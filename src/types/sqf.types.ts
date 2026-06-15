@@ -53,8 +53,8 @@ export interface ISQFChartData {
 
 /** Table data returned by the backend */
 export interface ISQFTableData {
-  headers: string[]
-  rows: Array<(string | number | null)[]>
+  headers?: string[]
+  rows?: Array<(string | number | null)[]>
   /** Optional footer row (totals) */
   footer?: (string | number | null)[]
 }
