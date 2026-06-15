@@ -21,16 +21,11 @@ function mapToETAMap(raw: IDataLoadETA[]): ETAMap {
   const eta: ETAMap = {}
   raw.forEach(entry => {
     const [hh, mm, ss] = entry.Expected_Time.split(':').map(Number)
+    // Construct the cut-off time using today's UTC date + the API's UTC time
     const now = new Date()
-    const todayLocal = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-    let cutOff = new Date(
+    const cutOff = new Date(
       Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), hh, mm, ss)
     )
-    const cutOffLocal = new Date(cutOff.getFullYear(), cutOff.getMonth(), cutOff.getDate())
-    const dayDiff = Math.round(
-      (cutOffLocal.getTime() - todayLocal.getTime()) / 86_400_000
-    )
-    if (dayDiff !== 0) cutOff = new Date(cutOff.getTime() - dayDiff * 86_400_000)
     const key = METRIC_KEY_MAP[entry.METRIC] || entry.METRIC
     eta[key] = { time: cutOff }
   })
