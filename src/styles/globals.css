@@ -1,1 +1,77 @@
-/* src/styles/globals.css — populated in Task 3 */
+/* src/styles/globals.css */
+
+:root {
+  /* Brand */
+  --color-primary: #0C482C;
+  --color-primary-text: #ffffff;
+
+  /* Metric card status colours */
+  --color-positive: #219653;
+  --color-negative: #EB5757;
+  --color-amber: #EF9C48;
+  --color-neutral: #E1E0E1;
+  --color-blue: #3F69AE;
+
+  /* Typography */
+  --color-text: #333333;
+  --color-text-secondary: #676d70;
+  --font-family: Arial, Helvetica, sans-serif;
+
+  /* Surfaces */
+  --color-border: #d3d3d3;
+  --color-bg: #fafafa;
+  --color-surface: #ffffff;
+
+  /* Chrome heights — used for page-content padding-top */
+  --header-height: 60px;
+  --page-bar-height: 48px;
+  --filter-bar-height: 48px;
+  --chrome-height: calc(var(--header-height) + var(--page-bar-height) + var(--filter-bar-height));
+
+  /* Footer */
+  --footer-height: 44px;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-family);
+  font-size: 14px;
+  background: var(--color-bg);
+  color: var(--color-text);
+  overflow-x: hidden;
+}
+
+/* ── Card grid — used by SummaryPage and DetailsPage ── */
+.card-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 24px;
+  margin-bottom: 32px;
+}
+
+/* Card widths at each breakpoint (from wireframe) */
+.metric-card-slot {
+  width: 100%;
+  max-width: 503px;
+}
+@media (min-width: 768px)  { .metric-card-slot { max-width: 332px; } }
+@media (min-width: 1024px) { .metric-card-slot { max-width: 440px; } }
+@media (min-width: 1440px) { .metric-card-slot { max-width: 410px; } }
+@media (min-width: 1920px) { .metric-card-slot { max-width: 392px; } }
+
+/* Skeleton animation */
+@keyframes skeleton-pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.4; }
+}
+.skeleton-block {
+  background: #e0e0e0;
+  border-radius: 4px;
+  animation: skeleton-pulse 1.5s ease-in-out infinite;
+}
