@@ -1,0 +1,82 @@
+<h2>React App Architecture — Section 1: Folder Structure</h2>
+<p class="subtitle">Phase 1: /quick-facts (summary + details pages). Click to confirm or raise concerns.</p>
+
+<div class="section">
+  <h3>Proposed Folder Structure</h3>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;">
+    <div style="background:#f8f9fa;border:1px solid #ddd;border-radius:6px;padding:16px;font-family:monospace;font-size:13px;line-height:1.8;">
+      <div style="color:#666;margin-bottom:8px;font-style:italic;">ip-react-node/</div>
+      <div>📁 <b>src/</b></div>
+      <div style="margin-left:16px;">📁 <b>api/</b> <span style="color:#888;font-family:sans-serif;font-size:11px;">— axios instance + endpoints</span></div>
+      <div style="margin-left:32px;">📄 client.ts</div>
+      <div style="margin-left:32px;">📄 sqf.ts <span style="color:#888;font-size:11px;">— all /sqf/* calls</span></div>
+      <div style="margin-left:16px;">📁 <b>components/</b> <span style="color:#888;font-family:sans-serif;font-size:11px;">— shared/reusable</span></div>
+      <div style="margin-left:32px;">📁 layout/ <span style="color:#888;font-size:11px;">Header, PageBar, FilterBar</span></div>
+      <div style="margin-left:32px;">📁 charts/ <span style="color:#888;font-size:11px;">BarChart, PieChart wrappers</span></div>
+      <div style="margin-left:32px;">📁 cards/ <span style="color:#888;font-size:11px;">MetricCard, ErrorCard, LoadingCard</span></div>
+      <div style="margin-left:32px;">📁 ui/ <span style="color:#888;font-size:11px;">Breadcrumbs, Spinner, etc.</span></div>
+      <div style="margin-left:16px;">📁 <b>context/</b></div>
+      <div style="margin-left:32px;">📄 FilterContext.tsx <span style="color:#888;font-size:11px;">— node + date state</span></div>
+      <div style="margin-left:32px;">📄 AuthContext.tsx <span style="color:#888;font-size:11px;">— stub for Phase 1</span></div>
+      <div style="margin-left:16px;">📁 <b>hooks/</b></div>
+      <div style="margin-left:32px;">📄 useFilterTree.ts <span style="color:#888;font-size:11px;">— hierarchy data query</span></div>
+      <div style="margin-left:32px;">📄 useSummaryCards.ts</div>
+      <div style="margin-left:32px;">📄 useDetailsCard.ts</div>
+      <div style="margin-left:32px;">📄 useCardStatus.ts <span style="color:#888;font-size:11px;">— getSQFMetricCardsStatus</span></div>
+      <div style="margin-left:16px;">📁 <b>pages/</b></div>
+      <div style="margin-left:32px;">📁 quick-facts/</div>
+      <div style="margin-left:48px;">📄 QuickFactsLayout.tsx <span style="color:#888;font-size:11px;">— shell + filter</span></div>
+      <div style="margin-left:48px;">📄 SummaryPage.tsx</div>
+      <div style="margin-left:48px;">📄 DetailsPage.tsx</div>
+      <div style="margin-left:16px;">📁 <b>styles/</b></div>
+      <div style="margin-left:32px;">📄 globals.css <span style="color:#888;font-size:11px;">— CSS variables, resets</span></div>
+      <div style="margin-left:16px;">📄 App.tsx <span style="color:#888;font-size:11px;">— router root</span></div>
+      <div style="margin-left:16px;">📄 main.tsx</div>
+      <div>📄 vite.config.ts</div>
+      <div>📄 .env.local <span style="color:#888;font-size:11px;">VITE_API_URL=http://127.0.0.1:8080/api</span></div>
+      <div>📄 .env.production <span style="color:#888;font-size:11px;">VITE_API_URL=/api</span></div>
+    </div>
+    <div>
+      <h4 style="margin-bottom:12px;">Design Principles</h4>
+      <div style="display:flex;flex-direction:column;gap:12px;">
+        <div style="background:#fff;border:1px solid #ddd;border-radius:6px;padding:12px;">
+          <div style="font-weight:600;color:#0C482C;margin-bottom:4px;">🔌 API Layer</div>
+          <p style="font-size:13px;color:#555;">Axios instance configured with base URL from <code>VITE_API_URL</code> env var. No hardcoded localhost. All SQF endpoints in one file.</p>
+        </div>
+        <div style="background:#fff;border:1px solid #ddd;border-radius:6px;padding:12px;">
+          <div style="font-weight:600;color:#0C482C;margin-bottom:4px;">🧩 Context</div>
+          <p style="font-size:13px;color:#555;">FilterContext wraps the /quick-facts layout. Holds the loaded hierarchy tree, selected node, and selected date. Syncs code+date to URL params.</p>
+        </div>
+        <div style="background:#fff;border:1px solid #ddd;border-radius:6px;padding:12px;">
+          <div style="font-weight:600;color:#0C482C;margin-bottom:4px;">🎣 React Query Hooks</div>
+          <p style="font-size:13px;color:#555;">One hook per API call. Query keys include [selectedNode.code, selectedDate] so React Query auto-refetches when filter changes — mirrors the Angular BehaviorSubject pattern.</p>
+        </div>
+        <div style="background:#fff;border:1px solid #ddd;border-radius:6px;padding:12px;">
+          <div style="font-weight:600;color:#0C482C;margin-bottom:4px;">🏭 Pages vs Components</div>
+          <p style="font-size:13px;color:#555;">Pages are route-level: SummaryPage, DetailsPage. Components are reusable: MetricCard renders in both summary and details. Charts are wrapped Chart.js components.</p>
+        </div>
+        <div style="background:#fff;border:1px solid #ddd;border-radius:6px;padding:12px;">
+          <div style="font-weight:600;color:#0C482C;margin-bottom:4px;">☁️ GCP-ready</div>
+          <p style="font-size:13px;color:#555;"><code>vite build</code> outputs to <code>dist/</code>. In prod, all API calls go to <code>/api</code> (same origin, proxied by Cloud Run / App Engine). No CORS issues.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="options">
+  <div class="option" data-choice="approve" onclick="toggleSelect(this)">
+    <div class="letter">✓</div>
+    <div class="content">
+      <h3>This looks good — continue to Section 2 (UI Layout)</h3>
+      <p>Move on to the header, filter bar, and page layout design</p>
+    </div>
+  </div>
+  <div class="option" data-choice="concern" onclick="toggleSelect(this)">
+    <div class="letter">?</div>
+    <div class="content">
+      <h3>I have concerns or changes</h3>
+      <p>Let me know in the terminal what you'd like to adjust</p>
+    </div>
+  </div>
+</div>

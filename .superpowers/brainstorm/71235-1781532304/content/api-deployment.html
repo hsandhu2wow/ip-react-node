@@ -1,0 +1,117 @@
+<h2>React App — Section 4: API Layer, Error Handling & GCP Deployment</h2>
+<p class="subtitle">How the React app connects to the Python backend, handles errors, and deploys to GCP.</p>
+
+<div class="section">
+  <h3>API Layer Design</h3>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+    <div>
+      <h4 style="margin-bottom:8px;">Axios Client (src/api/client.ts)</h4>
+      <div style="background:#f8f9fa;border:1px solid #ddd;border-radius:6px;padding:12px;font-family:monospace;font-size:12px;line-height:1.8;">
+        <div><span style="color:#888;">// Reads from env — never hardcoded</span></div>
+        <div>const client = axios.create({</div>
+        <div style="margin-left:16px;">baseURL: <b>import.meta.env.VITE_API_URL</b>,</div>
+        <div style="margin-left:16px;">withCredentials: true</div>
+        <div>});</div>
+        <div style="margin-top:8px;color:#888;">// .env.local</div>
+        <div>VITE_API_URL=http://127.0.0.1:8080/api</div>
+        <div style="margin-top:4px;color:#888;">// .env.production</div>
+        <div>VITE_API_URL=/api</div>
+      </div>
+      <div style="margin-top:8px;padding:8px;background:#d4edda;border:1px solid #28a745;border-radius:4px;font-size:12px;">
+        ✅ In GCP (Cloud Run or App Engine), the React static files and the Python API are served from the same origin. <code>/api</code> routes to Python — no CORS.
+      </div>
+    </div>
+    <div>
+      <h4 style="margin-bottom:8px;">SQF API Functions (src/api/sqf.ts)</h4>
+      <div style="background:#f8f9fa;border:1px solid #ddd;border-radius:6px;padding:12px;font-family:monospace;font-size:12px;line-height:1.8;">
+        <div>getUniversalFilter()</div>
+        <div style="margin-left:16px;color:#888;">→ GET /sqf/getUniversalFilterGeneric</div>
+        <div style="margin-top:4px;">getDataLoadETA()</div>
+        <div style="margin-left:16px;color:#888;">→ GET /sqf/getDataLoadETA</div>
+        <div style="margin-top:4px;">getSQFCardStatus()</div>
+        <div style="margin-left:16px;color:#888;">→ GET /sqf/getSQFMetricCardsStatus</div>
+        <div style="margin-top:4px;">getSummaryCards(level, date, code?)</div>
+        <div style="margin-left:16px;color:#888;">→ GET /sqf/summaryCards/{level}/{date}/{code}</div>
+        <div style="margin-top:4px;">getDetailCard(metric, level, date, code?)</div>
+        <div style="margin-left:16px;color:#888;">→ GET /sqf/detailCard/{metric}/{level}/{date}/{code}</div>
+        <div style="margin-top:4px;">getSeasonalMetric(level, date, code?)</div>
+        <div style="margin-left:16px;color:#888;">→ GET /sqf/seasonalMetric/{level}/{date}/{code}</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Error Handling Strategy</h3>
+  <div style="display:flex;flex-direction:column;gap:8px;">
+    <div style="background:#fff;border:1px solid #ddd;border-radius:6px;padding:12px;display:grid;grid-template-columns:160px 1fr;gap:12px;font-size:13px;">
+      <div style="font-weight:600;color:#eb5757;">No data for level</div>
+      <div><code>status: "error-NoDataForThisLevel"</code> → card renders as hidden (not shown in grid)</div>
+    </div>
+    <div style="background:#fff;border:1px solid #ddd;border-radius:6px;padding:12px;display:grid;grid-template-columns:160px 1fr;gap:12px;font-size:13px;">
+      <div style="font-weight:600;color:#ef9c48;">Data not yet loaded</div>
+      <div><code>status: "error-NoDataFound"</code> → show cut-off ETA time from <code>getDataLoadETA</code></div>
+    </div>
+    <div style="background:#fff;border:1px solid #ddd;border-radius:6px;padding:12px;display:grid;grid-template-columns:160px 1fr;gap:12px;font-size:13px;">
+      <div style="font-weight:600;color:#888;">Generic error</div>
+      <div>Network/server error → show error card with support email. React Query retries 3× automatically.</div>
+    </div>
+    <div style="background:#fff;border:1px solid #ddd;border-radius:6px;padding:12px;display:grid;grid-template-columns:160px 1fr;gap:12px;font-size:13px;">
+      <div style="font-weight:600;color:#3f69ae;">Loading state</div>
+      <div>While React Query is fetching → show MetricCardSkeleton (CSS pulse animation) for each expected card position</div>
+    </div>
+    <div style="background:#fff;border:1px solid #ddd;border-radius:6px;padding:12px;display:grid;grid-template-columns:160px 1fr;gap:12px;font-size:13px;">
+      <div style="font-weight:600;color:#0C482C;">Filter change</div>
+      <div>When node or date changes → React Query staleTime=0 so it always refetches. Previous data shown as "stale" during refetch (no flicker).</div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>GCP Deployment Structure</h3>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+    <div style="background:#f8f9fa;border:1px solid #ddd;border-radius:6px;padding:12px;font-size:13px;">
+      <div style="font-weight:600;margin-bottom:8px;">Build output</div>
+      <div style="font-family:monospace;font-size:12px;line-height:1.8;">
+        <div>$ npm run build</div>
+        <div style="color:#888;">→ dist/</div>
+        <div style="color:#888;">   index.html</div>
+        <div style="color:#888;">   assets/main.js (hashed)</div>
+        <div style="color:#888;">   assets/main.css (hashed)</div>
+      </div>
+      <div style="margin-top:8px;color:#555;font-size:12px;">Static files served by the existing Python backend (Flask's send_from_directory or GCP App Engine static handlers), or as a separate Cloud Run service.</div>
+    </div>
+    <div style="background:#f8f9fa;border:1px solid #ddd;border-radius:6px;padding:12px;font-size:13px;">
+      <div style="font-weight:600;margin-bottom:8px;">Vite config for SPA routing</div>
+      <div style="font-family:monospace;font-size:12px;line-height:1.8;">
+        <div style="color:#888;">// vite.config.ts</div>
+        <div>export default defineConfig({</div>
+        <div style="margin-left:12px;">server: {</div>
+        <div style="margin-left:24px;">proxy: {</div>
+        <div style="margin-left:36px;">'/api': 'http://127.0.0.1:8080'</div>
+        <div style="margin-left:24px;">}</div>
+        <div style="margin-left:12px;">},</div>
+        <div style="margin-left:12px;">build: { outDir: 'dist' }</div>
+        <div>})</div>
+      </div>
+      <div style="margin-top:8px;color:#555;font-size:12px;">In dev: Vite proxies <code>/api</code> to the running Python backend. In production: Python serves <code>/api</code> directly.</div>
+    </div>
+  </div>
+</div>
+
+<div class="options">
+  <div class="option" data-choice="approve" onclick="toggleSelect(this)">
+    <div class="letter">✓</div>
+    <div class="content">
+      <h3>All good — I approve the full design</h3>
+      <p>Ready to write the spec document and move to implementation planning</p>
+    </div>
+  </div>
+  <div class="option" data-choice="concern" onclick="toggleSelect(this)">
+    <div class="letter">?</div>
+    <div class="content">
+      <h3>I have a final concern</h3>
+      <p>Let me know in the terminal</p>
+    </div>
+  </div>
+</div>
