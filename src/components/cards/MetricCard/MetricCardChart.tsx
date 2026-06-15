@@ -10,10 +10,15 @@ import styles from './MetricCard.module.css'
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend)
 
 export function MetricCardChart({ chartData }: { chartData: ISQFChartData }) {
+  // Guard: backend may return chartData without labels/datasets at runtime
+  const safeData = {
+    labels: chartData.labels ?? [],
+    datasets: chartData.datasets ?? [],
+  }
   return (
     <div className={styles.chartArea}>
       <Bar
-        data={chartData as any}
+        data={safeData as any}
         options={{
           responsive: true,
           maintainAspectRatio: false,

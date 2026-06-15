@@ -41,8 +41,8 @@ export interface ISQFInfoNumber {
 
 /** Chart.js compatible data structure */
 export interface ISQFChartData {
-  labels: string[]
-  datasets: Array<{
+  labels?: string[]
+  datasets?: Array<{
     data: number[]
     backgroundColor?: string | string[]
     borderColor?: string | string[]
