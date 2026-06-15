@@ -1,0 +1,88 @@
+/* src/components/cards/MetricCard/MetricCard.module.css */
+
+/* ── Base card ── */
+.card {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  min-height: 380px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+/* ── Skeleton ── */
+.skeleton { min-height: 380px; }
+.skeletonBar { height: 4px; margin-bottom: 0; border-radius: 0; }
+.skeletonContent { padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+.skeletonTitle { height: 22px; width: 60%; }
+.skeletonSubtitle { height: 14px; width: 40%; }
+.skeletonKpi { height: 32px; width: 50%; }
+.skeletonChart { height: 146px; flex: 1; }
+
+/* ── Error card ── */
+.errorCard {
+  width: 100%;
+  min-height: 200px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.errorTitle { font-size: 18px; font-weight: 700; color: var(--color-text); }
+.errorMsg { font-size: 13px; color: var(--color-text-secondary); line-height: 1.6; }
+.errorMsg a { color: var(--color-blue); }
+
+/* ── Header ── */
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  border-top: 4px solid var(--color-neutral);
+  padding: 10px 12px 0;
+}
+.header.positive { border-top-color: var(--color-positive); }
+.header.negative { border-top-color: var(--color-negative); }
+.header.amber    { border-top-color: var(--color-amber);    }
+.header.neutral  { border-top-color: var(--color-neutral);  }
+
+.cardTitle  { font-size: 18px; font-weight: 700; color: var(--color-text); }
+.subTitle   { display: flex; gap: 16px; color: var(--color-text-secondary); font-size: 12px; margin-top: 4px; flex-wrap: wrap; }
+
+/* ── KPI row ── */
+.kpiRow { display: flex; align-items: stretch; padding: 4px 12px 8px; }
+.kpiCol { display: flex; flex-direction: column; padding-right: 14px; }
+.kpiCol:not(:first-child) { padding-left: 14px; }
+.kpiValue { font-size: 20px; font-weight: 700; line-height: 1.1; color: var(--color-text); }
+.kpiValue.positive { color: var(--color-positive); }
+.kpiValue.negative { color: var(--color-negative); }
+.kpiLabel { font-size: 12px; color: var(--color-text); margin-top: 3px; white-space: nowrap; }
+.kpiDivider { width: 1px; background: #e0e0e0; margin: 2px 0; flex-shrink: 0; }
+
+/* ── Chart ── */
+.chartArea { padding: 0 12px; margin: 8px 0; flex: 1; }
+
+/* ── Table ── */
+.tableArea { padding: 0 12px 8px; overflow-x: auto; }
+.table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.table th { text-align: left; padding: 6px 8px; font-weight: 600; border-bottom: 2px solid var(--color-border); color: var(--color-text); }
+.table td { padding: 6px 8px; border-bottom: 1px solid #f0f0f0; color: var(--color-text); }
+.table tr:last-child td { border-bottom: none; }
+.expandToggle { color: var(--color-blue); cursor: pointer; font-size: 12px; padding: 4px 12px; background: none; border: none; font-family: var(--font-family); }
+
+/* ── Tabs ── */
+.tabs { display: flex; border-bottom: 1px solid var(--color-border); margin: 0 12px; }
+.tab { padding: 6px 12px; font-size: 13px; cursor: pointer; border: none; background: none; border-bottom: 2px solid transparent; color: var(--color-text-secondary); font-family: var(--font-family); }
+.tabActive { border-bottom-color: var(--color-primary); color: var(--color-primary); font-weight: 600; }
+
+/* ── Footer ── */
+.footer { margin-top: auto; }
+.footerLinks { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; border-bottom: 1px solid #e0e0e0; }
+.detailsLink { color: var(--color-blue); cursor: pointer; font-size: 14px; text-decoration: none; }
+.footerMeta { display: flex; justify-content: space-between; align-items: center; padding: 6px 12px; min-height: 36px; }
+.updateDate { font-size: 12px; color: var(--color-text-secondary); display: flex; gap: 4px; align-items: center; }
