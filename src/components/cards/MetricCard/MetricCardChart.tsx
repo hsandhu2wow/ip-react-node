@@ -10,11 +10,16 @@ import styles from './MetricCard.module.css'
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend)
 
 export function MetricCardChart({ chartData }: { chartData: ISQFChartData }) {
-  // Guard: backend may return chartData without labels/datasets at runtime
+  // Guard: backend can return datasets/labels as non-array values at runtime.
+  // Array.isArray() rejects {}, null, undefined — not just null/undefined.
   const safeData = {
-    labels: chartData.labels ?? [],
-    datasets: chartData.datasets ?? [],
+    labels: Array.isArray(chartData?.labels) ? chartData.labels : [],
+    datasets: Array.isArray(chartData?.datasets) ? chartData.datasets : [],
   }
+
+  // Don't render an empty chart — nothing to show
+  if (safeData.datasets.length === 0) return null
+
   return (
     <div className={styles.chartArea}>
       <Bar

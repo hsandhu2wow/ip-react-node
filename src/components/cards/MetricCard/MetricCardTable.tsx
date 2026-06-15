@@ -7,9 +7,9 @@ const DEFAULT_ROWS = 5
 
 export function MetricCardTable({ tableData }: { tableData: ISQFTableData }) {
   const [expanded, setExpanded] = useState(false)
-  // Guard: backend may return tableData without rows/headers at runtime
-  const allRows = tableData.rows ?? []
-  const allHeaders = tableData.headers ?? []
+  // Guard: backend can return rows/headers as non-array values at runtime
+  const allRows = Array.isArray(tableData?.rows) ? tableData.rows : []
+  const allHeaders = Array.isArray(tableData?.headers) ? tableData.headers : []
   const rows = expanded ? allRows : allRows.slice(0, DEFAULT_ROWS)
   return (
     <div className={styles.tableArea}>
