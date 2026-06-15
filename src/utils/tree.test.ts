@@ -1,6 +1,6 @@
 // src/utils/tree.test.ts
 import { describe, it, expect } from 'vitest'
-import type { ISQFGenericFilter, IQFTree } from '../types/sqf.types'
+import type { ISQFGenericFilter } from '../types/sqf.types'
 import {
   processFilterResponse,
   flattenTree,

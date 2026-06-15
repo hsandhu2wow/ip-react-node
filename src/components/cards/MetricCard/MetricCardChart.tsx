@@ -17,7 +17,7 @@ export function MetricCardChart({ chartData }: { chartData: ISQFChartData }) {
         options={{
           responsive: true,
           maintainAspectRatio: false,
-          plugins: { legend: { display: false }, datalabels: { display: false } as any },
+          plugins: { legend: { display: false }, datalabels: { display: false } } as any,
           scales: { x: { grid: { display: false } }, y: { display: false } },
         }}
         height={146}

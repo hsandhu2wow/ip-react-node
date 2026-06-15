@@ -4,8 +4,8 @@ import {
   useContext,
   useState,
   useCallback,
-  ReactNode,
 } from 'react'
+import type { ReactNode } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import type { IQFTree } from '../types/sqf.types'
 import { formatDate, getYesterdayDate } from '../utils/formatters'
