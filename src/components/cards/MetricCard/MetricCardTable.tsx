@@ -7,12 +7,15 @@ const DEFAULT_ROWS = 5
 
 export function MetricCardTable({ tableData }: { tableData: ISQFTableData }) {
   const [expanded, setExpanded] = useState(false)
-  const rows = expanded ? tableData.rows : tableData.rows.slice(0, DEFAULT_ROWS)
+  // Guard: backend may return tableData without rows/headers at runtime
+  const allRows = tableData.rows ?? []
+  const allHeaders = tableData.headers ?? []
+  const rows = expanded ? allRows : allRows.slice(0, DEFAULT_ROWS)
   return (
     <div className={styles.tableArea}>
       <table className={styles.table}>
         <thead>
-          <tr>{tableData.headers.map((h, i) => <th key={i}>{h}</th>)}</tr>
+          <tr>{allHeaders.map((h, i) => <th key={i}>{h}</th>)}</tr>
         </thead>
         <tbody>
           {rows.map((row, ri) => (
@@ -20,9 +23,9 @@ export function MetricCardTable({ tableData }: { tableData: ISQFTableData }) {
           ))}
         </tbody>
       </table>
-      {tableData.rows.length > DEFAULT_ROWS && (
+      {allRows.length > DEFAULT_ROWS && (
         <button className={styles.expandToggle} onClick={() => setExpanded(e => !e)}>
-          {expanded ? 'Show less ▴' : `Show all ${tableData.rows.length} ▾`}
+          {expanded ? 'Show less ▴' : `Show all ${allRows.length} ▾`}
         </button>
       )}
     </div>
