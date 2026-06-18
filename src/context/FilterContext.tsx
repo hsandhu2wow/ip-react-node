@@ -48,6 +48,7 @@ export function FilterProvider({ children }: { children: ReactNode }) {
   const initTree = useCallback(
     (raw: ISQFGenericFilter[]) => {
       const tree = processFilterResponse(raw)
+      if (!tree) return // empty/invalid API response — stay in loading state
       addParents(tree)
       const flat = flattenTree(tree)
       setTreeNodes(flat)

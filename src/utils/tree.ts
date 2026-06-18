@@ -5,7 +5,8 @@ import type { ISQFGenericFilter, IQFTree } from '../types/sqf.types'
  * Converts the raw API response from getUniversalFilterGeneric into an IQFTree.
  * Mirrors Angular SqfFilterService.convertToMultiNodeTree / convertToGenericTree.
  */
-export function processFilterResponse(res: ISQFGenericFilter[]): IQFTree {
+export function processFilterResponse(res: ISQFGenericFilter[]): IQFTree | null {
+  if (!Array.isArray(res) || res.length === 0) return null
   if (res.length > 1) {
     return convertToMultiNodeTree(res)
   }
