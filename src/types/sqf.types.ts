@@ -32,31 +32,71 @@ export interface IQFTree {
   nonClickable?: boolean
 }
 
-/** KPI value displayed in a card */
+/** KPI value displayed in a card — matches actual backend shape */
 export interface ISQFInfoNumber {
-  val: string | number
-  label: string
-  color?: 'positive' | 'negative' | 'neutral'
+  displayValue: string | number
+  text: string
+  color?: string        // HEX color string e.g. "#219653", NOT a class name
+  infoMessage?: string
 }
 
-/** Chart.js compatible data structure */
+/** Chart data from the backend — custom format transformed into Chart.js by our component */
+export interface ISQFChartDataRow {
+  value: number
+  color: string
+  dataLabel?: string
+  tooltip?: string
+}
+
+export interface ISQFChartDataset {
+  data?: ISQFChartDataRow[]
+  _data?: ISQFChartDataRow[]    // some responses use _data
+  barThickness?: number
+  needleData?: { value: number; color: string; dataLabel: string | string[] }
+}
+
 export interface ISQFChartData {
-  labels?: string[]
-  datasets?: Array<{
-    data: number[]
-    backgroundColor?: string | string[]
-    borderColor?: string | string[]
-    label?: string
-    type?: string
-  }>
+  chartType: 'bar' | 'horizontalBar' | 'pie' | 'doughnut' | 'gauge'
+  chartOptions: {
+    labels?: string[]
+    stacked?: boolean
+    displayColors?: boolean
+    showCustomTooltip?: boolean
+    hasFixedDataLabel?: boolean
+    displayDataLabelIndex?: number
+    padding?: object
+    hideLabels?: boolean
+    showOnlyDataSet?: string
+  }
+  datasets: Record<string, ISQFChartDataset>
 }
 
-/** Table data returned by the backend */
+/** Table data returned by the backend — rows are objects keyed by column0, column1, etc. */
+export interface ISQFTableCell {
+  displayValue?: string | number
+  color?: string
+  cssClass?: string
+}
+
+export interface ISQFTableRow {
+  [key: string]: ISQFTableCell | unknown   // column0, column1, ... keys
+  breakdown_table_data?: ISQFTableRow[]
+  key?: string
+}
+
 export interface ISQFTableData {
-  headers?: string[]
+  type?: 'basic' | 'nested' | 'comments'
+  headers?: Array<string | { text: string; tooltip?: string }>
+  data?: ISQFTableRow[]
+  sortCol?: string
+  sortOrder?: string
+  freeze_first_column?: boolean
+  columnWidth?: string[]
+  hasHTMLHeaders?: boolean
+  headersCssClass?: string[]
+  scrollHelpText?: { desktop?: string; mobile?: string }
+  /** @deprecated legacy field — backend now uses `data` */
   rows?: Array<(string | number | null)[]>
-  /** Optional footer row (totals) */
-  footer?: (string | number | null)[]
 }
 
 /** One tab within a tabbed metric card */

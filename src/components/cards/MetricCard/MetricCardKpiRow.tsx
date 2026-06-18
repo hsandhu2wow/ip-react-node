@@ -11,8 +11,11 @@ export function MetricCardKpiRow({ infoNumbers }: { infoNumbers?: ISQFInfoNumber
         <Fragment key={i}>
           {i > 0 && <div className={styles.kpiDivider} />}
           <div className={styles.kpiCol}>
-            <div className={`${styles.kpiValue} ${styles[kpi.color || 'neutral']}`}>{kpi.val}</div>
-            <div className={styles.kpiLabel}>{kpi.label}</div>
+            {/* color is a hex string from the backend e.g. "#219653" */}
+            <div className={styles.kpiValue} style={{ color: kpi.color || 'inherit' }}>
+              {kpi.displayValue}
+            </div>
+            <div className={styles.kpiLabel}>{kpi.text}</div>
           </div>
         </Fragment>
       ))}

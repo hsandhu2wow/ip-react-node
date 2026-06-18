@@ -73,6 +73,7 @@
 .table th { text-align: left; padding: 6px 8px; font-weight: 600; border-bottom: 2px solid var(--color-border); color: var(--color-text); }
 .table td { padding: 6px 8px; border-bottom: 1px solid #f0f0f0; color: var(--color-text); }
 .table tr:last-child td { border-bottom: none; }
+.childRow td { background: #fafafa; font-size: 12px; padding-left: 20px; }
 .expandToggle { color: var(--color-blue); cursor: pointer; font-size: 12px; padding: 4px 12px; background: none; border: none; font-family: var(--font-family); }
 
 /* ── Tabs ── */
