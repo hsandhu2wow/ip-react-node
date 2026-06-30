@@ -1,5 +1,5 @@
 // src/components/layout/MobileNav/MobileNav.tsx
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
 import { useAuth } from '../../../context/AuthContext'
 import styles from './MobileNav.module.css'
@@ -75,6 +75,14 @@ export function MobileNav() {
 
   function close() { setDrawerOpen(false) }
 
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape' && drawerOpen) close()
+    }
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [drawerOpen])
+
   function isItemActive(to: string) {
     return location.pathname === to || location.pathname.startsWith(to + '/')
   }
@@ -116,6 +124,8 @@ export function MobileNav() {
         className={`${styles.drawer} ${drawerOpen ? styles.drawerOpen : ''}`}
         aria-hidden={!drawerOpen}
         aria-label="Main navigation"
+        role="dialog"
+        aria-modal="true"
         data-testid="mobile-drawer"
       >
         <div className={styles.drawerHeader}>

@@ -39,7 +39,7 @@ export function SideNav() {
   }, [menuOpen])
 
   return (
-    <nav className={styles.sidenav} aria-label="Main navigation">
+    <nav className={`${styles.sidenav} ${menuOpen ? styles.sidenavExpanded : ''}`} aria-label="Main navigation">
       {/* Logo */}
       <div className={styles.logo}>
         <div className={styles.logoIcon}>{WW_LOGO}</div>
@@ -92,7 +92,7 @@ export function SideNav() {
             onClick={() => setMenuOpen(o => !o)}
             data-testid="sidenav-user-trigger"
             aria-expanded={menuOpen}
-            aria-haspopup="menu"
+            aria-haspopup="true"
           >
             <div className={styles.avatar}>
               <span className="material-icons" style={{ fontSize: '22px' }}>account_circle</span>

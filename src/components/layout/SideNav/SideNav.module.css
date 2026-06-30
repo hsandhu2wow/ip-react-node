@@ -25,6 +25,11 @@
   box-shadow: 4px 0 12px rgba(0, 0, 0, 0.18);
 }
 
+.sidenavExpanded {
+  width: 290px;
+  box-shadow: 4px 0 12px rgba(0, 0, 0, 0.18);
+}
+
 /* ── Logo ── */
 .logo {
   display: flex;
