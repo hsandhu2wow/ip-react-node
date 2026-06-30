@@ -10,23 +10,27 @@ interface AuthUser {
 interface AuthContextType {
   user: AuthUser
   isAuthenticated: boolean
+  logout: () => void
 }
 
-// Phase 1 stub: hardcoded authenticated user.
-// Replace with real OAuth/Firebase auth in Phase 2.
 const STUB_USER: AuthUser = {
   name: 'Demo User',
-  portal: 'WW', // Woolworths
+  portal: 'WW',
 }
 
 const AuthContext = createContext<AuthContextType>({
   user: STUB_USER,
   isAuthenticated: true,
+  logout: () => window.location.reload(),
 })
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  function logout() {
+    // Phase 2: replace with real sign-out
+    window.location.reload()
+  }
   return (
-    <AuthContext.Provider value={{ user: STUB_USER, isAuthenticated: true }}>
+    <AuthContext.Provider value={{ user: STUB_USER, isAuthenticated: true, logout }}>
       {children}
     </AuthContext.Provider>
   )
@@ -40,7 +44,6 @@ export function useAuth() {
 export function ProtectedRoute({ children }: { children: ReactNode }) {
   const { isAuthenticated } = useAuth()
   if (!isAuthenticated) {
-    // Phase 2: replace with <Navigate to="/login" />
     return <div>Please log in.</div>
   }
   return <>{children}</>

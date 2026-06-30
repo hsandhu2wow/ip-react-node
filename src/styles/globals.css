@@ -22,14 +22,24 @@
   --color-bg: #fafafa;
   --color-surface: #ffffff;
 
-  /* Chrome heights — used for page-content padding-top */
-  --header-height: 60px;
+  /* Navigation layout — desktop defaults */
+  --sidenav-width: 56px;
+  --mob-appbar-height: 0px;
+
+  /* Chrome heights */
   --page-bar-height: 48px;
   --filter-bar-height: 48px;
-  --chrome-height: calc(var(--header-height) + var(--page-bar-height) + var(--filter-bar-height));
 
   /* Footer */
   --footer-height: 44px;
+}
+
+/* Mobile overrides */
+@media (max-width: 767px) {
+  :root {
+    --sidenav-width: 0px;
+    --mob-appbar-height: 56px;
+  }
 }
 
 *, *::before, *::after {
