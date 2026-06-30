@@ -4,7 +4,7 @@ import { useParams, Navigate } from 'react-router-dom'
 import { useDetailsCard } from '../../hooks/useDetailsCard'
 import { useCardStatus } from '../../hooks/useCardStatus'
 import { useFilter } from '../../context/FilterContext'
-import { MetricCard } from '../../components/cards/MetricCard'
+import { DetailsCard } from '../../components/cards/DetailsCard/DetailsCard'
 import type { ISQFMetricCard } from '../../types/sqf.types'
 import styles from './DetailsPage.module.css'
 
@@ -65,6 +65,7 @@ export function DetailsPage() {
 
   const cardConfig = cardStatus?.[type || '']
   const pageTitle = cardConfig?.titleText || type || ''
+  const detailsLastLevel = cardConfig?.details_last_level ?? 99
 
   // Build breadcrumb path from selected node
   const breadcrumbs: string[] = []
@@ -117,17 +118,21 @@ export function DetailsPage() {
         </div>
       )}
 
-      <div className="card-grid">
+      <div style={{ padding: '0 24px' }}>
         {isLoading
           ? Array.from({ length: SKELETON_COUNT }).map((_, i) => (
-              <div key={i} className="metric-card-slot">
-                <MetricCard isLoading />
+              <div key={i} style={{ marginBottom: 24 }}>
+                <DetailsCard isLoading />
               </div>
             ))
           : cards.map((card, i) => (
-              <div key={card.cardName + i} className="metric-card-slot">
-                <MetricCard card={card} />
-              </div>
+              <DetailsCard
+                key={card.cardName + i}
+                card={card}
+                last={i === cards.length - 1}
+                selectedNode={selectedNode}
+                detailsLastLevel={detailsLastLevel}
+              />
             ))}
       </div>
     </main>
