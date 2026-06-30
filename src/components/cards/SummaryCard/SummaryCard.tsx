@@ -105,11 +105,14 @@ export function SummaryCard({ card, isLoading, expandTable }: Props) {
   const [infoModalOpen, setInfoModalOpen] = useState(false)
   const [recognizeLoading, setRecognizeLoading] = useState(false)
 
+  const filterConfigKey = card?.filterKeys ? Object.keys(card.filterKeys).join(',') : ''
+  const dropdownKeys = card?.dropdowns?.map(d => d.key).join(',') ?? ''
+
   useEffect(() => {
     if (!card) return
     if (card.cards) setSelectedFilters(buildInitialFilters(card))
     setExpanded(Boolean(card.autoExpandForMobile))
-  }, [card?.cardName])
+  }, [card?.cardName, filterConfigKey, dropdownKeys])
 
   if (isLoading) return <MetricCardSkeleton />
   if (!card || card.hidden) return null

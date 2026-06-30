@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { SummaryCard } from './SummaryCard'
@@ -107,5 +107,25 @@ describe('SummaryCard', () => {
     renderCard({ card: { ...baseCard, updatedTime: '2026-06-29T22:00:00Z', dataInfo: { title: 'My Info', body: '<p>desc</p>' } } })
     fireEvent.click(screen.getByTestId('metrics-info-btn'))
     expect(screen.getByText('My Info')).toBeDefined()
+  })
+
+  it('updates content when dropdown filter is changed', async () => {
+    const cardWithFilters: ISQFMetricCard = {
+      ...baseCard,
+      cards: [
+        { cardName: 'sales-wtd', cardType: 'summary', keys: { period: 'wtd' }, infoNumbers: [{ displayValue: '$1M', text: 'WTD' }] },
+        { cardName: 'sales-mtd', cardType: 'summary', keys: { period: 'mtd' }, infoNumbers: [{ displayValue: '$5M', text: 'MTD' }] },
+      ],
+      filterKeys: { period: 'periodDd' },
+      dropdowns: [{ key: 'periodDd', data: [{ key: 'wtd', label: 'WTD' }, { key: 'mtd', label: 'MTD' }] }],
+    }
+    renderCard({ card: cardWithFilters })
+    // Initially shows first subcard (wtd)
+    expect(screen.getByText('$1M')).toBeDefined()
+
+    // Change dropdown to mtd
+    const select = document.querySelector('select') as HTMLSelectElement
+    fireEvent.change(select, { target: { value: 'mtd' } })
+    expect(screen.getByText('$5M')).toBeDefined()
   })
 })
