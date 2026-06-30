@@ -1,0 +1,42 @@
+/* src/pages/coming-soon/ComingSoon.module.css */
+.page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  gap: 12px;
+  text-align: center;
+  padding: 24px;
+}
+
+.icon {
+  font-size: 56px;
+  color: var(--color-primary);
+  margin-bottom: 8px;
+}
+
+.heading {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.subtext {
+  font-size: 15px;
+  color: var(--color-text-secondary);
+  max-width: 320px;
+  line-height: 1.6;
+}
+
+.badge {
+  display: inline-block;
+  margin-top: 8px;
+  padding: 4px 12px;
+  background: rgba(12, 72, 44, 0.08);
+  color: var(--color-primary);
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: capitalize;
+}
