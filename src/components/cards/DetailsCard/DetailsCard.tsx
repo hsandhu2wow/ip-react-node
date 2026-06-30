@@ -55,7 +55,7 @@ function computeDrillDown(
   }
   const child = selectedNode.children[0]
   const isStore = child.apiDepth === 5
-  if (child.apiDepth > detailsLastLevel) return { nextLevel: null, isStore }
+  if (child.apiDepth > detailsLastLevel) return { nextLevel: null, isStore: false }
 
   if (card.isGenericCardApi && card.customDrillDownText !== undefined) {
     return { nextLevel: card.customDrillDownText || null, isStore }
@@ -99,13 +99,12 @@ function KpiBlock({ kpi }: { kpi: ISQFInfoNumber }) {
 interface Props {
   card?: ISQFMetricCard
   isLoading?: boolean
-  last?: boolean
   /** Currently selected filter node — used to compute drill-down level label */
   selectedNode?: IQFTree | null
   /** details_last_level from card status config — limits drill-down depth */
   detailsLastLevel?: number
-  /** Called when user clicks the drill-down link */
-  onDrillDown?: () => void
+  /** Called when user clicks the drill-down link; passes selected dept for C1Availability */
+  onDrillDown?: (dept?: string) => void
 }
 
 export function DetailsCard({
@@ -273,7 +272,7 @@ export function DetailsCard({
               {nextLevel && !isStore && (
                 <span
                   className={styles.drillDownLink}
-                  onClick={onDrillDown}
+                  onClick={() => onDrillDown?.()}
                   role="button"
                   tabIndex={0}
                   onKeyDown={e => e.key === 'Enter' && onDrillDown?.()}
@@ -291,7 +290,7 @@ export function DetailsCard({
                     value={selectedDept}
                     onChange={e => {
                       setSelectedDept(e.target.value)
-                      onDrillDown?.()
+                      onDrillDown?.(e.target.value)
                     }}
                   >
                     <option value="" disabled>Select Department</option>

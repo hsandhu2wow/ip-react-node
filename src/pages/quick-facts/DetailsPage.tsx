@@ -129,7 +129,6 @@ export function DetailsPage() {
               <DetailsCard
                 key={card.cardName + i}
                 card={card}
-                last={i === cards.length - 1}
                 selectedNode={selectedNode}
                 detailsLastLevel={detailsLastLevel}
               />
