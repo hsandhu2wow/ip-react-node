@@ -38,6 +38,7 @@ export interface ISQFInfoNumber {
   text: string
   color?: string        // HEX color string e.g. "#219653", NOT a class name
   infoMessage?: string
+  val?: number          // raw numeric value used for sorting in DetailsPage
 }
 
 /** Chart data from the backend — custom format transformed into Chart.js by our component */
@@ -107,6 +108,13 @@ export interface ISQFTabData {
   infoNumbers?: ISQFInfoNumber[]
 }
 
+/** One item in an expandable list section of a summary card */
+export interface IExpandableListItem {
+  header: string        // raw HTML shown as the clickable row header
+  content?: string      // raw HTML shown when expanded
+  isExpanded?: boolean  // whether item starts expanded
+}
+
 /** Error payload from the backend (mapped from Angular's error handling) */
 export interface ISQFCardError {
   cutOffTime?: string | null
@@ -137,13 +145,23 @@ export interface ISQFMetricCard {
   jsId?: string
   // Tabbed/filtered card variant
   cards?: ISQFMetricCard[]
-  filterKeys?: string[]
+  filterKeys?: Record<string, string>   // { cardKeysColKey → dropdownKey }
   dropdowns?: Array<{ key: string; data: Array<{ key: string; label: string }> }>
   // Computed at fetch time
   isGenericCardApi?: boolean
   apiType?: string
   tableOnly?: boolean
   sortByVal?: number
+  // Card content extensions
+  updatedTime?: string                              // ISO date or displayable time string from API
+  dataInfo?: { title: string; body: string }        // "Metrics Info" popup content
+  subHeading?: string                               // label above KPI numbers
+  customInfoNumbers?: string                        // raw HTML replacing infoNumbers display
+  richText?: string                                 // raw HTML block after chart
+  expandable_list?: IExpandableListItem[]
+  customDrillDownText?: string                      // overrides "details" label in footer link
+  autoExpandForMobile?: boolean                     // auto-expand table on mobile
+  keys?: Record<string, string>                     // identifies this card within a filtered card.cards[]
 }
 
 /** Config entry from getSQFMetricCardsStatus */
