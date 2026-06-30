@@ -16,12 +16,12 @@ function renderAt(path: string) {
 describe('ComingSoon', () => {
   it('renders heading', () => {
     renderAt('/weekly')
-    expect(screen.getByText('Coming Soon')).toBeDefined()
+    expect(screen.getByText('Coming Soon')).toBeTruthy()
   })
 
   it('renders subtext', () => {
     renderAt('/weekly')
-    expect(screen.getByText(/currently in development/i)).toBeDefined()
+    expect(screen.getByText(/currently in development/i)).toBeTruthy()
   })
 
   it('renders route name badge for /weekly', () => {
