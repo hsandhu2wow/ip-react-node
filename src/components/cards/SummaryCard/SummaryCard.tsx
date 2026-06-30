@@ -216,7 +216,7 @@ export function SummaryCard({ card, isLoading, expandTable }: Props) {
                   >
                     {dd.data.map(opt => (
                       <option key={opt.key} value={opt.key}>
-                        {opt.label}
+                        {opt.text}
                       </option>
                     ))}
                   </select>

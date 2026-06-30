@@ -85,7 +85,7 @@ describe('SummaryCard', () => {
         { cardName: 'sales-wtd', cardType: 'summary', keys: { period: 'wtd' }, infoNumbers: [] },
       ],
       filterKeys: { period: 'periodDd' },
-      dropdowns: [{ key: 'periodDd', data: [{ key: 'mtd', label: 'MTD' }] }],
+      dropdowns: [{ key: 'periodDd', data: [{ key: 'mtd', text: 'MTD' }] }],
     }
     renderCard({ card: cardWithFilters })
     expect(screen.getByText(/Data temporarily unavailable/)).toBeDefined()
@@ -117,7 +117,7 @@ describe('SummaryCard', () => {
         { cardName: 'sales-mtd', cardType: 'summary', keys: { period: 'mtd' }, infoNumbers: [{ displayValue: '$5M', text: 'MTD' }] },
       ],
       filterKeys: { period: 'periodDd' },
-      dropdowns: [{ key: 'periodDd', data: [{ key: 'wtd', label: 'WTD' }, { key: 'mtd', label: 'MTD' }] }],
+      dropdowns: [{ key: 'periodDd', data: [{ key: 'wtd', text: 'WTD' }, { key: 'mtd', text: 'MTD' }] }],
     }
     renderCard({ card: cardWithFilters })
     // Initially shows first subcard (wtd)
