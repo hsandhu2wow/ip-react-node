@@ -42,7 +42,7 @@ describe('MetricCard', () => {
       cardType: 'summary',
       cardTitle: 'Sales',
       cardHeader: 'Sales',
-      infoNumbers: [{ val: '$1.2M', label: 'WTD', color: 'positive' }],
+      infoNumbers: [{ displayValue: '$1.2M', text: 'WTD', color: '#219653' }],
     }
     renderCard({ card })
     expect(screen.getByText('Sales')).toBeDefined()
