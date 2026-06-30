@@ -1,0 +1,248 @@
+/* src/components/layout/SideNav/SideNav.module.css */
+
+/* ── Hide on mobile ── */
+@media (max-width: 767px) {
+  .sidenav { display: none !important; }
+}
+
+.sidenav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  width: 56px;
+  background: #0C482C;
+  z-index: 1100;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  overflow: hidden;
+  transition: width 350ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sidenav:hover {
+  width: 290px;
+  box-shadow: 4px 0 12px rgba(0, 0, 0, 0.18);
+}
+
+/* ── Logo ── */
+.logo {
+  display: flex;
+  align-items: center;
+  height: 64px;
+  flex-shrink: 0;
+  overflow: hidden;
+  gap: 10px;
+}
+
+.logoIcon {
+  width: 56px;
+  height: 56px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.logoLabel {
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 280ms cubic-bezier(0.4, 0, 0.2, 1);
+  letter-spacing: 0.02em;
+}
+
+.sidenav:hover .logoLabel { opacity: 1; }
+
+/* ── Nav items ── */
+.nav {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 8px 0;
+  gap: 2px;
+  overflow: hidden;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  height: 48px;
+  padding: 0 16px 0 13px;
+  gap: 16px;
+  cursor: pointer;
+  border: none;
+  background: none;
+  color: rgba(255, 255, 255, 0.65);
+  font-family: var(--font-family);
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-decoration: none;
+  border-left: 3px solid transparent;
+  box-sizing: border-box;
+  transition: background 150ms, color 150ms;
+  width: 100%;
+}
+
+.item:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+}
+
+.itemActive {
+  background: rgba(255, 255, 255, 0.12) !important;
+  color: #fff !important;
+  border-left-color: #fff;
+}
+
+.itemIcon {
+  font-size: 22px;
+  flex-shrink: 0;
+  width: 24px;
+  text-align: center;
+  color: inherit;
+}
+
+.itemLabel {
+  opacity: 0;
+  transition: opacity 280ms cubic-bezier(0.4, 0, 0.2, 1);
+  font-size: 14px;
+  line-height: 1;
+}
+
+.sidenav:hover .itemLabel { opacity: 1; }
+
+.badge {
+  font-size: 10px;
+  background: rgba(255, 255, 255, 0.18);
+  color: rgba(255, 255, 255, 0.7);
+  border-radius: 3px;
+  padding: 2px 5px;
+  margin-left: auto;
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 280ms cubic-bezier(0.4, 0, 0.2, 1);
+  flex-shrink: 0;
+}
+
+.sidenav:hover .badge { opacity: 1; }
+
+/* ── Footer ── */
+.footer {
+  margin-top: auto;
+  flex-shrink: 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 8px 0;
+}
+
+/* ── User section ── */
+.userContainer { position: relative; }
+
+.userRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  overflow: hidden;
+  cursor: pointer;
+  position: relative;
+  background: none;
+  border: none;
+  width: 100%;
+  text-align: left;
+}
+
+.userRow:hover { background: rgba(255, 255, 255, 0.06); }
+
+.avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: #fff;
+}
+
+.userInfo {
+  display: flex;
+  flex-direction: column;
+  opacity: 0;
+  transition: opacity 280ms cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+  min-width: 0;
+}
+
+.sidenav:hover .userInfo { opacity: 1; }
+
+.userName {
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.userRole {
+  color: rgba(255, 255, 255, 0.65);
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.userChevron {
+  font-size: 16px;
+  color: rgba(255, 255, 255, 0.55);
+  flex-shrink: 0;
+  margin-left: auto;
+  opacity: 0;
+  transition: opacity 280ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sidenav:hover .userChevron { opacity: 1; }
+
+/* ── User popup menu ── */
+.userMenu {
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  right: 0;
+  z-index: 1200;
+  padding: 0 8px 4px;
+}
+
+.menuPanel {
+  background: #fff;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px -1px rgba(0,0,0,.2), 0 4px 5px 0 rgba(0,0,0,.14), 0 1px 10px 0 rgba(0,0,0,.12);
+  overflow: hidden;
+  padding: 8px 0;
+}
+
+.menuItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  height: 48px;
+  padding: 0 16px;
+  font-size: 14px;
+  font-family: inherit;
+  color: rgba(0, 0, 0, 0.87);
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+}
+
+.menuItem:hover { background: rgba(0, 0, 0, 0.04); }
+
+.menuIcon {
+  font-size: 20px;
+  color: rgba(0, 0, 0, 0.54);
+  flex-shrink: 0;
+}
