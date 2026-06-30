@@ -146,7 +146,7 @@ export interface ISQFMetricCard {
   // Tabbed/filtered card variant
   cards?: ISQFMetricCard[]
   filterKeys?: Record<string, string>   // { cardKeysColKey → dropdownKey }
-  dropdowns?: Array<{ key: string; data: Array<{ key: string; label: string }> }>
+  dropdowns?: Array<{ key: string; icon?: string; data: Array<{ key: string; text: string }> }>
   // Computed at fetch time
   isGenericCardApi?: boolean
   apiType?: string
