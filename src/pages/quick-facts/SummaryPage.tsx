@@ -2,7 +2,7 @@
 import { useSummaryCards } from '../../hooks/useSummaryCards'
 import { useCardStatus } from '../../hooks/useCardStatus'
 import { useFilter } from '../../context/FilterContext'
-import { MetricCard } from '../../components/cards/MetricCard'
+import { SummaryCard } from '../../components/cards/SummaryCard/SummaryCard'
 import type { ISQFMetricCard } from '../../types/sqf.types'
 import styles from './SummaryPage.module.css'
 
@@ -49,12 +49,12 @@ export function SummaryPage() {
         {isLoading
           ? Array.from({ length: SKELETON_COUNT }).map((_, i) => (
               <div key={i} className="metric-card-slot">
-                <MetricCard isLoading />
+                <SummaryCard isLoading />
               </div>
             ))
           : sortedCards.map(card => (
               <div key={card.cardName} className="metric-card-slot">
-                <MetricCard card={card} />
+                <SummaryCard card={card} />
               </div>
             ))}
       </div>
