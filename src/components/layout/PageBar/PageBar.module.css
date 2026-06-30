@@ -1,7 +1,7 @@
 /* src/components/layout/PageBar/PageBar.module.css */
 .container {
-  position: fixed;
-  top: var(--header-height);
+  position: sticky;
+  top: var(--mob-appbar-height);   /* 0 on desktop, 56px on mobile */
   left: 0;
   right: 0;
   z-index: 950;

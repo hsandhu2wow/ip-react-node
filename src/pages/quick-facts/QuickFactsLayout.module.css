@@ -1,12 +1,13 @@
 /* src/pages/quick-facts/QuickFactsLayout.module.css */
 .content {
-  padding-top: var(--chrome-height);
+  /* PageBar (48px) + FilterBar (48px) are sticky — they take up space naturally */
 }
 
 .footer {
   position: fixed;
   bottom: 0;
-  width: 100%;
+  left: var(--sidenav-width);
+  right: 0;
   background: #f5f5f5;
   border-top: 1px solid #e0e0e0;
   height: var(--footer-height);

@@ -1,0 +1,69 @@
+<h2>Quick Facts — Feature Gap Analysis</h2>
+<p class="subtitle">The Angular DSA app has these features that are missing from the React app. Which approach should we take?</p>
+
+<div class="section">
+  <h3 style="margin-bottom:10px">🔍 Features currently MISSING in React</h3>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px">
+    <div style="background:#fff3cd;border-radius:6px;padding:12px;font-size:13px">
+      <strong>Summary Card gaps</strong>
+      <ul style="margin:8px 0 0 0;padding-left:16px;line-height:1.8">
+        <li>Dropdown filters in card header</li>
+        <li>🎉 Recognize (celebrate) button</li>
+        <li>Expand / Collapse table &amp; tabs</li>
+        <li>KPI info tooltip (ℹ icon)</li>
+        <li>subHeading above KPIs</li>
+        <li>customInfoNumbers (HTML)</li>
+        <li>richText display</li>
+        <li>Expandable list items</li>
+        <li>"Updated at" timestamp in footer</li>
+        <li>"Metrics Info" popup (dataInfo)</li>
+        <li>Cut-off time error vs generic error</li>
+        <li>Filter error state</li>
+        <li>Location icon in subtitle</li>
+        <li>Reporting period label mapping</li>
+      </ul>
+    </div>
+    <div style="background:#d1ecf1;border-radius:6px;padding:12px;font-size:13px">
+      <strong>Details Card gaps</strong>
+      <ul style="margin:8px 0 0 0;padding-left:16px;line-height:1.8">
+        <li>Two-column layout (chart+KPIs | table)</li>
+        <li>"View X details" drill-down link</li>
+        <li>Dept select for C1Availability</li>
+        <li>Dropdown filters in header</li>
+        <li>🎉 Recognize button</li>
+        <li>"Updated at" + "Metrics Info" footer</li>
+        <li>Filter error state</li>
+        <li>Cut-off time / generic error states</li>
+        <li>tableOnly flag (full-width table)</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3 style="margin-bottom:10px">Which component approach do you prefer?</h3>
+  <div class="options">
+    <div class="option" data-choice="separate" onclick="toggleSelect(this)">
+      <div class="letter">A</div>
+      <div class="content">
+        <h3>Create separate SummaryCard &amp; DetailsCard components <span style="background:#d4edda;color:#155724;font-size:11px;padding:2px 6px;border-radius:10px;margin-left:6px">Recommended</span></h3>
+        <p>Replace the generic <code>MetricCard</code> with two purpose-built components matching the Angular <code>app-sqf-summary-card</code> and <code>app-sqf-details-card</code> exactly. Cleaner separation, easier to maintain, exact feature parity.</p>
+        <div class="pros-cons" style="margin-top:8px">
+          <div class="pros"><h4>Pros</h4><ul><li>Matches Angular architecture</li><li>Each card does one thing well</li><li>Easier to add card-specific features later</li></ul></div>
+          <div class="cons"><h4>Cons</h4><ul><li>More new files to create</li></ul></div>
+        </div>
+      </div>
+    </div>
+    <div class="option" data-choice="enhance" onclick="toggleSelect(this)">
+      <div class="letter">B</div>
+      <div class="content">
+        <h3>Enhance the existing MetricCard with a <code>variant</code> prop</h3>
+        <p>Add all features to the existing <code>MetricCard</code> component with <code>variant="summary"</code> and <code>variant="details"</code> props. Keeps one component, but grows it significantly.</p>
+        <div class="pros-cons" style="margin-top:8px">
+          <div class="pros"><h4>Pros</h4><ul><li>Fewer new files</li></ul></div>
+          <div class="cons"><h4>Cons</h4><ul><li>Component becomes very large</li><li>Mixed concerns</li></ul></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
