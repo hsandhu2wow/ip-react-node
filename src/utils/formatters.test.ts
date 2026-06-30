@@ -7,6 +7,7 @@ import {
   formatDate,
   getYesterdayDate,
   REPORTING_PERIODS,
+  isCutOffTimePast,
 } from './formatters'
 
 describe('colorVal', () => {
@@ -86,5 +87,19 @@ describe('REPORTING_PERIODS', () => {
   })
   it('maps MTD to Month-to-date', () => {
     expect(REPORTING_PERIODS['MTD']).toBe('Month-to-date')
+  })
+})
+
+describe('isCutOffTimePast', () => {
+  it('returns true when cut-off time is in the past', () => {
+    // 00:00:00 UTC is always in the past by the time any test runs
+    expect(isCutOffTimePast('00:00:00')).toBe(true)
+  })
+
+  it('returns false when cut-off time is far in the future', () => {
+    const now = new Date()
+    const futureHour = (now.getUTCHours() + 2) % 24
+    const futureStr = String(futureHour).padStart(2, '0') + ':59:59'
+    expect(isCutOffTimePast(futureStr)).toBe(false)
   })
 })

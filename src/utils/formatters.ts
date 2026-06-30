@@ -91,3 +91,15 @@ export const COLOR_CSS_VAR: Record<string, string> = {
   neutral:  'var(--color-neutral)',
   amber:    'var(--color-amber)',
 }
+
+/**
+ * Returns true when the given UTC cut-off time string (HH:MM:SS) is in the past.
+ * Used to decide whether to show "data will be ready by X" or a generic error.
+ */
+export function isCutOffTimePast(cutOffTime: string): boolean {
+  const now = new Date()
+  const [hh, mm, ss = 0] = cutOffTime.split(':').map(Number)
+  const cutOff = new Date()
+  cutOff.setUTCHours(hh, mm, ss, 0)
+  return now >= cutOff
+}
