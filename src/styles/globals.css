@@ -32,6 +32,10 @@
 
   /* Footer */
   --footer-height: 44px;
+
+  /* Compat aliases — removed in Task 6 when all consumers are updated */
+  --header-height: 56px;
+  --chrome-height: 56px;
 }
 
 /* Mobile overrides */
