@@ -8,6 +8,14 @@ import styles from './FilterBar.module.css'
 
 const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000
 
+/** Format ISO date "yyyy-MM-dd" → "dd MMM" e.g. "30 Jun" */
+function formatDisplayDate(iso: string): string {
+  if (!iso) return ''
+  const [year, month, day] = iso.split('-').map(Number)
+  const d = new Date(year, month - 1, day)
+  return d.toLocaleDateString('en-AU', { day: '2-digit', month: 'short' })
+}
+
 export function FilterBar() {
   useFilterTree() // loads tree and calls initTree on FilterContext
 
@@ -16,6 +24,7 @@ export function FilterBar() {
 
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
+  const dateInputRef = useRef<HTMLInputElement>(null)
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -48,39 +57,50 @@ export function FilterBar() {
             aria-expanded={dropdownOpen}
             aria-haspopup="listbox"
           >
-            <span className={styles.locationIcon}>📍</span>
+            <span className={`material-icons ${styles.locationIcon}`}>location_on</span>
             <span className={styles.locationText}>
               {selectedNode ? selectedNode.name : 'Loading...'}
             </span>
-            <span className={styles.caret}>{dropdownOpen ? '▴' : '▾'}</span>
+            <span className={`material-icons ${styles.caret}`}>keyboard_arrow_down</span>
           </button>
 
           {dropdownOpen && (
             <div className={styles.dropdownMenu} role="listbox">
-              {treeNodes.map(node => (
-                <button
-                  key={`${node.code}-${node.depth}`}
-                  className={`${styles.dropdownItem} ${
-                    node.code === selectedNode?.code ? styles.dropdownItemSelected : ''
-                  }`}
-                  style={{ paddingLeft: `${8 + node.depth * 12}px` }}
-                  role="option"
-                  aria-selected={node.code === selectedNode?.code}
-                  onClick={() => handleNodeSelect(node)}
-                >
-                  {node.name}
-                </button>
-              ))}
+              {treeNodes.map(node => {
+                const isSelected = node.code === selectedNode?.code
+                const isNonClickable = node.nonClickable
+                return (
+                  <button
+                    key={`${node.code}-${node.depth}`}
+                    className={`${styles.dropdownItem} ${isSelected ? styles.dropdownItemSelected : ''} ${isNonClickable ? styles.dropdownItemDisabled : ''}`}
+                    style={{ paddingLeft: `${node.depth * 8}px` }}
+                    role="option"
+                    aria-selected={isSelected}
+                    disabled={isNonClickable}
+                    onClick={() => !isNonClickable && handleNodeSelect(node)}
+                  >
+                    {node.name}
+                  </button>
+                )
+              })}
             </div>
           )}
         </div>
 
-        {/* Date picker */}
-        <div className={styles.datePicker}>
-          <span className={styles.dateIcon}>📅</span>
+        {/* Date picker — shows formatted label, hidden native input opens on click */}
+        <div
+          className={`${styles.datePicker} ${!isLoaded ? styles.datePickerDisabled : ''}`}
+          onClick={() => isLoaded && dateInputRef.current?.showPicker?.()}
+        >
+          <span className={`material-icons ${styles.dateIcon}`}>date_range</span>
+          <span className={styles.dateLabel}>
+            {selectedDate ? formatDisplayDate(selectedDate) : '—'}
+          </span>
+          <span className={`material-icons ${styles.caret}`}>keyboard_arrow_down</span>
           <input
+            ref={dateInputRef}
             type="date"
-            className={styles.dateInput}
+            className={styles.dateInputHidden}
             value={selectedDate}
             min={minDate}
             max={maxDate}
@@ -88,6 +108,8 @@ export function FilterBar() {
               if (e.target.value) setSelectedDate(e.target.value)
             }}
             disabled={!isLoaded}
+            tabIndex={-1}
+            aria-hidden="true"
           />
         </div>
       </div>

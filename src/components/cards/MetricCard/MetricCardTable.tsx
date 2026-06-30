@@ -40,7 +40,12 @@ export function MetricCardTable({ tableData }: { tableData: ISQFTableData }) {
         <thead>
           <tr>
             {displayedColumns.map((_, i) => (
-              <th key={i}>{headerLabel(headers[i])}</th>
+              <th key={i}>
+                {tableData.hasHTMLHeaders
+                  ? <div dangerouslySetInnerHTML={{ __html: headerLabel(headers[i]) }} />
+                  : <div>{headerLabel(headers[i])}</div>
+                }
+              </th>
             ))}
           </tr>
         </thead>
