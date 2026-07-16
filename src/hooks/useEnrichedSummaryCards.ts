@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import { useSummaryCards } from './useSummaryCards'
 import { useCardStatus } from './useCardStatus'
 import { useFilter } from '../context/FilterContext'
@@ -26,12 +27,17 @@ export function useEnrichedSummaryCards(): EnrichedSummaryResult {
   const cardStatus = statusQuery.data ?? {}
   const apiDepth = selectedNode?.apiDepth ?? 0
 
-  const data: ISQFMetricCard[] = (summaryQuery.data ?? []).map(card => ({
-    ...card,
-    isDetailsPageAvailable:
-      cardStatus[card.cardName]?.details === true &&
-      apiDepth <= (cardStatus[card.cardName]?.details_last_level ?? 99),
-  }))
+  const data = useMemo<ISQFMetricCard[]>(
+    () =>
+      (summaryQuery.data ?? []).map(card => ({
+        ...card,
+        isDetailsPageAvailable:
+          cardStatus[card.cardName]?.details === true &&
+          apiDepth <= (cardStatus[card.cardName]?.details_last_level ?? 99),
+      })),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [summaryQuery.data, cardStatus, apiDepth]
+  )
 
   return {
     data,

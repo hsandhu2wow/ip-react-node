@@ -1,6 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 // ── Mocks ────────────────────────────────────────────────────────────────────
+vi.mock('react', async () => {
+  const actual = await vi.importActual<typeof import('react')>('react')
+  return { ...actual, useMemo: (fn: () => any) => fn() }
+})
 vi.mock('./useSummaryCards', () => ({
   useSummaryCards: vi.fn(),
 }))
@@ -40,6 +44,10 @@ function setup({
 }
 
 describe('useEnrichedSummaryCards', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
   it('sets isDetailsPageAvailable=true when details=true and apiDepth within limit', () => {
     const result = setup({
       cards: [{ cardName: 'sales', cardType: 'summary' }],
