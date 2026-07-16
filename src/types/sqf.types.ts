@@ -168,15 +168,15 @@ export interface ISQFMetricCard {
 export interface IAvailableCardConfig {
   titleText?: string
   sequence: number
-  summary?: boolean
-  details?: boolean
+  summary?: boolean | number   // API returns 0/1
+  details?: boolean | number   // API returns 0/1
   summary_start_level?: number
   summary_last_level?: number
   details_start_level?: number
   details_last_level?: number
-  is_generic_api?: boolean
-  hide_cfc?: boolean
-  show_only_cfc?: boolean
+  is_generic_api?: boolean | number
+  hide_cfc?: boolean | number
+  show_only_cfc?: boolean | number
 }
 
 /** Map of cardName → config, from getSQFMetricCardsStatus */

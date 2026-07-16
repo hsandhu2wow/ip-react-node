@@ -32,7 +32,7 @@ export function useEnrichedSummaryCards(): EnrichedSummaryResult {
       (summaryQuery.data ?? []).map(card => ({
         ...card,
         isDetailsPageAvailable:
-          cardStatus[card.cardName]?.details === true &&
+          !!cardStatus[card.cardName]?.details &&
           apiDepth <= (cardStatus[card.cardName]?.details_last_level ?? 99),
       })),
     // eslint-disable-next-line react-hooks/exhaustive-deps
