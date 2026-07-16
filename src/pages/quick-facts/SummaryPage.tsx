@@ -1,6 +1,5 @@
 // src/pages/quick-facts/SummaryPage.tsx
-import { useSummaryCards } from '../../hooks/useSummaryCards'
-import { useCardStatus } from '../../hooks/useCardStatus'
+import { useEnrichedSummaryCards } from '../../hooks/useEnrichedSummaryCards'
 import { useFilter } from '../../context/FilterContext'
 import { SummaryCard } from '../../components/cards/SummaryCard/SummaryCard'
 import type { ISQFMetricCard } from '../../types/sqf.types'
@@ -8,12 +7,11 @@ import styles from './SummaryPage.module.css'
 
 export function SummaryPage() {
   const { isLoaded, selectedNode } = useFilter()
-  const cardStatusQuery = useCardStatus()
-  const summaryQuery = useSummaryCards()
+  const enrichedQuery = useEnrichedSummaryCards()
 
-  const isLoading = !isLoaded || summaryQuery.isLoading || cardStatusQuery.isLoading
-  const cardStatus = cardStatusQuery.data || {}
-  const cards: ISQFMetricCard[] = summaryQuery.data || []
+  const isLoading = !isLoaded || enrichedQuery.isLoading
+  const cardStatus = enrichedQuery.cardStatus
+  const cards: ISQFMetricCard[] = enrichedQuery.data
 
   // Sort by sequence number from card status config, then by card.seq
   const sortedCards = [...cards]
@@ -39,7 +37,7 @@ export function SummaryPage() {
         )}
       </div>
 
-      {summaryQuery.isError && (
+      {enrichedQuery.isError && (
         <div className={styles.errorBanner}>
           Failed to load metrics. Please try again.
         </div>
