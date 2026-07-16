@@ -1,10 +1,12 @@
 // src/pages/quick-facts/DetailsPage.tsx
 import { useState } from 'react'
-import { useParams, Navigate } from 'react-router-dom'
+import { useParams, Navigate, Link } from 'react-router-dom'
 import { useDetailsCard } from '../../hooks/useDetailsCard'
 import { useCardStatus } from '../../hooks/useCardStatus'
 import { useFilter } from '../../context/FilterContext'
 import { DetailsCard } from '../../components/cards/DetailsCard/DetailsCard'
+import { useEnrichedSummaryCards } from '../../hooks/useEnrichedSummaryCards'
+import { CardSidebar } from '../../components/cards/CardSidebar/CardSidebar'
 import type { ISQFMetricCard } from '../../types/sqf.types'
 import styles from './DetailsPage.module.css'
 
@@ -49,6 +51,7 @@ const SKELETON_COUNT = 9
 export function DetailsPage() {
   const { type } = useParams<{ type: string }>()
   const { isLoaded, selectedNode } = useFilter()
+  const enrichedSummary = useEnrichedSummaryCards()
   const cardStatusQuery = useCardStatus()
   const detailsQuery = useDetailsCard(type)
   const [sortType, setSortType] = useState<SortType>('az')
@@ -89,50 +92,65 @@ export function DetailsPage() {
         </div>
       )}
 
-      <div className={styles.pageHeader}>
-        <div className={styles.pageTitle}>{pageTitle}</div>
+      <div className={styles.layout}>
+        {/* Left sidebar — card type navigation */}
+        <CardSidebar
+          cards={enrichedSummary.data}
+          selectedType={type || ''}
+        />
 
-        {/* Sort controls */}
-        <div className={styles.sortControls}>
-          <span className={styles.sortLabel}>Sort:</span>
-          {([
-            ['az', 'A → Z'],
-            ['za', 'Z → A'],
-            ['lowhigh', 'Low → High'],
-            ['highlow', 'High → Low'],
-          ] as [SortType, string][]).map(([type, label]) => (
-            <button
-              key={type}
-              className={`${styles.sortBtn} ${sortType === type ? styles.sortBtnActive : ''}`}
-              onClick={() => setSortType(type)}
-            >
-              {label}
-            </button>
-          ))}
+        {/* Right column — detail cards */}
+        <div className={styles.detailColumn}>
+          <Link to="/quick-facts/summary" className={styles.backLink}>
+            ← Back to all cards
+          </Link>
+
+          <div className={styles.pageHeader}>
+            <div className={styles.pageTitle}>{pageTitle}</div>
+
+            {/* Sort controls */}
+            <div className={styles.sortControls}>
+              <span className={styles.sortLabel}>Sort:</span>
+              {([
+                ['az', 'A → Z'],
+                ['za', 'Z → A'],
+                ['lowhigh', 'Low → High'],
+                ['highlow', 'High → Low'],
+              ] as [SortType, string][]).map(([type, label]) => (
+                <button
+                  key={type}
+                  className={`${styles.sortBtn} ${sortType === type ? styles.sortBtnActive : ''}`}
+                  onClick={() => setSortType(type)}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {detailsQuery.isError && (
+            <div className={styles.errorBanner}>
+              Failed to load details. Please try again.
+            </div>
+          )}
+
+          <div>
+            {isLoading
+              ? Array.from({ length: SKELETON_COUNT }).map((_, i) => (
+                  <div key={i} style={{ marginBottom: 24 }}>
+                    <DetailsCard isLoading />
+                  </div>
+                ))
+              : cards.map((card, i) => (
+                  <DetailsCard
+                    key={card.cardName + i}
+                    card={card}
+                    selectedNode={selectedNode}
+                    detailsLastLevel={detailsLastLevel}
+                  />
+                ))}
+          </div>
         </div>
-      </div>
-
-      {detailsQuery.isError && (
-        <div className={styles.errorBanner}>
-          Failed to load details. Please try again.
-        </div>
-      )}
-
-      <div style={{ padding: '0 24px' }}>
-        {isLoading
-          ? Array.from({ length: SKELETON_COUNT }).map((_, i) => (
-              <div key={i} style={{ marginBottom: 24 }}>
-                <DetailsCard isLoading />
-              </div>
-            ))
-          : cards.map((card, i) => (
-              <DetailsCard
-                key={card.cardName + i}
-                card={card}
-                selectedNode={selectedNode}
-                detailsLastLevel={detailsLastLevel}
-              />
-            ))}
       </div>
     </main>
   )
