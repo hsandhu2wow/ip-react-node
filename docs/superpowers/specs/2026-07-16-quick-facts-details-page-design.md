@@ -30,7 +30,7 @@ card.isDetailsPageAvailable =
   selectedNode.apiDepth <= (cardStatus[card.cardName]?.details_last_level ?? 99)
 ```
 
-Returns the same query shape as `useSummaryCards` (`{ data, isLoading, isError }`), plus a `cardStatus` field for sequence/config access.
+Returns `{ data, isLoading, isError, cardStatus }` where `isLoading` is `true` while *either* query (summary cards or card status) is still pending.
 
 **Used by:** `SummaryPage` (replacing `useSummaryCards` + `useCardStatus`) and `DetailsPage` (for sidebar data).
 
