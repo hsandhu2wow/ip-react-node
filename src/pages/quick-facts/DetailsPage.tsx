@@ -1,5 +1,5 @@
 // src/pages/quick-facts/DetailsPage.tsx
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useParams, Navigate, Link } from 'react-router-dom'
 import { useDetailsCard } from '../../hooks/useDetailsCard'
 import { useCardStatus } from '../../hooks/useCardStatus'
@@ -48,6 +48,13 @@ function sortCards(cards: ISQFMetricCard[], sortType: SortType): ISQFMetricCard[
 
 const SKELETON_COUNT = 9
 
+const SORT_OPTIONS: [SortType, string][] = [
+  ['az', 'A - Z'],
+  ['za', 'Z - A'],
+  ['highlow', 'High-Low'],
+  ['lowhigh', 'Low-High'],
+]
+
 export function DetailsPage() {
   const { type } = useParams<{ type: string }>()
   const { isLoaded, selectedNode } = useFilter()
@@ -55,6 +62,18 @@ export function DetailsPage() {
   const cardStatusQuery = useCardStatus()
   const detailsQuery = useDetailsCard(type)
   const [sortType, setSortType] = useState<SortType>('az')
+  const [sortOpen, setSortOpen] = useState(false)
+  const sortRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (sortRef.current && !sortRef.current.contains(e.target as Node)) {
+        setSortOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
 
   // If card type doesn't exist in available cards, redirect to summary
   const cardStatus = cardStatusQuery.data
@@ -108,23 +127,33 @@ export function DetailsPage() {
           <div className={styles.pageHeader}>
             <div className={styles.pageTitle}>{pageTitle}</div>
 
-            {/* Sort controls */}
-            <div className={styles.sortControls}>
-              <span className={styles.sortLabel}>Sort:</span>
-              {([
-                ['az', 'A → Z'],
-                ['za', 'Z → A'],
-                ['lowhigh', 'Low → High'],
-                ['highlow', 'High → Low'],
-              ] as [SortType, string][]).map(([type, label]) => (
-                <button
-                  key={type}
-                  className={`${styles.sortBtn} ${sortType === type ? styles.sortBtnActive : ''}`}
-                  onClick={() => setSortType(type)}
-                >
-                  {label}
-                </button>
-              ))}
+            {/* Sort dropdown — matches Angular's "Sort Cards ≡" button */}
+            <div className={styles.sortDropdownWrapper} ref={sortRef}>
+              <button
+                className={styles.sortDropdownBtn}
+                onClick={() => setSortOpen(o => !o)}
+                aria-expanded={sortOpen}
+                aria-haspopup="listbox"
+              >
+                {SORT_OPTIONS.find(([t]) => t === sortType)?.[1] ?? 'Sort Cards'}
+                <span className={styles.sortIcon}>⇅</span>
+              </button>
+              {sortOpen && (
+                <div className={styles.sortDropdownMenu} role="listbox">
+                  {SORT_OPTIONS.map(([t, label]) => (
+                    <button
+                      key={t}
+                      className={`${styles.sortDropdownItem} ${t === sortType ? styles.sortDropdownItemActive : ''}`}
+                      disabled={t === sortType}
+                      role="option"
+                      aria-selected={t === sortType}
+                      onClick={() => { setSortType(t); setSortOpen(false) }}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 

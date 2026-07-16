@@ -22,34 +22,68 @@
 }
 
 .pageTitle {
-  font-size: 22px;
-  font-weight: 700;
+  font-size: 20px;
+  font-weight: 600;
   color: var(--color-text);
   text-transform: capitalize;
 }
 
-.sortControls {
+.sortDropdownWrapper {
+  position: relative;
+}
+
+.sortDropdownBtn {
   display: flex;
   align-items: center;
   gap: 6px;
-  flex-wrap: wrap;
-}
-.sortLabel { font-size: 13px; color: var(--color-text-secondary); }
-.sortBtn {
   padding: 4px 12px;
   border: 1px solid var(--color-border);
   border-radius: 4px;
+  background: none;
+  font-size: 14px;
+  color: #4a4a4a;
+  cursor: pointer;
+  font-family: var(--font-family);
+  white-space: nowrap;
+}
+.sortDropdownBtn:hover { background: rgba(0, 0, 0, 0.04); }
+
+.sortIcon {
+  font-size: 16px;
+  opacity: 0.7;
+}
+
+.sortDropdownMenu {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
   background: var(--color-surface);
-  font-size: 13px;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  min-width: 130px;
+  z-index: 500;
+}
+
+.sortDropdownItem {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 10px 16px;
+  border: none;
+  background: none;
+  font-size: 14px;
   color: var(--color-text);
   cursor: pointer;
   font-family: var(--font-family);
 }
-.sortBtn:hover { background: rgba(0,0,0,0.04); }
-.sortBtnActive {
-  background: var(--color-primary);
-  color: var(--color-primary-text);
-  border-color: var(--color-primary);
+.sortDropdownItem:hover:not(:disabled) { background: #fafafa; }
+
+.sortDropdownItemActive {
+  font-weight: 600;
+  color: var(--color-primary);
+  cursor: default;
+  opacity: 1;
 }
 
 .errorBanner {
@@ -76,9 +110,11 @@
 }
 
 .backLink {
-  display: inline-block;
-  font-size: 13px;
-  color: var(--color-primary);
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 14px;
+  color: #4a4a4a;
   text-decoration: none;
   margin-bottom: 8px;
 }
