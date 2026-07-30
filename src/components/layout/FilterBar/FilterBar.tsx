@@ -4,6 +4,7 @@ import { useFilter } from '../../../context/FilterContext'
 import { useFilterTree } from '../../../hooks/useFilterTree'
 import { formatDate, getYesterdayDate } from '../../../utils/formatters'
 import type { IQFTree } from '../../../types/sqf.types'
+import { LocationTree } from './LocationTree'
 import styles from './FilterBar.module.css'
 
 const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000
@@ -19,8 +20,7 @@ function formatDisplayDate(iso: string): string {
 export function FilterBar() {
   useFilterTree() // loads tree and calls initTree on FilterContext
 
-  const { treeNodes, selectedNode, selectedDate, isLoaded, setSelectedNode, setSelectedDate } =
-    useFilter()
+  const { selectedNode, selectedDate, isLoaded, setSelectedNode, setSelectedDate } = useFilter()
 
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
@@ -66,23 +66,7 @@ export function FilterBar() {
 
           {dropdownOpen && (
             <div className={styles.dropdownMenu} role="listbox">
-              {treeNodes.map(node => {
-                const isSelected = node.code === selectedNode?.code
-                const isNonClickable = node.nonClickable
-                return (
-                  <button
-                    key={`${node.code}-${node.depth}`}
-                    className={`${styles.dropdownItem} ${isSelected ? styles.dropdownItemSelected : ''} ${isNonClickable ? styles.dropdownItemDisabled : ''}`}
-                    style={{ paddingLeft: `${node.depth * 8}px` }}
-                    role="option"
-                    aria-selected={isSelected}
-                    disabled={isNonClickable}
-                    onClick={() => !isNonClickable && handleNodeSelect(node)}
-                  >
-                    {node.name}
-                  </button>
-                )
-              })}
+              <LocationTree onSelect={handleNodeSelect} />
             </div>
           )}
         </div>

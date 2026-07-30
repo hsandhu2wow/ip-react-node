@@ -1,0 +1,139 @@
+/* src/components/layout/FilterBar/LocationTree.module.css */
+.tree {
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Search row ── */
+.searchRow {
+  background: #fafafa;
+  min-height: 58px;
+  padding: 8px 12px 8px 20px;
+  margin-bottom: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.searchInput {
+  flex: 1;
+  border: none;
+  background: transparent;
+  color: #9b9b9b;
+  font-size: 12px;
+  letter-spacing: 0.02em;
+  font-family: var(--font-family);
+  outline: none;
+}
+.searchInput::placeholder { color: #9b9b9b; }
+.searchInput::-webkit-search-cancel-button { display: none; }
+
+.searchIconBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  padding: 4px;
+  color: #9b9b9b;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.searchIconBtn .material-icons { font-size: 18px; }
+
+/* ── "Your location" row ── */
+.locationRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 58px;
+  padding: 0 20px;
+  margin-bottom: 2px;
+  background: #fafafa;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--color-text-secondary);
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.locationRowIcon { font-size: 18px; }
+
+.noResults {
+  padding: 16px 20px;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
+/* ── Tree nodes ── */
+.node {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 48px;
+  padding-right: 8px;
+  font-size: 15px;
+  opacity: 0.7;
+  cursor: pointer;
+}
+
+.node:hover {
+  opacity: 1;
+  background: #fafafa;
+}
+
+.nodeSelected {
+  opacity: 1;
+}
+.nodeSelected .nodeName {
+  color: var(--color-primary);
+  font-weight: bold;
+}
+
+.nodeName {
+  padding: 0 8px 0 8px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.toggleBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  border: none;
+  background: none;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+}
+.toggleBtn .material-icons { font-size: 18px; }
+
+.togglePlaceholder {
+  display: inline-block;
+  width: 32px;
+  flex-shrink: 0;
+}
+
+/* ── Non-clickable divider-style row (e.g. group headers) ── */
+.disabledRow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-height: 36px;
+  cursor: not-allowed;
+  color: var(--color-text-secondary);
+  font-size: 14px;
+}
+
+.disabledLine {
+  flex: 1;
+  max-width: 40px;
+  height: 1px;
+  background: var(--color-border);
+}

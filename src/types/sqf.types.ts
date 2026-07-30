@@ -142,6 +142,7 @@ export interface ISQFMetricCard {
   isDetailsPageAvailable?: boolean
   canDrillDown?: boolean
   childCode?: string
+  cardCode?: string
   jsId?: string
   // Tabbed/filtered card variant
   cards?: ISQFMetricCard[]

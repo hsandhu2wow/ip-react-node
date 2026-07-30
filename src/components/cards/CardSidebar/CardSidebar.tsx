@@ -1,6 +1,6 @@
 // src/components/cards/CardSidebar/CardSidebar.tsx
-import { Link } from 'react-router-dom'
 import type { ISQFMetricCard } from '../../../types/sqf.types'
+import { SummaryCard } from '../SummaryCard/SummaryCard'
 import styles from './CardSidebar.module.css'
 
 interface Props {
@@ -18,24 +18,15 @@ export function CardSidebar({ cards, selectedType }: Props) {
     <nav className={styles.sidebar} aria-label="Card types">
       {available.map(card => {
         const isSelected = card.cardName === selectedType
-        const kpi = card.infoNumbers?.[0]
         return (
-          <Link
+          <div
             key={card.cardName}
-            to={`/quick-facts/details/${card.cardName}`}
-            className={`${styles.item} ${isSelected ? styles.itemSelected : ''}`}
+            className={`${styles.item} ${isSelected ? '' : styles.itemGrayed}`}
             data-selected={isSelected}
             aria-current={isSelected ? 'page' : undefined}
-            style={{ borderLeftColor: card.cardHeader || undefined }}
           >
-            <div className={styles.itemTitle}>{card.cardTitle || card.cardName}</div>
-            {kpi && (
-              <div className={styles.itemKpi}>
-                <span>{kpi.displayValue}</span>{' '}
-                <span>{kpi.text}</span>
-              </div>
-            )}
-          </Link>
+            <SummaryCard card={card} />
+          </div>
         )
       })}
     </nav>

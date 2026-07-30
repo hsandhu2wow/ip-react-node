@@ -1,48 +1,29 @@
 /* src/components/cards/CardSidebar/CardSidebar.module.css */
 .sidebar {
-  width: 220px;
+  /* Wider than the visual card size — the extra width is scaled away below,
+     matching Angular's `qf-summary-card--small` treatment. */
+  width: 380px;
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
-  gap: 6px;
   padding-top: 4px;
 }
 
+/* Mirrors Angular's `.qf-summary-card--small`: shrink the full-size summary
+   card and pull the freed-up space back in with negative margins so cards
+   stack tightly instead of leaving large empty gaps. */
 .item {
-  display: block;
-  text-decoration: none;
-  border: 1px solid var(--color-border);
-  border-left: 3px solid transparent;
-  border-radius: 6px;
-  padding: 10px 12px;
-  background: var(--color-surface);
-  transition: background 0.1s;
-  cursor: pointer;
+  transform: scale(0.8);
+  transform-origin: top left;
+  margin-bottom: -60px;
+  margin-right: -76px;
+  transition: opacity 0.15s;
 }
 
-.item:hover {
-  background: rgba(0, 0, 0, 0.03);
-}
-
-.itemSelected {
-  border-left-width: 3px;
-  border-color: var(--color-primary);
-  background: var(--color-primary-bg, #e8f0fe);
-}
-
-.itemTitle {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--color-text);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.itemKpi {
-  font-size: 12px;
-  color: var(--color-text-secondary);
-  margin-top: 2px;
+/* Non-selected cards are dimmed — matches Angular's `.qf-summary-card_grayed`
+   (opacity: 0.5). The selected card renders at full opacity. */
+.itemGrayed {
+  opacity: 0.5;
 }
 
 /* Hide sidebar below 960px to match Angular's hide-md breakpoint */

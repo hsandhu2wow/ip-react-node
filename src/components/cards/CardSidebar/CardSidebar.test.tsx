@@ -59,12 +59,12 @@ describe('CardSidebar', () => {
     expect(selected?.textContent).toContain('Sales')
   })
 
-  it('links each card to /quick-facts/details/:cardName', () => {
+  it('renders a "Go to details" link for each card pointing to its details page', () => {
     render$('sales')
-    const salesLink = screen.getByRole('link', { name: /Sales/ })
-    expect(salesLink.getAttribute('href')).toBe('/quick-facts/details/sales')
-    const stockLink = screen.getByRole('link', { name: /Stock Loss/ })
-    expect(stockLink.getAttribute('href')).toBe('/quick-facts/details/stockloss')
+    const links = screen.getAllByRole('link', { name: /Go to details/i })
+    const hrefs = links.map(l => l.getAttribute('href'))
+    expect(hrefs).toContain('/quick-facts/details/sales')
+    expect(hrefs).toContain('/quick-facts/details/stockloss')
   })
 
   it('renders nothing when cards array is empty', () => {

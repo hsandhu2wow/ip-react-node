@@ -57,7 +57,7 @@ const SORT_OPTIONS: [SortType, string][] = [
 
 export function DetailsPage() {
   const { type } = useParams<{ type: string }>()
-  const { isLoaded, selectedNode } = useFilter()
+  const { isLoaded, selectedNode, setSelectedNode } = useFilter()
   const enrichedSummary = useEnrichedSummaryCards()
   const cardStatusQuery = useCardStatus()
   const detailsQuery = useDetailsCard(type)
@@ -81,13 +81,31 @@ export function DetailsPage() {
     return <Navigate to="/quick-facts/summary" replace />
   }
 
-  const isLoading = !isLoaded || detailsQuery.isLoading
-  const raw: ISQFMetricCard[] = detailsQuery.data || []
-  const cards = sortCards(raw.filter(c => !c.hidden), sortType)
-
   const cardConfig = cardStatus?.[type || '']
   const pageTitle = cardConfig?.titleText || type || ''
+  const detailsStartLevel = cardConfig?.details_start_level ?? 0
   const detailsLastLevel = cardConfig?.details_last_level ?? 99
+  const apiDepth = selectedNode?.apiDepth ?? 0
+
+  const isLoading = !isLoaded || detailsQuery.isLoading
+  const raw: ISQFMetricCard[] = detailsQuery.data || []
+  // Matches Angular's SqfCardsService.setupCommonProps(): only compute canDrillDown
+  // when the API hasn't already supplied an explicit value.
+  const enrichedRaw = raw.map(c => ({
+    ...c,
+    canDrillDown:
+      c.canDrillDown !== undefined
+        ? String(c.canDrillDown) === 'true'
+        : detailsStartLevel <= apiDepth && apiDepth <= detailsLastLevel,
+  }))
+  const cards = sortCards(enrichedRaw.filter(c => !c.hidden), sortType)
+
+  // Navigate to the child location matching the clicked card's drill-down code
+  function handleDrillDown(code?: string) {
+    if (!code || !selectedNode?.children?.length) return
+    const target = selectedNode.children.find(c => c.code === code)
+    if (target) setSelectedNode(target)
+  }
 
   // Build breadcrumb path from selected node
   const breadcrumbs: string[] = []
@@ -176,6 +194,7 @@ export function DetailsPage() {
                     card={card}
                     selectedNode={selectedNode}
                     detailsLastLevel={detailsLastLevel}
+                    onDrillDown={handleDrillDown}
                   />
                 ))}
           </div>

@@ -49,19 +49,23 @@ function computeDrillDown(
   card: ISQFMetricCard,
   selectedNode: IQFTree | null,
   detailsLastLevel: number
-): { nextLevel: string | null; isStore: boolean } {
+): { nextLevel: string | null; isStore: boolean; childCode: string | undefined } {
+  // Matches Angular's SqfCardsService.selectCard(): generic cards drill down via
+  // childCode, other card types via cardCode.
+  const childCode = card.isGenericCardApi ? card.childCode : card.cardCode
+
   if (!card.canDrillDown || !selectedNode?.children?.length) {
-    return { nextLevel: null, isStore: false }
+    return { nextLevel: null, isStore: false, childCode }
   }
-  const child = selectedNode.children[0]
+  const child = selectedNode.children.find(c => c.code === childCode) ?? selectedNode.children[0]
   const isStore = child.apiDepth === 5
-  if (child.apiDepth > detailsLastLevel) return { nextLevel: null, isStore: false }
+  if (child.apiDepth > detailsLastLevel) return { nextLevel: null, isStore: false, childCode }
 
   if (card.isGenericCardApi && card.customDrillDownText !== undefined) {
-    return { nextLevel: card.customDrillDownText || null, isStore }
+    return { nextLevel: card.customDrillDownText || null, isStore, childCode }
   }
   if (card.cardName === 'C1Availability' && child.level_desc === 'Store') {
-    return { nextLevel: 'Store details', isStore }
+    return { nextLevel: 'Store details', isStore, childCode }
   }
   const desc =
     child.children?.length
@@ -69,7 +73,7 @@ function computeDrillDown(
       : child.leafChildren?.length
       ? (child.leafChildren[0] as any).level_desc
       : 'Category'
-  return { nextLevel: `${desc} details`, isStore }
+  return { nextLevel: `${desc} details`, isStore, childCode }
 }
 
 // ── KPI block (stacked layout for details) ─────────────────────────────────
@@ -103,8 +107,10 @@ interface Props {
   selectedNode?: IQFTree | null
   /** details_last_level from card status config — limits drill-down depth */
   detailsLastLevel?: number
-  /** Called when user clicks the drill-down link; passes selected dept for C1Availability */
-  onDrillDown?: (dept?: string) => void
+  /** Called when user clicks the drill-down link. Passes the target child node's
+   *  code — either card.childCode/cardCode, or a selected department code for
+   *  the C1Availability store-level dropdown. */
+  onDrillDown?: (code?: string) => void
 }
 
 export function DetailsCard({
@@ -144,7 +150,7 @@ export function DetailsCard({
     : undefined
   const showRecognize = shouldShowRecognize(card.cardHeader)
   const cutOffPast = card.error?.cutOffTime ? isCutOffTimePast(card.error.cutOffTime) : false
-  const { nextLevel, isStore } = computeDrillDown(card, selectedNode ?? null, detailsLastLevel)
+  const { nextLevel, isStore, childCode } = computeDrillDown(card, selectedNode ?? null, detailsLastLevel)
 
   const { infoNumbers, chartData, tabs, tableData } = contentCard ?? ({} as ISQFMetricCard)
   const showLeftCol = !card.tableOnly
@@ -259,7 +265,11 @@ export function DetailsCard({
                     ))}
                   </div>
                 )}
-                {chartData && <MetricCardChart chartData={chartData} />}
+                {chartData && (
+                  <div className={styles.graphArea}>
+                    <MetricCardChart chartData={chartData} />
+                  </div>
+                )}
               </div>
             )}
 
@@ -272,10 +282,10 @@ export function DetailsCard({
               {nextLevel && !isStore && (
                 <span
                   className={styles.drillDownLink}
-                  onClick={() => onDrillDown?.()}
+                  onClick={() => onDrillDown?.(childCode)}
                   role="button"
                   tabIndex={0}
-                  onKeyDown={e => e.key === 'Enter' && onDrillDown?.()}
+                  onKeyDown={e => e.key === 'Enter' && onDrillDown?.(childCode)}
                 >
                   View {nextLevel}
                 </span>
