@@ -136,3 +136,28 @@
   opacity: 0;
   pointer-events: none;
 }
+
+/* Feedback / download / print actions — right end of the filter bar */
+.right {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding-right: 12px;
+  margin-left: auto;
+}
+
+.iconBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 50%;
+  background: none;
+  color: #4a4a4a;
+  cursor: pointer;
+}
+.iconBtn .material-icons { font-size: 20px; }
+.iconBtn:hover:not(:disabled) { background: rgba(0, 0, 0, 0.06); }
+.iconBtn:disabled { color: #b0b0b0; cursor: not-allowed; }

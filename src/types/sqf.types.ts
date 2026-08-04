@@ -83,12 +83,14 @@ export interface ISQFTableRow {
   [key: string]: ISQFTableCell | unknown   // column0, column1, ... keys
   breakdown_table_data?: ISQFTableRow[]
   key?: string
+  customFontWeight?: number
 }
 
 export interface ISQFTableData {
   type?: 'basic' | 'nested' | 'comments'
   headers?: Array<string | { text: string; tooltip?: string }>
   data?: ISQFTableRow[]
+  footer?: ISQFTableRow[]
   sortCol?: string
   sortOrder?: string
   freeze_first_column?: boolean
@@ -121,8 +123,11 @@ export interface ISQFCardError {
   generic?: boolean
   level?: boolean
   wmd?: boolean
-  support_email?: string
+  /** Human-readable error heading, e.g. "Data refresh failed, we are currently investigating" */
+  message?: string
+  supportEmail?: string
 }
+
 
 /** Core metric card shape — returned by /sqf/summaryCards and /sqf/detailCard */
 export interface ISQFMetricCard {

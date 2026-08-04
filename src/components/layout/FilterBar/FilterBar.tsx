@@ -97,6 +97,38 @@ export function FilterBar() {
           />
         </div>
       </div>
+
+      {/* Feedback/export actions — feedback & download aren't wired to a backend yet,
+          shown as inert affordances matching Store Insights' layout; print is functional. */}
+      <div className={styles.right}>
+        <button
+          type="button"
+          className={styles.iconBtn}
+          title="Send feedback"
+          aria-label="Send feedback"
+          disabled
+        >
+          <span className="material-icons">forum</span>
+        </button>
+        <button
+          type="button"
+          className={styles.iconBtn}
+          title="Download"
+          aria-label="Download"
+          disabled
+        >
+          <span className="material-icons">play_for_work</span>
+        </button>
+        <button
+          type="button"
+          className={styles.iconBtn}
+          title="Print"
+          aria-label="Print"
+          onClick={() => window.print()}
+        >
+          <span className="material-icons">print</span>
+        </button>
+      </div>
     </div>
   )
 }

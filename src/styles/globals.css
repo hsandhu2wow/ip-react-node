@@ -90,3 +90,11 @@ body {
   border-radius: 4px;
   animation: skeleton-pulse 1.5s ease-in-out infinite;
 }
+
+/* ── Table cell utility classes — injected via API HTML (dangerouslySetInnerHTML),
+   so these must stay global/unscoped rather than CSS-module classes. ── */
+.left-align { text-align: left; }
+.right-align { text-align: right; }
+.center-align { text-align: center; }
+.text-green { color: #146A30; }
+.text-red { color: #B10200; }

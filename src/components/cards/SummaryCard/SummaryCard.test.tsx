@@ -93,7 +93,7 @@ describe('SummaryCard', () => {
 
   it('shows generic error card', () => {
     renderCard({
-      card: { ...baseCard, error: { generic: true, support_email: 'help@example.com' } },
+      card: { ...baseCard, error: { generic: true, supportEmail: 'help@example.com' } },
     })
     expect(screen.getByText(/unavailable/i)).toBeDefined()
   })

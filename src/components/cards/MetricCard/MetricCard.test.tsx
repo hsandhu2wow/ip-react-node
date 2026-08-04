@@ -30,7 +30,7 @@ describe('MetricCard', () => {
       cardName: 'sales',
       cardType: 'summary',
       cardTitle: 'Sales',
-      error: { generic: true, support_email: 'support@example.com' },
+      error: { generic: true, supportEmail: 'support@example.com' },
     }
     renderCard({ card })
     expect(screen.getByTestId('metric-card-error')).toBeDefined()

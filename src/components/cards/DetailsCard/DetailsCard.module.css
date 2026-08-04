@@ -224,3 +224,4 @@
 .errorHeading { font-size: 15px; font-weight: 700; color: var(--color-text); margin-bottom: 8px; }
 .errorSubtext { font-size: 13px; color: var(--color-text-secondary); line-height: 1.6; }
 .errorLink { color: var(--color-blue); }
+.errorImg { width: 72px; height: 72px; margin-bottom: 12px; }

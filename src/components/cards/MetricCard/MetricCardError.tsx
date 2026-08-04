@@ -24,10 +24,10 @@ export function MetricCardError({ error, cardTitle }: Props) {
       ) : (
         <div className={styles.errorMsg}>
           <p>Data is currently unavailable for this selection.</p>
-          {error.support_email && (
+          {error.supportEmail && (
             <p>
               Contact{' '}
-              <a href={`mailto:${error.support_email}`}>{error.support_email}</a>
+              <a href={`mailto:${error.supportEmail}`}>{error.supportEmail}</a>
             </p>
           )}
         </div>

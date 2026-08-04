@@ -154,6 +154,7 @@ export function SummaryCard({ card, isLoading, expandTable }: Props) {
   }
 
   if (card.error) {
+    const isPending = card.error.cutOffTime && !cutOffPast
     return (
       <div className={styles.card} id={card.jsId} data-testid="summary-card-error">
         <div className={styles.header} style={{ borderTopColor: borderColor }}>
@@ -162,26 +163,32 @@ export function SummaryCard({ card, isLoading, expandTable }: Props) {
           </div>
         </div>
         <div className={styles.errorContent}>
-          {card.error.cutOffTime && !cutOffPast ? (
-            <>
-              <p className={styles.errorHeading}>
-                Data refresh is expected to complete by {card.error.cutOffTime}
-              </p>
-              <p className={styles.errorSubtext}>Check back soon.</p>
-            </>
+          <img
+            className={styles.errorImg}
+            src={
+              isPending
+                ? '/assets/images/Data_refresh_empty_state.svg'
+                : '/assets/images/Data_refresh_failed_empty_state.svg'
+            }
+            alt="No data"
+          />
+          {isPending ? (
+            <p className={styles.errorHeading}>
+              Data refresh is expected to complete by {card.error.cutOffTime}
+            </p>
           ) : (
-            <>
-              <p className={styles.errorHeading}>Data currently unavailable</p>
-              <p className={styles.errorSubtext}>
-                For any concerns please contact:{' '}
-                {card.error.support_email && (
-                  <a className={styles.errorLink} href={`mailto:${card.error.support_email}`}>
-                    {card.error.support_email}
-                  </a>
-                )}
-              </p>
-            </>
+            <p className={styles.errorHeading}>
+              {card.error.message || 'Data currently unavailable'}
+            </p>
           )}
+          <p className={styles.errorSubtext}>
+            For any concerns please contact:{' '}
+            {card.error.supportEmail && (
+              <a className={styles.errorLink} href={`mailto:${card.error.supportEmail}`}>
+                {card.error.supportEmail}
+              </a>
+            )}
+          </p>
         </div>
       </div>
     )

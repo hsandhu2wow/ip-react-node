@@ -68,12 +68,25 @@
 .chartArea { padding: 0 12px; margin: 8px 0; flex: 1; }
 
 /* ── Table ── */
-.tableArea { padding: 0 12px 8px; overflow-x: auto; }
-.table { width: 100%; border-collapse: collapse; font-size: 13px; }
-.table th { text-align: left; padding: 6px 8px; font-weight: 600; border-bottom: 2px solid var(--color-border); color: var(--color-text); }
-.table td { padding: 6px 8px; border-bottom: 1px solid #f0f0f0; color: var(--color-text); }
+.tableArea { padding: 0 12px 8px; overflow-x: auto; min-width: 0; }
+.table { width: 100%; min-width: max-content; border-collapse: collapse; font-size: 12px; }
+.table th {
+  text-align: left;
+  padding: 4px 8px;
+  height: 40px;
+  font-weight: 700;
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text);
+}
+.table th:first-child, .table td:first-child { padding-left: 0; }
+.table td { padding: 4px 8px; height: 48px; line-height: 20px; border-bottom: 1px solid #f0f0f0; color: var(--color-text); font-weight: 500; white-space: nowrap; }
+.table tbody tr:hover { background: #f4f9fc; }
 .table tr:last-child td { border-bottom: none; }
-.childRow td { background: #fafafa; font-size: 12px; padding-left: 20px; }
+.childRow td { background: #fafafa; font-size: 12px; padding-left: 20px; color: #797979; font-weight: 400; }
+.firstCol { display: flex; align-items: center; gap: 2px; }
+.expandIcon { font-size: 18px; color: var(--color-text-secondary); flex-shrink: 0; }
+.sortIcon { font-size: 14px; vertical-align: middle; margin-left: 2px; color: var(--color-text-secondary); }
+.footerRow td { font-weight: 700; border-top: 1px solid var(--color-border); border-bottom: none; }
 .expandToggle { color: var(--color-blue); cursor: pointer; font-size: 12px; padding: 4px 12px; background: none; border: none; font-family: var(--font-family); }
 
 /* ── Tabs ── */
