@@ -1,12 +1,15 @@
 steps:
-  # Install dependencies
-  - name: "gcr.io/cloud-builders/npm"
+  # Install dependencies (Vite 7 / rolldown require Node 20.19+ or 22.12+;
+  # gcr.io/cloud-builders/npm ships an old Node 19, so use an official Node image instead)
+  - name: "node:22"
     id: install
+    entrypoint: npm
     args: ["ci"]
 
   # Build the React app (tsc -b && vite build) -> outputs to dist/
-  - name: "gcr.io/cloud-builders/npm"
+  - name: "node:22"
     id: build
+    entrypoint: npm
     args: ["run", "build"]
     waitFor: ["install"]
 
