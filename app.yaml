@@ -1,0 +1,23 @@
+runtime: python312
+service: ip-react
+env: standard
+
+handlers:
+  # Serve static assets (JS/CSS/images) built by Vite with long-lived caching.
+  - url: /assets
+    static_dir: dist/assets
+    secure: always
+    http_headers:
+      Cache-Control: "public, max-age=31536000, immutable"
+
+  - url: /favicon.ico
+    static_files: dist/favicon.ico
+    upload: dist/favicon.ico
+    secure: always
+
+  # SPA fallback: any other route serves index.html so client-side routing
+  # (react-router-dom) can handle it.
+  - url: /.*
+    static_files: dist/index.html
+    upload: dist/index.html
+    secure: always

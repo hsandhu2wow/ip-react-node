@@ -1,0 +1,40 @@
+steps:
+  # Install dependencies
+  - name: "gcr.io/cloud-builders/npm"
+    id: install
+    args: ["ci"]
+
+  # Build the React app (tsc -b && vite build) -> outputs to dist/
+  - name: "gcr.io/cloud-builders/npm"
+    id: build
+    args: ["run", "build"]
+    waitFor: ["install"]
+
+  # Deploy the built app to the App Engine "ip-react" service
+  - name: "gcr.io/google.com/cloudsdktool/cloud-sdk"
+    id: deploy-service
+    entrypoint: gcloud
+    args:
+      - "app"
+      - "deploy"
+      - "app.yaml"
+      - "--project=$PROJECT_ID"
+      - "--quiet"
+    waitFor: ["build"]
+
+  # Update dispatch routing rules
+  - name: "gcr.io/google.com/cloudsdktool/cloud-sdk"
+    id: deploy-dispatch
+    entrypoint: gcloud
+    args:
+      - "app"
+      - "deploy"
+      - "dispatch.yaml"
+      - "--project=$PROJECT_ID"
+      - "--quiet"
+    waitFor: ["deploy-service"]
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+
+timeout: 1200s

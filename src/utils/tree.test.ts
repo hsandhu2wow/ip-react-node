@@ -42,14 +42,14 @@ const MULTI_NODE_RESPONSE: ISQFGenericFilter[] = [
 
 describe('processFilterResponse', () => {
   it('converts single-root response to a tree', () => {
-    const tree = processFilterResponse(NATIONAL_RESPONSE)
+    const tree = processFilterResponse(NATIONAL_RESPONSE)!
     expect(tree.code).toBe('National')
     expect(tree.children).toHaveLength(1)
     expect(tree.children![0].code).toBe('NSW')
   })
 
   it('wraps multi-root response in a hidden root node', () => {
-    const tree = processFilterResponse(MULTI_NODE_RESPONSE)
+    const tree = processFilterResponse(MULTI_NODE_RESPONSE)!
     expect(tree.alwaysHidden).toBe(true)
     expect(tree.children).toHaveLength(2)
     expect(tree.children![0].code).toBe('w_retail')
@@ -58,7 +58,7 @@ describe('processFilterResponse', () => {
 
 describe('flattenTree', () => {
   it('returns all non-hidden nodes in depth-first order', () => {
-    const tree = processFilterResponse(NATIONAL_RESPONSE)
+    const tree = processFilterResponse(NATIONAL_RESPONSE)!
     const flat = flattenTree(tree)
     const codes = flat.map(n => n.code)
     expect(codes).toContain('National')
@@ -67,7 +67,7 @@ describe('flattenTree', () => {
   })
 
   it('excludes hidden/alwaysHidden nodes', () => {
-    const tree = processFilterResponse(MULTI_NODE_RESPONSE)
+    const tree = processFilterResponse(MULTI_NODE_RESPONSE)!
     const flat = flattenTree(tree)
     // root node is hidden, but its children are not
     expect(flat.some(n => n.alwaysHidden)).toBe(false)
@@ -76,7 +76,7 @@ describe('flattenTree', () => {
 
 describe('findNodeByCode', () => {
   it('finds a node by code in a flat list', () => {
-    const tree = processFilterResponse(NATIONAL_RESPONSE)
+    const tree = processFilterResponse(NATIONAL_RESPONSE)!
     const flat = flattenTree(tree)
     const node = findNodeByCode(flat, '1234')
     expect(node).not.toBeNull()
@@ -84,7 +84,7 @@ describe('findNodeByCode', () => {
   })
 
   it('returns null when code not found', () => {
-    const tree = processFilterResponse(NATIONAL_RESPONSE)
+    const tree = processFilterResponse(NATIONAL_RESPONSE)!
     const flat = flattenTree(tree)
     expect(findNodeByCode(flat, 'NOT_EXISTS')).toBeNull()
   })
@@ -92,7 +92,7 @@ describe('findNodeByCode', () => {
 
 describe('addParents', () => {
   it('sets parent references on children', () => {
-    const tree = processFilterResponse(NATIONAL_RESPONSE)
+    const tree = processFilterResponse(NATIONAL_RESPONSE)!
     addParents(tree)
     expect(tree.children![0].parent).toBe(tree)
     expect(tree.children![0].children![0].parent).toBe(tree.children![0])
@@ -101,7 +101,7 @@ describe('addParents', () => {
 
 describe('getFirstSelectableNode', () => {
   it('returns the first non-hidden selectable node', () => {
-    const tree = processFilterResponse(NATIONAL_RESPONSE)
+    const tree = processFilterResponse(NATIONAL_RESPONSE)!
     addParents(tree)
     const node = getFirstSelectableNode(flattenTree(tree))
     expect(node).not.toBeNull()

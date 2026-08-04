@@ -1,0 +1,11 @@
+# Only for Supermarkets we have Pricing Simulator and me@woolies (Widget) Services
+dispatch:
+  # Send all /api/ps/ to the pricing-simulator backend.
+  - url: "*/api/ps/*"
+    service: pricing-simulator
+  - url: "*/api/widget/*"
+    service: widget-generator
+  - url: "*/api/act/*"
+    service: act
+  - url: "*/api/*"
+    service: default
