@@ -28,9 +28,10 @@ function getSelectedTab(activeCard: WfCardData | undefined, selectedDateFilter: 
   if (Array.isArray(activeCard.cardContents)) {
     const dateFilterKey = activeCard.dateFilterKey || 'weekNo';
     const filterValue = selectedDateFilter || activeCard.dateFilterValues?.[0] || '';
-    return activeCard.cardContents.find(
-      (c) => (c as unknown as Record<string, string>)[dateFilterKey] === filterValue
-    );
+    return activeCard.cardContents.find((c) => {
+      if (dateFilterKey === 'month') return c.month === filterValue;
+      return c.weekNo === filterValue;
+    });
   }
   if (activeCard.cardContents) {
     return activeCard.cardContents;
@@ -94,7 +95,7 @@ export function TrendPage({ metric }: TrendPageProps) {
             ))}
           </select>
         )}
-        {!isError && activeCard?.hasHistoryData && (activeCard.dateFilterValues?.length ?? 0) > 0 && (
+        {activeCard?.hasHistoryData && (activeCard.dateFilterValues?.length ?? 0) > 0 && (
           <label>
             {activeCard.dateFilterLabel || 'Fiscal week'}:
             <select
@@ -110,7 +111,7 @@ export function TrendPage({ metric }: TrendPageProps) {
             </select>
           </label>
         )}
-        {!isError && showVarianceToggleEnabled && (
+        {showVarianceToggleEnabled && (
           <label>
             <input
               type="checkbox"

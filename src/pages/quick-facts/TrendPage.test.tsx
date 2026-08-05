@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { TrendPage } from './TrendPage';
 import * as useTrendDataModule from '../../hooks/useTrendData';
 
@@ -111,5 +111,69 @@ describe('TrendPage', () => {
     });
     render(<TrendPage metric="weekly" />);
     expect(screen.getByText(/Subscription preferences/)).toBeInTheDocument();
+  });
+
+  it('switches tabs when a different tab is selected', () => {
+    const multiTabData = {
+      ...baseWfData,
+      cards: [
+        baseWfData.cards[0],
+        {
+          key: 'inventory',
+          displayName: 'Inventory',
+          hasHistoryData: true,
+          dateFilterValues: ['2026-08-04'],
+          dateFilterKey: 'weekNo',
+          durationLabel: 'Fiscal week',
+          cardContents: {
+            weekNo: '2026-08-04',
+            timePeriod: 'Aug 4, 2026',
+            tableData: { headers: [{ text: 'Group', val: '0' }], data: [] },
+          },
+        },
+      ],
+    };
+    (useTrendDataModule.useTrendData as ReturnType<typeof vi.fn>).mockReturnValue({
+      data: multiTabData,
+      isLoading: false,
+      isError: false,
+    });
+    render(<TrendPage metric="weekly" />);
+    expect(screen.getByText('Weekly Facts - Sales')).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText('Select tab'), { target: { value: 'inventory' } });
+    expect(screen.getByText('Weekly Facts - Inventory')).toBeInTheDocument();
+  });
+
+  it('resolves the correct cardContents entry from an array when a date filter is selected', () => {
+    const multiDateData = {
+      ...baseWfData,
+      cards: [
+        {
+          ...baseWfData.cards[0],
+          dateFilterValues: ['2026-08-04', '2026-07-28'],
+          cardContents: [
+            {
+              weekNo: '2026-08-04',
+              timePeriod: 'Aug 4, 2026',
+              tableData: { headers: [{ text: 'Group', val: '0' }], data: [] },
+            },
+            {
+              weekNo: '2026-07-28',
+              timePeriod: 'Jul 28, 2026',
+              tableData: { headers: [{ text: 'Group', val: '0' }], data: [] },
+            },
+          ],
+        },
+      ],
+    };
+    (useTrendDataModule.useTrendData as ReturnType<typeof vi.fn>).mockReturnValue({
+      data: multiDateData,
+      isLoading: false,
+      isError: false,
+    });
+    render(<TrendPage metric="weekly" />);
+    expect(screen.getByText('Fiscal week: Aug 4, 2026')).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText('Select date'), { target: { value: '2026-07-28' } });
+    expect(screen.getByText('Fiscal week: Jul 28, 2026')).toBeInTheDocument();
   });
 });
