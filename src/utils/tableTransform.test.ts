@@ -103,4 +103,57 @@ describe('filterTableData', () => {
     const result = filterTableData(data, true);
     expect(result.rows.every((r) => !r.isGroupEnd)).toBe(true);
   });
+
+  it('handles empty table without throwing', () => {
+    const data: WfTableData = {
+      headers,
+      data: [],
+    };
+    const result = filterTableData(data, true);
+    expect(result.headers).toEqual(headers);
+    expect(result.rows).toEqual([]);
+  });
+
+  it('correctly finalizes rowSpan for a group with 3+ rows', () => {
+    const data: WfTableData = {
+      headers,
+      data: [
+        [cell(0, { rowSpan: 1, displayValue: 'Group A' }), cell(1), cell(2)],
+        [cell(0, { rowSpan: 0 }), cell(1), cell(2)],
+        [cell(0, { rowSpan: 0 }), cell(1), cell(2)],
+        [cell(0, { rowSpan: 1, displayValue: 'Group B' }), cell(1), cell(2)],
+      ],
+    };
+    const result = filterTableData(data, true);
+    expect(result.rows).toHaveLength(4);
+    expect(result.rows[0][0].rowSpan).toBe(3);
+    expect(result.rows[1][0].rowSpan).toBe(0);
+    expect(result.rows[2][0].rowSpan).toBe(0);
+    expect(result.rows[2].isGroupEnd).toBe(true);
+    expect(result.rows[3][0].rowSpan).toBe(1);
+  });
+
+  it('combines KPI filtering with grouping, keeping only KPI rows and adjusting rowSpan', () => {
+    const data: WfTableData = {
+      headers,
+      kpiFilterEnabled: true,
+      measureColumnId: 1,
+      data: [
+        [cell(0, { rowSpan: 1, displayValue: 'Group A' }), cell(1, { tags: 'KPI' }), cell(2)],
+        [cell(0, { rowSpan: 0 }), cell(1, { tags: '' }), cell(2)],
+        [cell(0, { rowSpan: 0 }), cell(1, { tags: 'KPI' }), cell(2)],
+        [cell(0, { rowSpan: 1, displayValue: 'Group B' }), cell(1, { tags: 'KPI' }), cell(2)],
+      ],
+    };
+    const result = filterTableData(data, false);
+    expect(result.rows).toHaveLength(3);
+    expect(result.rows[0][0].rowSpan).toBe(2);
+    expect(result.rows[0][0].displayValue).toBe('Group A');
+    expect(result.rows[0][1].tags).toBe('KPI');
+    expect(result.rows[1][0].rowSpan).toBe(0);
+    expect(result.rows[1][1].tags).toBe('KPI');
+    expect(result.rows[1].isGroupEnd).toBe(true);
+    expect(result.rows[2][0].rowSpan).toBe(1);
+    expect(result.rows[2][0].displayValue).toBe('Group B');
+  });
 });
