@@ -41,6 +41,22 @@ describe('SideNav', () => {
     expect(weekly?.dataset.active).toBe('true')
   })
 
+  it('marks Trend as active on /quick-facts/weekly and not Daily', () => {
+    renderNav('/quick-facts/weekly')
+    const trend = screen.getByText('Trend').closest('a')
+    const daily = screen.getByText('Daily').closest('a')
+    expect(trend?.dataset.active).toBe('true')
+    expect(daily?.dataset.active).not.toBe('true')
+  })
+
+  it('marks Trend as active on /quick-facts/myplan and not Daily', () => {
+    renderNav('/quick-facts/myplan')
+    const trend = screen.getByText('Trend').closest('a')
+    const daily = screen.getByText('Daily').closest('a')
+    expect(trend?.dataset.active).toBe('true')
+    expect(daily?.dataset.active).not.toBe('true')
+  })
+
   it('renders user name from AuthContext', () => {
     renderNav()
     expect(screen.getByText('Demo User')).toBeTruthy()
