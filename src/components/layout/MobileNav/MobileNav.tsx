@@ -16,22 +16,31 @@ const ROUTE_TITLES: Record<string, { title: string; tagline?: string }> = {
   '/availability-navigator':{ title: 'Availability Navigator' },
 }
 
-const BUYING_ITEMS = [
-  { icon: 'calendar_today', label: 'Quick Facts',       to: '/quick-facts', altPrefixes: [] as string[] },
-  { icon: 'dashboard',      label: 'Dashboards',        to: '/dashboards', altPrefixes: [] as string[] },
-  { icon: 'attach_money',   label: 'Pricing Simulator', to: '/pricing-simulator', altPrefixes: [] as string[] },
+interface NavItem {
+  icon: string
+  label: string
+  to: string
+  altPrefixes?: string[]
+  isSymbol?: boolean
+}
+
+const BUYING_ITEMS: NavItem[] = [
+  { icon: 'calendar_today', label: 'Quick Facts',       to: '/quick-facts' },
+  { icon: 'dashboard',      label: 'Dashboards',        to: '/dashboards' },
+  { icon: 'attach_money',   label: 'Pricing Simulator', to: '/pricing-simulator' },
 ]
 
-const STORE_ITEMS = [
-  { icon: 'today',        label: 'Daily',      to: '/quick-facts', altPrefixes: [] as string[] },
-  { icon: 'date_range',   label: 'Weekly',     to: '/weekly', altPrefixes: [] as string[] },
+const STORE_ITEMS: NavItem[] = [
+  { icon: 'today',        label: 'Daily',      to: '/quick-facts' },
+  { icon: 'date_range',   label: 'Weekly',     to: '/weekly' },
   { icon: 'view_week',    label: 'Trend',      to: '/quick-facts/weekly', altPrefixes: ['/quick-facts/myplan'] },
-  { icon: 'dashboard',    label: 'Dashboards', to: '/dashboards', altPrefixes: [] as string[] },
+  { icon: 'dashboard',    label: 'Dashboards', to: '/dashboards' },
 ]
 
-const STANDALONE_ITEMS = [
-  { icon: 'shelves', label: 'Availability Navigator', to: '/availability-navigator', isSymbol: true, altPrefixes: [] as string[] },
+const STANDALONE_ITEMS: NavItem[] = [
+  { icon: 'shelves', label: 'Availability Navigator', to: '/availability-navigator', isSymbol: true },
 ]
+
 
 const WW_LOGO = (
   <svg width="40" height="32" viewBox="0 0 80 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -87,11 +96,11 @@ export function MobileNav() {
 
   const activePrefix = getActivePrefix(
     location.pathname,
-    [...BUYING_ITEMS, ...STORE_ITEMS, ...STANDALONE_ITEMS].flatMap((item) => [item.to, ...item.altPrefixes])
+    [...BUYING_ITEMS, ...STORE_ITEMS, ...STANDALONE_ITEMS].flatMap((item) => [item.to, ...(item.altPrefixes ?? [])])
   )
 
-  function isItemActive(item: { to: string; altPrefixes: string[] }) {
-    return item.to === activePrefix || item.altPrefixes.includes(activePrefix)
+  function isItemActive(item: NavItem) {
+    return item.to === activePrefix || (item.altPrefixes?.includes(activePrefix) ?? false)
   }
 
   return (
