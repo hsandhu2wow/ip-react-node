@@ -11,7 +11,7 @@ import client from './client'
 import { getWeeklyFacts, getMyPlan } from './trend'
 import type { WfPageData } from '../types/wf.types'
 
-const mockClient = client as ReturnType<typeof vi.fn>
+const mockClient = vi.mocked(client)
 
 describe('trend API', () => {
   beforeEach(() => {
@@ -24,7 +24,7 @@ describe('trend API', () => {
         cards: [],
         refreshTime: '2024-01-01T00:00:00Z',
       }
-      ;(mockClient.get as ReturnType<typeof vi.fn>).mockResolvedValue({
+      mockClient.get.mockResolvedValue({
         data: mockData,
       })
 
@@ -52,7 +52,7 @@ describe('trend API', () => {
         refreshTime: '2024-01-01T00:00:00Z',
         title: 'Weekly Facts',
       }
-      ;(mockClient.get as ReturnType<typeof vi.fn>).mockResolvedValue({
+      mockClient.get.mockResolvedValue({
         data: mockData,
       })
 
@@ -70,7 +70,7 @@ describe('trend API', () => {
         cards: [],
         refreshTime: '2024-01-01T00:00:00Z',
       }
-      ;(mockClient.get as ReturnType<typeof vi.fn>).mockResolvedValue({
+      mockClient.get.mockResolvedValue({
         data: mockData,
       })
 
@@ -98,7 +98,7 @@ describe('trend API', () => {
         refreshTime: '2024-01-01T00:00:00Z',
         title: 'My Plan',
       }
-      ;(mockClient.get as ReturnType<typeof vi.fn>).mockResolvedValue({
+      mockClient.get.mockResolvedValue({
         data: mockData,
       })
 
