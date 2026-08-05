@@ -20,10 +20,12 @@ export function TrendTable({ tableData, isExpanded, showVariance }: TrendTablePr
       <table className={tableClassName}>
         <thead>
           <tr>
-            {headers.map((header, idx) => (
+            {headers.map((header) => (
               <th
-                key={`${header.val}-${idx}`}
-                className={`${styles.headerCell} ${header.cssClass || ''}`}
+                key={header.val}
+                className={[styles.headerCell, header.cssClass]
+                  .filter(Boolean)
+                  .join(' ')}
                 colSpan={header.colSpan}
                 title={getHeaderTooltip(header)}
               >
@@ -44,7 +46,9 @@ export function TrendTable({ tableData, isExpanded, showVariance }: TrendTablePr
                   return (
                     <td
                       key={`cell-${rowIdx}-${cellIdx}`}
-                      className={`${styles.dataCell} ${header?.cssClass || ''} ${cell.cssClass || ''}`}
+                      className={[styles.dataCell, header?.cssClass, cell.cssClass]
+                        .filter(Boolean)
+                        .join(' ')}
                       style={getCellBorderStyle(cell)}
                       rowSpan={cell.rowSpan}
                       title={cell.tooltip}

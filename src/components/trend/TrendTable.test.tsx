@@ -49,4 +49,18 @@ describe('TrendTable', () => {
     // (per tableTransform's rule: never mark isGroupEnd on the last row of the whole table)
     expect(rows.length).toBe(2);
   });
+
+  it('does not render a <td> for cells with rowSpan: 0', () => {
+    const { container } = render(<TrendTable tableData={tableData} isExpanded={true} showVariance={false} />);
+    // tableData has 2 rows: first row has Group A with rowSpan 1, second row has a cell with rowSpan 0 (grouped-away)
+    // Query all <td> elements in the tbody
+    const cells = container.querySelectorAll('tbody td');
+    // Row 1: 3 cells (Group A, Sales, $100)
+    // Row 2: 2 cells (Units, 50) — the first cell has rowSpan: 0 and should NOT render a <td>
+    // Total: 5 cells (not 6)
+    expect(cells.length).toBe(5);
+    // Verify Group A appears only once
+    const groupCells = Array.from(cells).filter(cell => cell.textContent?.includes('Group A'));
+    expect(groupCells.length).toBe(1);
+  });
 });
