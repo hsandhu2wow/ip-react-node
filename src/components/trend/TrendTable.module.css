@@ -1,0 +1,31 @@
+/* src/components/trend/TrendTable.module.css */
+.tableWrapper {
+  overflow-x: auto;
+  width: 100%;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.headerCell {
+  text-align: left;
+  padding: 8px 12px;
+  font-weight: 600;
+  border-bottom: 2px solid #ddd;
+  white-space: nowrap;
+}
+
+.dataCell {
+  padding: 6px 12px;
+  border-bottom: 1px solid #eee;
+  vertical-align: top;
+}
+
+.spacerRow td {
+  height: 12px;
+  padding: 0;
+  border: none;
+}
