@@ -5,6 +5,8 @@
 }
 
 .breadcrumbs {
+  max-width: 1640px;
+  margin: 0 auto;
   padding: 8px 24px;
   font-size: 13px;
   color: var(--color-text-secondary);
@@ -101,6 +103,8 @@
   display: flex;
   align-items: flex-start;
   gap: 24px;
+  max-width: 1640px;
+  margin: 0 auto;
   padding: 0 24px;
 }
 
