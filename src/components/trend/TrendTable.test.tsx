@@ -63,4 +63,51 @@ describe('TrendTable', () => {
     const groupCells = Array.from(cells).filter(cell => cell.textContent?.includes('Group A'));
     expect(groupCells.length).toBe(1);
   });
+
+  it('renders backend HTML markup in cells instead of escaped tag text', () => {
+    const htmlData: WfTableData = {
+      headers: [
+        { text: 'Group', val: '0' },
+        { text: 'Metric', val: '1' },
+        { text: 'Value', val: '2' },
+      ],
+      data: [
+        [
+          cell(0, { rowSpan: 1, displayValue: 'Group A' }),
+          cell(1, { displayValue: 'VOC Score' }),
+          cell(2, { displayValue: '<span class="wf-primary-val">79</span><span class="wf-var-text wf-var-text--neg">▼ -1</span>' }),
+        ],
+      ],
+    };
+    const { container } = render(<TrendTable tableData={htmlData} isExpanded={true} showVariance={false} />);
+    // The literal tag text must NOT appear as escaped text content.
+    expect(container.textContent).not.toContain('<span');
+    // The HTML must be rendered as real DOM elements.
+    const primaryVal = container.querySelector('.wf-primary-val');
+    expect(primaryVal).not.toBeNull();
+    expect(primaryVal?.textContent).toBe('79');
+    expect(container.querySelector('.wf-var-text--neg')).not.toBeNull();
+  });
+
+  it('renders tags for cells with a tags field', () => {
+    const tagData: WfTableData = {
+      headers: [
+        { text: 'Group', val: '0' },
+        { text: 'Metric', val: '1' },
+        { text: 'Value', val: '2' },
+      ],
+      data: [
+        [
+          cell(0, { rowSpan: 1, displayValue: 'Group A' }),
+          cell(1, { displayValue: 'VOC Score' }),
+          cell(2, { displayValue: '79', tags: 'KPI,NEW' }),
+        ],
+      ],
+    };
+    const { container } = render(<TrendTable tableData={tagData} isExpanded={true} showVariance={false} />);
+    const tags = container.querySelectorAll('.wf-home__tag');
+    expect(tags.length).toBe(2);
+    expect(tags[0].getAttribute('data-tag')).toBe('KPI');
+    expect(tags[1].getAttribute('data-tag')).toBe('NEW');
+  });
 });
