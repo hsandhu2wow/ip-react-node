@@ -345,7 +345,7 @@ td.wf-table__data.goal-tracker-title {
   color: #333333;
 }
 
-.wf-table.wf-table--show-variance td.wf-table__data:not(:has(div.metric-name)):not(.wf-table__goals):not(.goal-tracker) > div {
+.wf-table.wf-table--show-variance td.wf-table__data > div.wf-table__value-cell {
   display: flex;
   flex-direction: column;
   align-items: flex-end;

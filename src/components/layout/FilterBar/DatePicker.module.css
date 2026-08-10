@@ -1,0 +1,109 @@
+/* src/components/layout/FilterBar/DatePicker.module.css */
+
+.panel {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background: var(--color-surface);
+  border: 1px solid #d3d3d3;
+  border-radius: 4px;
+  box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.15);
+  width: 288px;
+  padding: 12px 16px 16px;
+  z-index: 1100;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.monthLabel {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-text);
+  background: none;
+  border: none;
+  cursor: default;
+  padding: 4px 0;
+}
+
+.monthLabel .material-icons { font-size: 18px; color: var(--color-text-secondary); }
+
+.navBtns { display: flex; gap: 4px; }
+
+.navBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: none;
+  background: none;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+}
+.navBtn:hover { background: rgba(0, 0, 0, 0.06); }
+.navBtn .material-icons { font-size: 18px; }
+
+.weekdayRow {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  text-align: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+  margin-bottom: 4px;
+}
+
+.daysGrid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  row-gap: 2px;
+}
+
+.monthLeadLabel {
+  display: flex;
+  align-items: center;
+  padding-left: 4px;
+  font-size: 11px;
+  white-space: nowrap;
+  overflow: hidden;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+}
+
+.dayCell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 1;
+  border: none;
+  background: none;
+  border-radius: 50%;
+  font-size: 13px;
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+.dayCell:hover { background: rgba(0, 0, 0, 0.06); }
+
+.dayCellDisabled {
+  color: #cfcfcf;
+  cursor: not-allowed;
+}
+.dayCellDisabled:hover { background: none; }
+
+.dayCellSelected,
+.dayCellSelected:hover {
+  background: var(--color-primary);
+  color: #fff;
+  font-weight: 700;
+}

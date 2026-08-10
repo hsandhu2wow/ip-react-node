@@ -107,10 +107,12 @@
   height: 32px;
   flex-shrink: 0;
   border: none;
+  border-radius: 50%;
   background: none;
   color: var(--color-text-secondary);
   cursor: pointer;
 }
+.toggleBtn:hover { background: rgba(0, 0, 0, 0.06); }
 .toggleBtn .material-icons { font-size: 18px; }
 
 .togglePlaceholder {

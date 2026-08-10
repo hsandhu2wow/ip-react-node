@@ -77,87 +77,107 @@ export function TrendPage({ metric }: TrendPageProps) {
   const kpiFilterEnabled = tableData?.kpiFilterEnabled === true;
 
   return (
-    <div>
-      <div className={styles.toolbar}>
-        {tabs.length > 1 && (
-          <select
-            aria-label="Select tab"
-            value={activeCard?.key}
-            onChange={(e) => {
-              setSelectedTabKey(e.target.value);
-              setSelectedDateFilter('');
-            }}
-          >
-            {tabs.map((tab) => (
-              <option key={tab.key} value={tab.key}>
-                {tab.displayName}
-              </option>
-            ))}
-          </select>
-        )}
-        {activeCard?.hasHistoryData && (activeCard.dateFilterValues?.length ?? 0) > 0 && (
-          <label>
-            {activeCard.dateFilterLabel || 'Fiscal week'}:
+    <div className={styles.wrapperContent}>
+      <div className={styles.wfHome}>
+        <div className={styles.toolbar}>
+          {tabs.length > 1 && (
             <select
-              aria-label="Select date"
-              value={selectedDateFilter || activeCard.dateFilterValues?.[0] || ''}
-              onChange={(e) => setSelectedDateFilter(e.target.value)}
+              className={styles.select}
+              aria-label="Select tab"
+              value={activeCard?.key}
+              onChange={(e) => {
+                setSelectedTabKey(e.target.value);
+                setSelectedDateFilter('');
+              }}
             >
-              {activeCard.dateFilterValues?.map((value) => (
-                <option key={value} value={value}>
-                  {value}
+              {tabs.map((tab) => (
+                <option key={tab.key} value={tab.key}>
+                  {tab.displayName}
                 </option>
               ))}
             </select>
-          </label>
-        )}
-        {showVarianceToggleEnabled && (
-          <label>
-            <input
-              type="checkbox"
-              checked={showVariance}
-              onChange={(e) => setShowVariance(e.target.checked)}
-            />
-            {showVarianceLabel}
-          </label>
-        )}
-        {kpiFilterEnabled && (
-          <label>
-            <input
-              type="checkbox"
-              checked={isExpanded}
-              onChange={(e) => setIsExpanded(e.target.checked)}
-            />
-            Show all rows
-          </label>
-        )}
-      </div>
-
-      <div className={styles.headerBlock}>
-        <div className={styles.title}>
-          {metricDisplayName} - {activeCard?.displayName}
+          )}
+          {activeCard?.hasHistoryData && (activeCard.dateFilterValues?.length ?? 0) > 0 && (
+            <label className={styles.selectLabel}>
+              {activeCard.dateFilterLabel || 'Fiscal week'}:
+              <select
+                className={styles.select}
+                aria-label="Select date"
+                value={selectedDateFilter || activeCard.dateFilterValues?.[0] || ''}
+                onChange={(e) => setSelectedDateFilter(e.target.value)}
+              >
+                {activeCard.dateFilterValues?.map((value) => (
+                  <option key={value} value={value}>
+                    {value}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
+          {showVarianceToggleEnabled && (
+            <label className={styles.toggleLabel}>
+              <span
+                className={[styles.toggleSwitch, showVariance ? styles.toggleSwitchOn : '']
+                  .filter(Boolean)
+                  .join(' ')}
+              >
+                <input
+                  type="checkbox"
+                  className={styles.toggleInput}
+                  checked={showVariance}
+                  onChange={(e) => setShowVariance(e.target.checked)}
+                />
+                <span className={styles.toggleThumb} />
+              </span>
+              {showVarianceLabel}
+            </label>
+          )}
+          {kpiFilterEnabled && (
+            <label className={styles.toggleLabel}>
+              <span
+                className={[styles.toggleSwitch, isExpanded ? styles.toggleSwitchOn : '']
+                  .filter(Boolean)
+                  .join(' ')}
+              >
+                <input
+                  type="checkbox"
+                  className={styles.toggleInput}
+                  checked={isExpanded}
+                  onChange={(e) => setIsExpanded(e.target.checked)}
+                />
+                <span className={styles.toggleThumb} />
+              </span>
+              Show all rows
+            </label>
+          )}
         </div>
-        <div className={styles.subHeaderRow}>
-          <span>
-            {durationLabel}: {selectedTab?.timePeriod}
-          </span>
-          <span>
-            {wfData.metricsInfo && (
-              <span className={styles.metricsInfo}>{wfData.metricsInfo.label || 'Metrics Info'}</span>
-            )}
-            {' '}
-            {wfData.refreshFiscalPeriod
-              ? `Last updated: ${wfData.refreshFiscalPeriod} (${formatLastUpdated(wfData.refreshTime)})`
-              : `Last updated: ${formatLastUpdated(wfData.refreshTime)}`}
-          </span>
-        </div>
-        {selectedTab?.infoMessage && <div className={styles.infoMessage}>{selectedTab.infoMessage}</div>}
-        {wfData.is_web_subscription_enabled && (
-          <div className={styles.subscriptionLink}>Subscription preferences</div>
-        )}
-      </div>
 
-      {tableData && <TrendTable tableData={tableData} isExpanded={isExpanded} showVariance={showVariance} />}
+        <div className={styles.headerBlock}>
+          <div className={styles.title}>
+            {metricDisplayName} - {activeCard?.displayName}
+          </div>
+          <div className={styles.subHeaderRow}>
+            <span>
+              {durationLabel}: {selectedTab?.timePeriod}
+            </span>
+            <span>
+              {wfData.metricsInfo && (
+                <span className={styles.metricsInfo}>{wfData.metricsInfo.label || 'Metrics Info'}</span>
+              )}
+              {' '}
+              {wfData.refreshFiscalPeriod
+                ? `Last updated: ${wfData.refreshFiscalPeriod} (${formatLastUpdated(wfData.refreshTime)})`
+                : `Last updated: ${formatLastUpdated(wfData.refreshTime)}`}
+            </span>
+          </div>
+          {selectedTab?.infoMessage && <div className={styles.infoMessage}>{selectedTab.infoMessage}</div>}
+          {wfData.is_web_subscription_enabled && (
+            <div className={styles.subscriptionLink}>Subscription preferences</div>
+          )}
+        </div>
+
+        {tableData && <TrendTable tableData={tableData} isExpanded={isExpanded} showVariance={showVariance} />}
+      </div>
     </div>
   );
 }

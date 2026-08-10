@@ -87,16 +87,18 @@
   z-index: 1100;
 }
 
-/* Date picker — hidden input, visible label + icon */
+/* Date picker — trigger button + custom dropdown panel */
 .datePicker {
   display: flex;
   align-items: center;
   cursor: pointer;
+  border: none;
   border-right: 1px solid var(--color-border);
   padding: 0 8px 0 4px;
   height: var(--filter-bar-height);
   gap: 0;
-  position: relative;
+  background: none;
+  font-family: var(--font-family);
 }
 
 .datePicker:hover { background: rgba(0, 0, 0, 0.04); }
@@ -124,17 +126,6 @@
   color: #4a4a4a;
   white-space: nowrap;
   margin-right: 2px;
-}
-
-/* Native input is invisible but overlays the datePicker div for click capture */
-.dateInputHidden {
-  position: absolute;
-  width: 0;
-  height: 0;
-  border: 0;
-  padding: 0;
-  opacity: 0;
-  pointer-events: none;
 }
 
 /* Feedback / download / print actions — right end of the filter bar */

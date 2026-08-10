@@ -1,13 +1,12 @@
 /* src/pages/quick-facts/DetailsPage.module.css */
 .page {
-  padding-top: 24px;
-  padding-bottom: calc(var(--footer-height) + 24px);
+  padding: 8px 32px calc(var(--footer-height) + 32px);
 }
 
 .breadcrumbs {
   max-width: 1640px;
   margin: 0 auto;
-  padding: 8px 24px;
+  padding: 8px 0;
   font-size: 13px;
   color: var(--color-text-secondary);
 }
@@ -104,8 +103,7 @@
   align-items: flex-start;
   gap: 24px;
   max-width: 1640px;
-  margin: 0 auto;
-  padding: 0 24px;
+  margin: 8px auto 0;
 }
 
 .detailColumn {

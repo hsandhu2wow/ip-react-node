@@ -1,5 +1,5 @@
 // src/components/cards/MetricCard/MetricCardTable.tsx
-import { useState } from 'react'
+import { useEffect, useRef, useState, useCallback } from 'react'
 import type { ISQFTableData, ISQFTableRow } from '../../../types/sqf.types'
 import styles from './MetricCard.module.css'
 
@@ -29,6 +29,28 @@ function TableCell({ cell }: { cell: Cell }) {
 
 export function MetricCardTable({ tableData }: { tableData: ISQFTableData }) {
   const [expandedKey, setExpandedKey] = useState<string | null>(null)
+  const scrollRef = useRef<HTMLDivElement>(null)
+  const [showShadow, setShowShadow] = useState(false)
+  const freezeFirstColumn = !!tableData.freeze_first_column
+
+  // Right-edge shadow hints that there are more columns to scroll to — hidden
+  // once the table is scrolled all the way to its end (mirrors Angular's
+  // sqf-basic-table showShadow/updateShadow logic).
+  const updateShadow = useCallback(() => {
+    const el = scrollRef.current
+    if (!el) return
+    setShowShadow(
+      freezeFirstColumn &&
+      el.scrollWidth > el.clientWidth &&
+      el.scrollWidth - el.scrollLeft > el.clientWidth + 1
+    )
+  }, [freezeFirstColumn])
+
+  useEffect(() => {
+    updateShadow()
+    window.addEventListener('resize', updateShadow)
+    return () => window.removeEventListener('resize', updateShadow)
+  }, [updateShadow, tableData])
 
   const headers = Array.isArray(tableData?.headers) ? tableData.headers : []
   const rows = Array.isArray(tableData?.data) ? tableData.data : []
@@ -57,8 +79,12 @@ export function MetricCardTable({ tableData }: { tableData: ISQFTableData }) {
   })
 
   return (
-    <div className={styles.tableArea}>
-      <table className={styles.table}>
+    <div
+      ref={scrollRef}
+      className={`${styles.tableArea} ${showShadow ? styles.tableAreaShadow : ''}`}
+      onScroll={updateShadow}
+    >
+      <table className={`${styles.table} ${freezeFirstColumn ? styles.stickyCol : ''}`}>
         <thead>
           <tr>
             {displayedColumns.map((_, i) => (

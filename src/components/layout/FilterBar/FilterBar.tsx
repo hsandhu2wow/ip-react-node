@@ -5,6 +5,7 @@ import { useFilterTree } from '../../../hooks/useFilterTree'
 import { formatDate, getYesterdayDate } from '../../../utils/formatters'
 import type { IQFTree } from '../../../types/sqf.types'
 import { LocationTree } from './LocationTree'
+import { DatePicker } from './DatePicker'
 import styles from './FilterBar.module.css'
 
 const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000
@@ -24,13 +25,17 @@ export function FilterBar() {
 
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
-  const dateInputRef = useRef<HTMLInputElement>(null)
+  const [datePickerOpen, setDatePickerOpen] = useState(false)
+  const datePickerRef = useRef<HTMLDivElement>(null)
 
-  // Close dropdown when clicking outside
+  // Close dropdowns when clicking outside
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
         setDropdownOpen(false)
+      }
+      if (datePickerRef.current && !datePickerRef.current.contains(e.target as Node)) {
+        setDatePickerOpen(false)
       }
     }
     document.addEventListener('mousedown', handleClickOutside)
@@ -71,30 +76,34 @@ export function FilterBar() {
           )}
         </div>
 
-        {/* Date picker — shows formatted label, hidden native input opens on click */}
-        <div
-          className={`${styles.datePicker} ${!isLoaded ? styles.datePickerDisabled : ''}`}
-          onClick={() => isLoaded && dateInputRef.current?.showPicker?.()}
-        >
-          <span className={`material-icons ${styles.dateIcon}`}>date_range</span>
-          <span className={styles.dateLabel}>
-            {selectedDate ? formatDisplayDate(selectedDate) : '—'}
-          </span>
-          <span className={`material-icons ${styles.caret}`}>keyboard_arrow_down</span>
-          <input
-            ref={dateInputRef}
-            type="date"
-            className={styles.dateInputHidden}
-            value={selectedDate}
-            min={minDate}
-            max={maxDate}
-            onChange={e => {
-              if (e.target.value) setSelectedDate(e.target.value)
-            }}
+        {/* Date picker — custom month-grid dropdown matching Store Insights */}
+        <div className={styles.dropdown} ref={datePickerRef}>
+          <button
+            type="button"
+            className={`${styles.datePicker} ${!isLoaded ? styles.datePickerDisabled : ''}`}
+            onClick={() => isLoaded && setDatePickerOpen(o => !o)}
+            aria-expanded={datePickerOpen}
+            aria-haspopup="dialog"
             disabled={!isLoaded}
-            tabIndex={-1}
-            aria-hidden="true"
-          />
+          >
+            <span className={`material-icons ${styles.dateIcon}`}>today</span>
+            <span className={styles.dateLabel}>
+              {selectedDate ? formatDisplayDate(selectedDate) : '—'}
+            </span>
+            <span className={`material-icons ${styles.caret}`}>keyboard_arrow_down</span>
+          </button>
+
+          {datePickerOpen && (
+            <DatePicker
+              selectedDate={selectedDate}
+              minDate={minDate}
+              maxDate={maxDate}
+              onSelect={iso => {
+                setSelectedDate(iso)
+                setDatePickerOpen(false)
+              }}
+            />
+          )}
         </div>
       </div>
 
@@ -117,7 +126,7 @@ export function FilterBar() {
           aria-label="Download"
           disabled
         >
-          <span className="material-icons">play_for_work</span>
+          <span className="material-icons">get_app</span>
         </button>
         <button
           type="button"

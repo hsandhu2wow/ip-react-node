@@ -65,10 +65,29 @@
 .kpiDivider { width: 1px; background: #e0e0e0; margin: 2px 0; flex-shrink: 0; }
 
 /* ── Chart ── */
-.chartArea { padding: 0 12px; margin: 8px 0; flex: 1; }
+.chartArea { padding: 0 12px; margin: 8px 0; position: relative; width: 100%; }
 
 /* ── Table ── */
-.tableArea { padding: 0 12px 8px; overflow-x: auto; min-width: 0; }
+.tableArea { padding: 0 12px 8px; overflow: auto; min-width: 0; position: relative; max-height: 336px; }
+
+@media (max-width: 600px) {
+  .tableArea { max-height: 644px; }
+}
+
+/* Right-edge scroll shadow — shown while a sticky-first-column table has
+   more columns to scroll to, hidden once scrolled to the end. */
+.tableAreaShadow::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 14px;
+  height: 100%;
+  background: linear-gradient(to left, rgba(100, 100, 100, 0.3), rgba(100, 100, 100, 0));
+  z-index: 5;
+  pointer-events: none;
+}
+
 .table { width: 100%; min-width: max-content; border-collapse: collapse; font-size: 12px; }
 .table th {
   text-align: left;
@@ -88,6 +107,19 @@
 .sortIcon { font-size: 14px; vertical-align: middle; margin-left: 2px; color: var(--color-text-secondary); }
 .footerRow td { font-weight: 700; border-top: 1px solid var(--color-border); border-bottom: none; }
 .expandToggle { color: var(--color-blue); cursor: pointer; font-size: 12px; padding: 4px 12px; background: none; border: none; font-family: var(--font-family); }
+
+/* Sticky first column — frozen while the rest of the table scrolls
+   underneath it (mirrors Angular's qf-table__sticky-column). */
+.stickyCol th:first-child, .stickyCol td:first-child {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  background: var(--color-surface);
+}
+.stickyCol thead th:first-child { z-index: 3; }
+.stickyCol tbody tr:hover td:first-child { background: #f4f9fc; }
+.stickyCol .childRow td:first-child { background: #fafafa; }
+.stickyCol .footerRow td:first-child { background: var(--color-surface); }
 
 /* ── Tabs ── */
 .tabs { display: flex; border-bottom: 1px solid var(--color-border); margin: 0 12px; }

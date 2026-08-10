@@ -216,7 +216,10 @@ export function DetailsCard({
             <div className={styles.cardTitle}>{card.cardTitle}</div>
             <div className={styles.subTitle}>
               {reportingPeriod && (
-                <span className={styles.subTitleItem}>📅 {reportingPeriod}</span>
+                <span className={styles.subTitleItem}>
+                  <span className={`material-icons-outlined ${styles.subTitleIcon}`}>calendar_today</span>
+                  {reportingPeriod}
+                </span>
               )}
               {card.dropdowns?.map(dd => (
                 <span key={dd.key} className={styles.subTitleItem}>
@@ -245,7 +248,7 @@ export function DetailsCard({
                 data-testid="details-recognize-btn"
                 aria-label="Recognize team"
               >
-                {recognizeLoading ? <span className={styles.spinner} /> : '🎉'}
+                {recognizeLoading ? <span className={styles.spinner} /> : <span className="material-icons-outlined">celebration</span>}
               </button>
             </div>
           )}
@@ -277,7 +280,7 @@ export function DetailsCard({
                 )}
                 {chartData && (
                   <div className={styles.graphArea}>
-                    <MetricCardChart chartData={chartData} />
+                    <MetricCardChart chartData={chartData} height={156} />
                   </div>
                 )}
               </div>

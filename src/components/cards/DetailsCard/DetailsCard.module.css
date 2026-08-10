@@ -46,6 +46,8 @@
 
 .subTitleItem { display: flex; align-items: center; gap: 3px; }
 
+.subTitleIcon { font-size: 14px; }
+
 .dropdownSelect {
   font-size: 12px;
   font-family: inherit;
@@ -109,7 +111,7 @@
 }
 
 .graphArea {
-  margin: auto 0 0;
+  margin: auto;
   display: flex;
   align-items: center;
   padding: 24px 12px 24px 0;
@@ -123,7 +125,6 @@
   padding: 0 12px;
   border-left: 1px solid var(--color-border);
   min-width: 0;
-  overflow-x: auto;
 }
 
 .rightColFull {

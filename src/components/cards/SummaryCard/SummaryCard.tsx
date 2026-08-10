@@ -203,13 +203,13 @@ export function SummaryCard({ card, isLoading, expandTable }: Props) {
             <div className={styles.subTitle}>
               {location && (
                 <span className={styles.subTitleItem}>
-                  <span className={styles.subTitleIcon}>📍</span>
+                  <span className={`material-icons-outlined ${styles.subTitleIcon}`}>location_on</span>
                   {location}
                 </span>
               )}
               {reportingPeriod && (
                 <span className={styles.subTitleItem}>
-                  <span className={styles.subTitleIcon}>📅</span>
+                  <span className={`material-icons-outlined ${styles.subTitleIcon}`}>calendar_today</span>
                   {reportingPeriod}
                 </span>
               )}
@@ -240,7 +240,7 @@ export function SummaryCard({ card, isLoading, expandTable }: Props) {
                 data-testid="recognize-btn"
                 aria-label="Recognize team"
               >
-                {recognizeLoading ? <span className={styles.spinner} /> : '🎉'}
+                {recognizeLoading ? <span className={styles.spinner} /> : <span className="material-icons-outlined">celebration</span>}
               </button>
             </div>
           )}

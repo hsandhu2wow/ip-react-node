@@ -67,7 +67,7 @@ export function LocationTree({ onSelect }: Props) {
     if (node.hidden || node.alwaysHidden) return null
     if (visibleCodes && !visibleCodes.has(node.code)) return null
 
-    const paddingLeft = node.depth * 8
+    const paddingLeft = node.depth * 20
 
     if (node.nonClickable) {
       return (

@@ -1,5 +1,6 @@
 import { Fragment } from 'react';
 import { filterTableData, getCellBorderStyle, getHeaderTooltip } from '../../utils/tableTransform';
+import { isHtmlTooltip, showHtmlTooltip, hideHtmlTooltip } from '../../utils/htmlTooltip';
 import type { WfTableData } from '../../types/wf.types';
 import styles from './TrendTable.module.css';
 
@@ -17,6 +18,14 @@ function getTags(tags: string | undefined): string[] {
     .filter(Boolean);
 }
 
+function htmlTooltipHandlers(html: string | null | undefined) {
+  if (!html) return {};
+  return {
+    onMouseEnter: (e: React.MouseEvent<HTMLElement>) => showHtmlTooltip(e.currentTarget, html, e.clientX, e.clientY),
+    onMouseLeave: (e: React.MouseEvent<HTMLElement>) => hideHtmlTooltip(e.currentTarget),
+  };
+}
+
 export function TrendTable({ tableData, isExpanded, showVariance }: TrendTableProps) {
   const { headers, rows } = filterTableData(tableData, isExpanded);
   const tableClassName = [styles.table, 'wf-table', showVariance ? 'wf-table--show-variance' : '']
@@ -30,6 +39,7 @@ export function TrendTable({ tableData, isExpanded, showVariance }: TrendTablePr
           <tr>
             {headers.map((header, headerIdx) => {
               const isFirstOrSecond = headerIdx === 0 || headerIdx === 1;
+              const htmlTooltip = isHtmlTooltip(header.tooltip) ? header.tooltip! : null;
               return (
                 <th
                   key={header.val || headerIdx}
@@ -42,8 +52,9 @@ export function TrendTable({ tableData, isExpanded, showVariance }: TrendTablePr
                     .filter(Boolean)
                     .join(' ')}
                   colSpan={header.colSpan || 1}
-                  title={getHeaderTooltip(header)}
+                  title={htmlTooltip ? undefined : getHeaderTooltip(header)}
                   style={isFirstOrSecond ? { position: 'sticky', left: headerIdx === 0 ? 0 : undefined } : undefined}
+                  {...htmlTooltipHandlers(htmlTooltip)}
                 >
                   <div className={[styles.thDiv, headerIdx === 1 ? 'metric-name' : ''].filter(Boolean).join(' ')}>
                     <span dangerouslySetInnerHTML={{ __html: header.text }} />
@@ -64,20 +75,33 @@ export function TrendTable({ tableData, isExpanded, showVariance }: TrendTablePr
                   }
                   const tags = getTags(cell.tags);
                   const isFirstOrSecond = cellIdx === 0 || cellIdx === 1;
+                  const cellClasses = ['wf-table__data', styles.dataCell, header?.cssClass, cell.cssClass]
+                    .filter(Boolean)
+                    .join(' ');
+                  const isGoalCell = /(^|\s)(wf-table__goals|goal-tracker)(\s|$)/.test(cellClasses);
+                  const isValueCell = cellIdx > 1 && !isGoalCell;
+                  const htmlTooltip = !cell.infoMessage && isHtmlTooltip(cell.tooltip) ? cell.tooltip! : null;
                   return (
                     <td
                       key={`cell-${rowIdx}-${cellIdx}`}
-                      className={['wf-table__data', styles.dataCell, header?.cssClass, cell.cssClass]
-                        .filter(Boolean)
-                        .join(' ')}
+                      className={cellClasses}
                       style={{
                         ...getCellBorderStyle(cell),
                         ...(isFirstOrSecond ? { position: 'sticky', left: cellIdx === 0 ? 0 : undefined } : {}),
                       }}
                       rowSpan={cell.rowSpan || 1}
-                      title={cell.infoMessage ? undefined : cell.tooltip}
+                      title={cell.infoMessage || htmlTooltip ? undefined : cell.tooltip}
+                      {...htmlTooltipHandlers(htmlTooltip)}
                     >
-                      <div className={[styles.tdDiv, cellIdx === 0 ? 'transform-text' : ''].filter(Boolean).join(' ')}>
+                      <div
+                        className={[
+                          styles.tdDiv,
+                          cellIdx === 0 ? 'transform-text' : '',
+                          isValueCell ? 'wf-table__value-cell' : '',
+                        ]
+                          .filter(Boolean)
+                          .join(' ')}
+                      >
                         <div className={cellIdx === 1 ? 'metric-name' : ''}>
                           <span
                             className={cellIdx > 1 ? 'wf-table__kpi-value' : ''}
