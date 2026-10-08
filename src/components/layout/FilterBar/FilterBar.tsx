@@ -1,7 +1,15 @@
 // src/components/layout/FilterBar/FilterBar.tsx
 import { useState, useRef, useEffect } from 'react'
+import { useLocation, matchPath } from 'react-router-dom'
 import { useFilter } from '../../../context/FilterContext'
+import { useAuth } from '../../../context/AuthContext'
 import { useFilterTree } from '../../../hooks/useFilterTree'
+import { useSummaryCards } from '../../../hooks/useSummaryCards'
+import { useDetailsCard } from '../../../hooks/useDetailsCard'
+import { usePeriodCards } from '../../../hooks/usePeriodCards'
+import { childLevelLabel, hidesBreakdownAxis } from '../../../utils/levelLabels'
+import { FilterSelect } from './FilterSelect'
+import type { BreakdownAxis, Period } from '../../../types/sqf.types'
 import { formatDate, getYesterdayDate } from '../../../utils/formatters'
 import type { IQFTree } from '../../../types/sqf.types'
 import { LocationTree } from './LocationTree'
@@ -21,7 +29,25 @@ function formatDisplayDate(iso: string): string {
 export function FilterBar() {
   useFilterTree() // loads tree and calls initTree on FilterContext
 
-  const { selectedNode, selectedDate, isLoaded, setSelectedNode, setSelectedDate } = useFilter()
+  const {
+    selectedNode, selectedDate, isLoaded, setSelectedNode, setSelectedDate,
+    setSelectedPeriod, selectedBreakdownAxis, setSelectedBreakdownAxis,
+  } = useFilter()
+  const { user } = useAuth()
+
+  const { pathname } = useLocation()
+  const detailsType = matchPath('/quick-facts/details/:type', pathname)?.params.type
+  const isSummaryPage = pathname.startsWith('/quick-facts/summary')
+  const summaryQuery = useSummaryCards(isSummaryPage || !!detailsType)
+  const detailsQuery = useDetailsCard(detailsType)
+  const { hasMultiplePeriods, activePeriod } = usePeriodCards(
+    detailsType ? detailsQuery.data : summaryQuery.data
+  )
+  const showFilters = isSummaryPage || !!detailsType
+  const showPeriod = showFilters && hasMultiplePeriods
+  const showAxis = showFilters && !hidesBreakdownAxis(selectedNode)
+  const axisLabel =
+    selectedBreakdownAxis === 'childLevel' ? childLevelLabel(selectedNode, user.portal) : 'Departments'
 
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
@@ -105,6 +131,32 @@ export function FilterBar() {
             />
           )}
         </div>
+
+        {showPeriod && (
+          <FilterSelect<Period>
+            ariaLabel="Reporting period"
+            label={activePeriod === 'YDAY' ? 'Day' : 'Week to Date'}
+            value={activePeriod}
+            options={[
+              { value: 'WTD', label: 'Week to Date' },
+              { value: 'YDAY', label: 'Day' },
+            ]}
+            onChange={setSelectedPeriod}
+          />
+        )}
+
+        {showAxis && (
+          <FilterSelect<BreakdownAxis>
+            ariaLabel="Breakdown"
+            label={axisLabel}
+            value={selectedBreakdownAxis}
+            options={[
+              { value: 'childLevel', label: childLevelLabel(selectedNode, user.portal) },
+              { value: 'department', label: 'Departments' },
+            ]}
+            onChange={setSelectedBreakdownAxis}
+          />
+        )}
       </div>
 
       {/* Feedback/export actions — feedback & download aren't wired to a backend yet,

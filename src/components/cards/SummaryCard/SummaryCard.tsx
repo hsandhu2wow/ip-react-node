@@ -1,6 +1,7 @@
 import { useState, useEffect, Fragment } from 'react'
 import { Link } from 'react-router-dom'
-import type { ISQFMetricCard, ISQFInfoNumber, IExpandableListItem } from '../../../types/sqf.types'
+import type { ISQFMetricCard, ISQFInfoNumber, IExpandableListItem, BreakdownAxis } from '../../../types/sqf.types'
+import { useAxisCard } from '../../../hooks/useAxisCard'
 import { MetricCardSkeleton } from '../MetricCard/MetricCardSkeleton'
 import { MetricCardChart } from '../MetricCard/MetricCardChart'
 import { MetricCardTable } from '../MetricCard/MetricCardTable'
@@ -97,9 +98,12 @@ interface Props {
   card?: ISQFMetricCard
   isLoading?: boolean
   expandTable?: boolean
+  /** Global breakdown axis; when set, axis-driven cards ignore their own dropdowns */
+  axis?: BreakdownAxis
 }
 
-export function SummaryCard({ card, isLoading, expandTable }: Props) {
+export function SummaryCard({ card, isLoading, expandTable, axis }: Props) {
+  const { axisDriven, axisCard } = useAxisCard(card, axis)
   const [expanded, setExpanded] = useState(false)
   const [selectedFilters, setSelectedFilters] = useState<Record<string, string>>({})
   const [infoModalOpen, setInfoModalOpen] = useState(false)
@@ -119,7 +123,7 @@ export function SummaryCard({ card, isLoading, expandTable }: Props) {
 
   let contentCard: ISQFMetricCard | null = card
   if (card.cards && card.filterKeys) {
-    contentCard = getFilteredSubCard(card, selectedFilters)
+    contentCard = axisDriven ? axisCard : getFilteredSubCard(card, selectedFilters)
   }
   const hasFilterError = card.cards != null && contentCard == null
 
@@ -213,7 +217,7 @@ export function SummaryCard({ card, isLoading, expandTable }: Props) {
                   {reportingPeriod}
                 </span>
               )}
-              {card.dropdowns?.map(dd => (
+              {!axisDriven && card.dropdowns?.map(dd => (
                 <span key={dd.key} className={styles.subTitleItem}>
                   <select
                     className={styles.dropdownSelect}

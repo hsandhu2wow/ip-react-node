@@ -1,5 +1,6 @@
 import { useState, useEffect, Fragment } from 'react'
-import type { ISQFMetricCard, ISQFInfoNumber, IQFTree } from '../../../types/sqf.types'
+import type { ISQFMetricCard, ISQFInfoNumber, IQFTree, BreakdownAxis } from '../../../types/sqf.types'
+import { useAxisCard } from '../../../hooks/useAxisCard'
 import { MetricCardSkeleton } from '../MetricCard/MetricCardSkeleton'
 import { MetricCardChart } from '../MetricCard/MetricCardChart'
 import { MetricCardTable } from '../MetricCard/MetricCardTable'
@@ -111,6 +112,8 @@ interface Props {
    *  code — either card.childCode/cardCode, or a selected department code for
    *  the C1Availability store-level dropdown. */
   onDrillDown?: (code?: string) => void
+  /** Global breakdown axis; when set, axis-driven cards ignore their own dropdowns */
+  axis?: BreakdownAxis
 }
 
 export function DetailsCard({
@@ -119,7 +122,9 @@ export function DetailsCard({
   selectedNode,
   detailsLastLevel = 99,
   onDrillDown,
+  axis,
 }: Props) {
+  const { axisDriven, axisCard } = useAxisCard(card, axis)
   const [selectedFilters, setSelectedFilters] = useState<Record<string, string>>({})
   const [infoModalOpen, setInfoModalOpen] = useState(false)
   const [recognizeLoading, setRecognizeLoading] = useState(false)
@@ -138,7 +143,7 @@ export function DetailsCard({
   // ── Resolve content card ────────────────────────────────────────────────
   let contentCard: ISQFMetricCard | null = card
   if (card.cards && card.filterKeys) {
-    contentCard = getFilteredSubCard(card, selectedFilters)
+    contentCard = axisDriven ? axisCard : getFilteredSubCard(card, selectedFilters)
   }
   const hasFilterError = card.cards != null && contentCard == null
 
@@ -221,7 +226,7 @@ export function DetailsCard({
                   {reportingPeriod}
                 </span>
               )}
-              {card.dropdowns?.map(dd => (
+              {!axisDriven && card.dropdowns?.map(dd => (
                 <span key={dd.key} className={styles.subTitleItem}>
                   <select
                     className={styles.dropdownSelect}

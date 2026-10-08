@@ -196,3 +196,15 @@ export interface IDataLoadETA {
 
 /** Computed ETA map keyed by metric name */
 export type ETAMap = Record<string, { time: Date; day?: string }>
+
+/** Reporting period offered by the Quick Facts filter */
+export type Period = 'WTD' | 'YDAY'
+
+/** Global breakdown axis: one level down the hierarchy, or departments */
+export type BreakdownAxis = 'childLevel' | 'department'
+
+/** Per-period value: a bare card array, or the original { cards, sortBy } shape */
+export type ISQFPeriodValue = ISQFMetricCard[] | { cards: ISQFMetricCard[]; sortBy?: string }
+
+/** summaryCards / detailCard response: only periods that have data are present */
+export type ISQFPeriodResponse = Partial<Record<Period, ISQFPeriodValue>>

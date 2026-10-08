@@ -2,6 +2,7 @@ import client from './client'
 import type {
   ISQFGenericFilter,
   ISQFMetricCard,
+  ISQFPeriodResponse,
   IAvailableMetricCards,
   IDataLoadETA,
 } from '../types/sqf.types'
@@ -34,11 +35,11 @@ export async function getSummaryCards(
   apiDepth: number,
   date: string,
   code?: string
-): Promise<ISQFMetricCard[]> {
+): Promise<ISQFPeriodResponse | ISQFMetricCard[]> {
   const path = apiDepth && code
     ? `/sqf/summaryCards/${apiDepth}/${date}/${code}`
     : `/sqf/summaryCards/0/${date}`
-  const res = await client.get<ISQFMetricCard[]>(path)
+  const res = await client.get<ISQFPeriodResponse | ISQFMetricCard[]>(path)
   return res.data
 }
 
@@ -54,11 +55,11 @@ export async function getDetailCard(
   apiDepth: number,
   date: string,
   code?: string
-): Promise<ISQFMetricCard[]> {
+): Promise<ISQFPeriodResponse | ISQFMetricCard[]> {
   const path = apiDepth && code
     ? `/sqf/detailCard/${metric}/${apiDepth}/${date}/${code}`
     : `/sqf/detailCard/${metric}/0/${date}`
-  const res = await client.get<ISQFMetricCard[]>(path)
+  const res = await client.get<ISQFPeriodResponse | ISQFMetricCard[]>(path)
   return res.data
 }
 

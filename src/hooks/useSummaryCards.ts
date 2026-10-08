@@ -6,7 +6,7 @@ import { useFilter } from '../context/FilterContext'
  * Fetches summary metric cards for the current filter selection.
  * Auto-refetches whenever selectedNode or selectedDate changes.
  */
-export function useSummaryCards() {
+export function useSummaryCards(enabled = true) {
   const { selectedNode, selectedDate, isLoaded } = useFilter()
 
   return useQuery({
@@ -17,7 +17,7 @@ export function useSummaryCards() {
         selectedDate,
         selectedNode!.code || undefined
       ),
-    enabled: isLoaded,
+    enabled: isLoaded && enabled,
     staleTime: 0,
   })
 }

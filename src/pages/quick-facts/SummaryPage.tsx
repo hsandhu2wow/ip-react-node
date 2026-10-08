@@ -6,7 +6,7 @@ import type { ISQFMetricCard } from '../../types/sqf.types'
 import styles from './SummaryPage.module.css'
 
 export function SummaryPage() {
-  const { isLoaded, selectedNode } = useFilter()
+  const { isLoaded, selectedNode, selectedBreakdownAxis } = useFilter()
   const enrichedQuery = useEnrichedSummaryCards()
 
   const isLoading = !isLoaded || enrichedQuery.isLoading
@@ -52,7 +52,7 @@ export function SummaryPage() {
             ))
           : sortedCards.map(card => (
               <div key={card.cardName} className="metric-card-slot">
-                <SummaryCard card={card} />
+                <SummaryCard card={card} axis={selectedBreakdownAxis} />
               </div>
             ))}
       </div>

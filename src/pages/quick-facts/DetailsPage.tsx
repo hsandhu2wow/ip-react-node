@@ -6,6 +6,7 @@ import { useCardStatus } from '../../hooks/useCardStatus'
 import { useFilter } from '../../context/FilterContext'
 import { DetailsCard } from '../../components/cards/DetailsCard/DetailsCard'
 import { useEnrichedSummaryCards } from '../../hooks/useEnrichedSummaryCards'
+import { usePeriodCards } from '../../hooks/usePeriodCards'
 import { CardSidebar } from '../../components/cards/CardSidebar/CardSidebar'
 import type { ISQFMetricCard } from '../../types/sqf.types'
 import styles from './DetailsPage.module.css'
@@ -57,13 +58,26 @@ const SORT_OPTIONS: [SortType, string][] = [
 
 export function DetailsPage() {
   const { type } = useParams<{ type: string }>()
-  const { isLoaded, selectedNode, setSelectedNode } = useFilter()
+  const { isLoaded, selectedNode, setSelectedNode, selectedBreakdownAxis } = useFilter()
   const enrichedSummary = useEnrichedSummaryCards()
   const cardStatusQuery = useCardStatus()
   const detailsQuery = useDetailsCard(type)
+  const periodCards = usePeriodCards(detailsQuery.data)
   const [sortType, setSortType] = useState<SortType>('az')
   const [sortOpen, setSortOpen] = useState(false)
   const sortRef = useRef<HTMLDivElement>(null)
+
+  // Backend-provided default sort (per period) seeds the sort dropdown.
+  const backendSortBy = periodCards.sortBy
+  useEffect(() => {
+    const mapped: Record<string, SortType> = {
+      'A - Z': 'az',
+      'Z - A': 'za',
+      'Low - High': 'lowhigh',
+      'High - Low': 'highlow',
+    }
+    if (backendSortBy && mapped[backendSortBy]) setSortType(mapped[backendSortBy])
+  }, [backendSortBy, type])
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -88,7 +102,7 @@ export function DetailsPage() {
   const apiDepth = selectedNode?.apiDepth ?? 0
 
   const isLoading = !isLoaded || detailsQuery.isLoading
-  const raw: ISQFMetricCard[] = detailsQuery.data || []
+  const raw: ISQFMetricCard[] = periodCards.cards
   // Matches Angular's SqfCardsService.setupCommonProps(): only compute canDrillDown
   // when the API hasn't already supplied an explicit value.
   const enrichedRaw = raw.map(c => ({
@@ -195,6 +209,7 @@ export function DetailsPage() {
                     selectedNode={selectedNode}
                     detailsLastLevel={detailsLastLevel}
                     onDrillDown={handleDrillDown}
+                    axis={selectedBreakdownAxis}
                   />
                 ))}
           </div>

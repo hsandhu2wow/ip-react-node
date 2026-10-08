@@ -11,7 +11,7 @@ import type { IQFTree } from '../types/sqf.types'
 import { formatDate, getYesterdayDate } from '../utils/formatters'
 import { flattenTree, findNodeByCode, getFirstSelectableNode, addParents } from '../utils/tree'
 import { processFilterResponse } from '../utils/tree'
-import type { ISQFGenericFilter } from '../types/sqf.types'
+import type { ISQFGenericFilter, Period, BreakdownAxis } from '../types/sqf.types'
 
 interface FilterContextType {
   /** Flat list of all selectable nodes — used by the location dropdown */
@@ -26,6 +26,12 @@ interface FilterContextType {
   initTree: (raw: ISQFGenericFilter[]) => void
   setSelectedNode: (node: IQFTree) => void
   setSelectedDate: (date: string) => void
+  /** Reporting period shown on cards (WTD / YDAY). Persisted in ?period= */
+  selectedPeriod: Period
+  /** Breakdown axis for cards (child level / department). Persisted in ?axis=; never reset on navigation */
+  selectedBreakdownAxis: BreakdownAxis
+  setSelectedPeriod: (period: Period) => void
+  setSelectedBreakdownAxis: (axis: BreakdownAxis) => void
 }
 
 const FilterContext = createContext<FilterContextType | null>(null)
@@ -93,6 +99,43 @@ export function FilterProvider({ children }: { children: ReactNode }) {
     [setSearchParams]
   )
 
+  const [selectedPeriod, setSelectedPeriodState] = useState<Period>(() =>
+    searchParams.get('period') === 'YDAY' ? 'YDAY' : 'WTD'
+  )
+  const [selectedBreakdownAxis, setSelectedAxisState] = useState<BreakdownAxis>(() =>
+    searchParams.get('axis') === 'department' ? 'department' : 'childLevel'
+  )
+
+  const setSelectedPeriod = useCallback(
+    (period: Period) => {
+      setSelectedPeriodState(period)
+      setSearchParams(
+        prev => {
+          const next = new URLSearchParams(prev)
+          next.set('period', period)
+          return next
+        },
+        { replace: true }
+      )
+    },
+    [setSearchParams]
+  )
+
+  const setSelectedBreakdownAxis = useCallback(
+    (axis: BreakdownAxis) => {
+      setSelectedAxisState(axis)
+      setSearchParams(
+        prev => {
+          const next = new URLSearchParams(prev)
+          next.set('axis', axis)
+          return next
+        },
+        { replace: true }
+      )
+    },
+    [setSearchParams]
+  )
+
   const isLoaded = treeNodes.length > 0 && selectedNode !== null
 
   return (
@@ -105,6 +148,10 @@ export function FilterProvider({ children }: { children: ReactNode }) {
         initTree,
         setSelectedNode,
         setSelectedDate,
+        selectedPeriod,
+        selectedBreakdownAxis,
+        setSelectedPeriod,
+        setSelectedBreakdownAxis,
       }}
     >
       {children}
