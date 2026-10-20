@@ -1,7 +1,7 @@
 /* src/components/layout/MobileNav/MobileNav.module.css */
 
 /* ── Hide on desktop ── */
-@media (min-width: 768px) {
+@media (min-width: 769px) {
   .appbar { display: none !important; }
   .backdrop { display: none !important; }
   .drawer { display: none !important; }

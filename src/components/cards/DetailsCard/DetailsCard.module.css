@@ -1,37 +1,60 @@
-/* ── Base card ── */
+/* ── Base card (.qf-details-card) — outer width/margins are owned by the page slot ── */
 .card {
   width: 100%;
-  max-width: 900px;
+  max-width: none;
+  margin: 0;
+  padding: 0;
   display: flex;
   flex-direction: column;
+  height: auto;
   min-height: 388px;
+  max-height: 508px;
   background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: 4px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  /* mat-card text colour */
+  color: #4a4a4a;
+  border: 1px solid #d3d3d3;
+  border-radius: 4.06px;
+  box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.1);
   overflow: hidden;
-  margin: 0 auto 24px;
+}
+/* .qf-details-card__has-tabs */
+.cardHasTabs { max-height: 568px; }
+
+/* tablet-sm: height auto, min-height 300, max-height 100% */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .card { min-height: 300px; max-height: 100%; }
+}
+@media (max-width: 768px) {
+  .card, .cardHasTabs { min-height: 300px; max-height: none; overflow-x: hidden; overflow-y: auto; }
 }
 
-/* ── Header ── */
+/* ── Header (.qf-details-card__header) ── */
 .header {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   min-height: 50px;
   border-top: 4px solid var(--color-neutral);
+  border-radius: 3.74px 3.74px 0 0;
   margin-bottom: 16px;
-  padding: 10px 12px 0;
 }
 
-.headerLeft { flex: 1; min-width: 0; }
+.headerLeft {
+  display: flex;
+  flex-direction: column;
+  margin-left: 12px;
+  width: 85%;
+  min-width: 0;
+}
 
 .cardTitle {
+  display: flex;
+  align-items: center;
   font-size: 16px;
   font-weight: 700;
-  color: var(--color-text);
+  color: inherit;
   padding-top: 8px;
-  margin-bottom: 4px;
+  padding-bottom: 0;
 }
 
 .subTitle {
@@ -39,37 +62,52 @@
   flex-wrap: wrap;
   gap: 16px;
   align-items: center;
-  color: var(--color-text-secondary);
+  color: #676d70;
   font-size: 12px;
-  padding-bottom: 8px;
+  line-height: 14px;
+  padding: 6px 0 8px;
 }
 
-.subTitleItem { display: flex; align-items: center; gap: 3px; }
+.subTitleItem { display: flex; align-items: center; margin-right: 5px; }
+.subTitleText { margin: 0 6px 0 4px; }
 
-.subTitleIcon { font-size: 14px; }
+.subTitleIcon {
+  font-size: 12.9px;
+  width: 12.9px;
+  height: 12.9px;
+  min-width: 12.9px;
+  line-height: 13px;
+  vertical-align: text-top;
+}
 
 .dropdownSelect {
   font-size: 12px;
   font-family: inherit;
   border: none;
   background: transparent;
-  color: var(--color-text-secondary);
+  color: #676d70;
   cursor: pointer;
   padding: 0;
 }
 
-.headerRight { flex-shrink: 0; padding-top: 2px; }
+.headerRight { flex-shrink: 0; }
 
+/* .qf-details-card__recognize-button + mat-icon-button (48×48, 24px icon) */
 .recognizeBtn {
+  width: 48px;
+  height: 48px;
   background: none;
   border: none;
+  border-radius: 50%;
   cursor: pointer;
-  font-size: 20px;
-  padding: 4px;
-  color: var(--color-text-secondary);
+  font-size: 24px;
+  padding: 12px;
+  color: #616161;
   display: flex;
   align-items: center;
+  justify-content: center;
 }
+.recognizeBtn :global(.material-icons-outlined) { font-size: 24px; }
 .recognizeBtn:hover { color: var(--color-primary); }
 .recognizeBtn:disabled { opacity: 0.5; cursor: default; }
 
@@ -84,84 +122,116 @@
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 
-/* ── Two-column content — 38/62 split, matches Angular's
-   qf-details-card__left-section / __right-content ── */
+/* ── Two-column content (.qf-details-card__content / __left-section / __right-content) ── */
 .content {
   display: flex;
-  flex: 1;
   flex-wrap: wrap;
+  height: 100%;
   min-height: 280px;
+  padding: 0;
   overflow: hidden;
-}
-
-@media (max-width: 600px) {
-  .content { flex-direction: column; }
 }
 
 .leftCol {
   display: flex;
   flex-direction: column;
   width: 38%;
-  flex-shrink: 0;
-  padding-left: 12px;
 }
 
-@media (max-width: 600px) {
-  .leftCol { width: 100%; padding-left: 0; }
-}
-
+/* .qf-details-card__graph (+ qf-styles.scss width 100% / centered) */
 .graphArea {
   margin: auto;
   display: flex;
   align-items: center;
-  padding: 24px 12px 24px 0;
+  justify-content: center;
+  width: 100%;
+  padding: 24px 12px;
 }
+/* app-sqf-pie-chart host padding-top (40px) sits outside the 180px chart box */
+.graphAreaPie { padding-top: 64px; }
 
-.rightCol {
+.rightCol, .rightColFull {
   width: 62%;
   display: flex;
   flex-direction: column;
+  gap: 0;
   justify-content: space-between;
   padding: 0 12px;
-  border-left: 1px solid var(--color-border);
+  border-left: 1px solid #e0e0e0;
   min-width: 0;
 }
+.rightColFull { width: 100%; }
 
-.rightColFull {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  padding: 0 12px;
-  min-width: 0;
+/* .qf-details-card__table */
+.table { flex-grow: 1; min-width: 0; }
+.tabContent { height: 100%; }
+
+/* tablet-lg / desktop-* (qf-styles.scss) */
+@media (min-width: 1024px) {
+  .rightCol { width: 60%; padding-left: 28px; margin-left: 16px; }
+  .rightColFull { width: 100%; padding-left: 0; margin-left: 12px; border-left: none; }
 }
 
-@media (max-width: 600px) {
-  .rightCol, .rightColFull { width: 100%; border-left: none; border-top: 1px solid var(--color-border); padding: 12px 0 0; }
+/* mobile-* / tablet-sm: right column loses its divider */
+@media (max-width: 1023px) {
+  .rightCol, .rightColFull { border-left: 0; }
 }
 
-/* ── KPI numbers — laid out in a row, each block stacked value-over-label,
-   separated by a vertical divider (matches Angular's __numbers/-block/-divider) ── */
+/* tablet-sm: content wraps into a single column */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .leftCol, .rightCol, .rightColFull { width: 100%; }
+  .graphArea { margin: 16px auto; }
+}
+
+/* xsm */
+@media (max-width: 768px) {
+  .content { overflow-y: auto; }
+  .leftCol, .rightCol, .rightColFull, .table { width: 100%; }
+  .table { height: auto; }
+}
+
+/* ── KPI numbers (.qf-details-card__numbers / -block / __number / -divider) ── */
 .kpiRow { display: flex; justify-content: flex-start; align-items: flex-start; }
 .kpiBlock { display: flex; flex-direction: column; align-items: flex-start; margin: 0 12px; padding: 8px 0; }
-.kpiBlock:first-child { margin-left: 0; }
-.kpiValue { font-size: 20px; font-weight: 700; color: var(--color-text); margin-bottom: 4px; }
+.kpiValue { font-size: 20px; font-weight: 700; color: inherit; margin-bottom: 4px; }
 .kpiLabel {
   font-size: 12px;
   line-height: 14px;
-  color: var(--color-text);
+  color: #333333;
   opacity: 0.9;
   display: flex;
-  align-items: center;
-  gap: 4px;
+}
+.kpiTooltip {
+  position: fixed;
+  transform: translateY(-100%);
+  z-index: 1600;
+  width: max-content;
+  max-width: 240px;
+  padding: 8px;
+  border-radius: 4px;
+  background: #333333;
+  color: #ffffff;
+  font-size: 12px;
+  line-height: 16px;
+  pointer-events: none;
 }
 .kpiDivider { width: 0; height: 34px; border-left: 1px solid #e0e0e0; align-self: center; }
 
-.infoIcon { font-size: 13px; cursor: pointer; color: var(--color-text-secondary); }
+/* .qf-details-card__title-icon */
+.infoIcon {
+  font-size: 15px;
+  width: 15px;
+  height: 15px;
+  line-height: 16px;
+  margin-left: 2px;
+  cursor: pointer;
+  color: var(--color-text-secondary);
+}
+.dataInfoIcon { font-size: 14px; width: 14px; height: 14px; }
 
 /* ── Drill-down link ── */
 .drillDownLink {
-  color: var(--color-blue);
+  color: #3f69ae;
   font-size: 14px;
   padding: 16px 0;
   cursor: pointer;
@@ -172,11 +242,13 @@
 .deptSelect {
   display: flex;
   align-items: center;
-  gap: 4px;
   padding: 8px 0;
+  font-size: 14px;
+  color: #3f69ae;
 }
-.deptSelectLabel { font-size: 14px; color: var(--color-blue); width: 160px; }
+.deptSelectLabel { width: 160px; }
 .deptSelectInput {
+  width: 150px;
   font-size: 13px;
   font-family: inherit;
   border: 1px solid var(--color-border);
@@ -187,17 +259,23 @@
   cursor: pointer;
 }
 
-/* ── Footer ── */
+/* ── Footer (.qf-details-card__sub-title.__sub-title-top-border) ── */
 .footer {
   display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
   justify-content: space-between;
   align-items: center;
+  width: 100%;
   padding: 12px;
-  border-top: 1px solid var(--color-border);
+  border-top: 1px solid #e0e0e0;
   font-size: 12px;
-  color: var(--color-text-secondary);
+  line-height: 14px;
+  color: #676d70;
 }
+.footerText { margin: 0 6px 0 0; }
 
+/* .qf-details-card__data-info */
 .metricsInfoBtn {
   display: flex;
   align-items: center;
@@ -206,23 +284,61 @@
   border: none;
   cursor: pointer;
   font-size: 12px;
-  color: var(--color-text-secondary);
+  line-height: 14px;
+  color: #676d70;
   font-family: var(--font-family);
-  padding: 0;
+  padding: 4px;
 }
-.metricsInfoBtn:hover { color: var(--color-text); }
+.metricsInfoBtn:hover { background-color: #f5f5f5; border-radius: 4px; }
 
-/* ── Errors ── */
+/* ── Errors (.qf-details-card__error) ── */
 .errorContent {
-  flex: 1;
+  margin: auto;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  padding: 24px;
   text-align: center;
+  color: #676d70;
 }
-.errorHeading { font-size: 15px; font-weight: 700; color: var(--color-text); margin-bottom: 8px; }
-.errorSubtext { font-size: 13px; color: var(--color-text-secondary); line-height: 1.6; }
-.errorLink { color: var(--color-blue); }
-.errorImg { width: 72px; height: 72px; margin-bottom: 12px; }
+.errorHeading { align-self: stretch; font-size: 16px; line-height: 19.2px; font-weight: 700; margin: 8px 0; }
+.errorSubtext { font-size: 9px; }
+.errorLink { color: inherit; }
+.errorImg { width: 84px; }
+
+/* Legacy (pre-axis) cards: segmented toggle instead of a dropdown (Angular __seg) */
+.seg {
+  display: inline-flex;
+  border: 1px solid #d3d3d3;
+  border-radius: 6px;
+  overflow: hidden;
+  height: 26px;
+  box-sizing: border-box;
+}
+
+.segBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  border: none;
+  background: #fff;
+  color: #333;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 400;
+  cursor: pointer;
+  padding: 0 8px;
+  height: 24px;
+  line-height: 24px;
+  transition: background 150ms, color 150ms;
+}
+
+.segBtn:first-child { border-right: 1px solid #d3d3d3; }
+.segBtn:hover:not(.segBtnActive) { background: #f7f7f7; }
+.segBtnActive { background: var(--main-bg-color, #10542f); color: #fff; }
+
+/* .qf-details-card__preview — added to the card root while it is captured for export */
+.card:global(.qf-details-card__preview) { border: 1px solid #d3d3d3; height: auto; }
+.card:global(.qf-details-card__preview) .headerRight { display: none; }
+.card:global(.qf-details-card__preview) .drillDownLink { display: none; }
+.card:global(.qf-details-card__preview) .deptSelect { display: none; }

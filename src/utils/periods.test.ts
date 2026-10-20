@@ -23,6 +23,12 @@ describe('normalizePeriods', () => {
     expect(r.periods.YDAY).toBeUndefined()
   })
 
+  it('preserves a legacy top-level cards wrapper and its sort setting', () => {
+    const r = normalizePeriods({ cards: [card('a')], sortBy: 'HighLow' })
+    expect(r.periods.WTD).toEqual([card('a')])
+    expect(r.sortBy.WTD).toBe('HighLow')
+  })
+
   it('drops invalid values and handles single period', () => {
     expect(normalizePeriods({ WTD: 'x', YDAY: null }).periods).toEqual({})
     expect(normalizePeriods(undefined).periods).toEqual({})

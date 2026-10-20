@@ -1,0 +1,161 @@
+/* Angular core-qf/qf-nps-survey.component.scss */
+.survey {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  line-height: 20px;
+  letter-spacing: 0;
+  color: #333333;
+  font-size: 14px;
+  padding: 24px;
+}
+
+.closeRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.header {
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 700;
+}
+
+.closeBtn {
+  border: 0;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+  color: inherit;
+  font-size: 24px;
+}
+
+.divider {
+  width: 100%;
+  margin: 0;
+  border: 0;
+  border-top: 1px solid #d3d3d3;
+}
+
+.dividerQa {
+  border-top-color: #efefef;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.row {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.newline {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.subDiv {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+}
+
+.sub {
+  width: auto;
+  height: 18px;
+  font-weight: 400;
+  font-size: 12px;
+  line-height: 24px;
+  color: #848484;
+}
+
+.icons {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  justify-content: center;
+}
+
+.iconsDiv {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+}
+
+.scoreBtn {
+  width: 44px;
+  height: 44px;
+  border-radius: 4px;
+  border: 1px solid #d3d3d3;
+  background-color: #f7f7f7;
+  color: #333333;
+  font: inherit;
+  cursor: pointer;
+}
+
+.scoreSelected {
+  background-color: #219653;
+  color: white;
+  transform: scale(1.1);
+}
+
+.comment {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.comment textarea {
+  width: 100%;
+  height: 109px;
+  border: 1px solid #d3d3d3;
+  border-radius: 3px;
+  color: #333333;
+  padding: 8px;
+  box-sizing: border-box;
+  font: inherit;
+}
+
+.bottom {
+  flex-direction: row;
+}
+
+.submitBtn,
+.exitBtn {
+  height: 32px;
+  width: 69px;
+  border-radius: 3px;
+  padding: 5.5px 12px;
+  letter-spacing: 0;
+  font: inherit;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.submitBtn {
+  border: 0;
+  background: #efefef;
+  color: #a7a7a7;
+}
+
+.submitBtn:disabled {
+  cursor: default;
+}
+
+.submitSelected {
+  background-color: #219653 !important;
+  color: #ffffff;
+}
+
+.exitBtn {
+  color: #333333;
+  border: 1px solid #219653;
+  background: #ffffff;
+}

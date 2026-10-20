@@ -81,10 +81,13 @@
   border: 1px solid #d3d3d3;
   border-radius: 0 0 6px 6px;
   box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.05);
-  width: 320px;
+  width: fit-content;
   max-height: 384px;
-  overflow-y: auto;
+  overflow-y: scroll;
   z-index: 1100;
+}
+@media (max-width: 768px) {
+  .dropdownMenu { width: 280px; }
 }
 
 /* Date picker — trigger button + custom dropdown panel */
@@ -93,7 +96,6 @@
   align-items: center;
   cursor: pointer;
   border: none;
-  border-right: 1px solid var(--color-border);
   padding: 0 8px 0 4px;
   height: var(--filter-bar-height);
   gap: 0;
@@ -108,15 +110,17 @@
   cursor: not-allowed;
 }
 
+/* Angular .qf-filter__dp-toggle: 20px-wide box (margin-right .5rem) holding a
+   scale(0.7) mat-icon-button, so the 16.8px glyph overflows 11.4px to the right */
 .dateIcon {
-  font-size: 14px;
-  width: 14px;
-  height: 14px;
-  line-height: 14px;
-  flex: 0 0 14px;
+  font-size: 16.8px;
+  width: 20px;
+  height: 16.8px;
+  line-height: 16.8px;
+  flex: 0 0 20px;
   color: #4a4a4a;
-  transform: scale(0.85);
-  margin-right: 4px;
+  margin-right: 8px;
+  transform: translateX(11.4px);
 }
 
 .dateLabel {
@@ -125,30 +129,139 @@
   font-weight: 600;
   color: #4a4a4a;
   white-space: nowrap;
-  margin-right: 2px;
 }
 
+/* Angular hidden .qf-filter__dp-input (width 0 + 2px side padding) before the caret */
+.dateCaret { margin-left: 4px; }
+
 /* Feedback / download / print actions — right end of the filter bar */
+/* Angular .qf-filter__option.qf-filter__right-section */
 .right {
   display: flex;
+  flex-grow: 1;
+  justify-content: flex-end;
   align-items: center;
-  gap: 4px;
-  padding-right: 12px;
-  margin-left: auto;
+  gap: 2px;
+  padding: 0 8px;
+  color: #4a4a4a;
 }
 
 .iconBtn {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
+  width: 48px;
+  height: 48px;
   border: none;
   border-radius: 50%;
   background: none;
-  color: #4a4a4a;
+  color: #616161;
   cursor: pointer;
 }
 .iconBtn .material-icons { font-size: 20px; }
 .iconBtn:hover:not(:disabled) { background: rgba(0, 0, 0, 0.06); }
 .iconBtn:disabled { color: #b0b0b0; cursor: not-allowed; }
+/* styles.scss .hide-xsm */
+@media (max-width: 768px) {
+  .hideXsm { display: none; }
+}
+
+/* Angular .qf-filter__date-group — period menu + date picker */
+.dateGroup {
+  display: flex;
+  align-items: stretch;
+  height: 100%;
+  border-right: 1px solid #d3d3d3;
+}
+
+/* Angular .hide-sm — only visible at ≤768 */
+@media (min-width: 769px) {
+  .hideSm { display: none !important; }
+}
+
+/* Angular sqf-filter .ai-insights-button */
+.aiInsightsBtn {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  gap: 4px;
+  position: relative;
+  width: 121px;
+  height: 35px;
+  padding: 3px 8px;
+  border: none;
+  border-radius: 3px;
+  background: #ffffff;
+  color: #3f69ae;
+  font-family: var(--font-family);
+  font-size: 14px;
+  line-height: 21px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.aiInsightsBtn:hover,
+.aiInsightsBtnSelected { background: #e8edf5; }
+
+.aiInsightsIcon {
+  background: linear-gradient(90deg, #0091f8 0%, #ab65fb 50%, #e24dc5 75%, #f0416b 87.5%, #f45406 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: #4f46e5;
+  font-size: 22px !important;
+  width: 22px;
+  height: 22px;
+  margin-right: 4px;
+}
+
+.aiInsightsDivider {
+  width: 0;
+  height: 16px;
+  border: 1px solid #e0e0e0;
+  margin-left: 4px;
+}
+
+.hideSm { position: relative; }
+/* Angular renders the kebab menu as a plain mat-menu (backdropClass only styles the backdrop) */
+.mobileMenu {
+  position: absolute;
+  top: 100%;
+  right: 8px;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  min-width: 112px;
+  max-width: 280px;
+  padding: 8px 0;
+  box-sizing: border-box;
+  background: #fff;
+  border-radius: 4px;
+  box-shadow: 0 5px 5px -3px rgba(0, 0, 0, 0.2), 0 8px 10px 1px rgba(0, 0, 0, 0.14), 0 3px 14px 2px rgba(0, 0, 0, 0.12);
+}
+
+.mobileMenuItem {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: 48px;
+  padding: 0 16px;
+  border: none;
+  background: none;
+  color: rgba(0, 0, 0, 0.87);
+  font-family: var(--font-family);
+  font-size: 12px;
+  line-height: 12px;
+  font-weight: 400;
+  text-align: left;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.mobileMenuItem:hover {
+  background: rgba(0, 0, 0, 0.04);
+}
+.mobileMenuItem :global(.material-icons) {
+  color: rgba(0, 0, 0, 0.87);
+  font-size: 24px;
+  margin-right: 16px;
+}

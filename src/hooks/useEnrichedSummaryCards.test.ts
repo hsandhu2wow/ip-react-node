@@ -11,6 +11,9 @@ vi.mock('./useSummaryCards', () => ({
 vi.mock('./useCardStatus', () => ({
   useCardStatus: vi.fn(),
 }))
+vi.mock('./useDataLoadETA', () => ({
+  useDataLoadETA: () => ({ data: undefined }),
+}))
 vi.mock('../context/FilterContext', () => ({
   useFilter: vi.fn(),
 }))

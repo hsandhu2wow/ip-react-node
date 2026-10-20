@@ -1,8 +1,12 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { CardSidebar } from './CardSidebar'
+import { mapSeasonalCards } from '../../../api/seasonal'
+import { seasonalAPI } from '../../../test/fixtures/seasonal'
 import type { ISQFMetricCard } from '../../../types/sqf.types'
+
+vi.mock('../SeasonalCard/SeasonalBarChart', () => ({ SeasonalBarChart: () => null }))
 
 const cards: ISQFMetricCard[] = [
   {
@@ -39,11 +43,35 @@ function render$(selectedType: string) {
 }
 
 describe('CardSidebar', () => {
-  it('renders only cards where isDetailsPageAvailable=true', () => {
-    render$('sales')
-    expect(screen.getByText('Sales')).toBeDefined()
-    expect(screen.getByText('Stock Loss')).toBeDefined()
-    expect(screen.queryByText('No Link')).toBeNull()
+  it('inserts the seasonal legacy summary by sequence and marks its active type', () => {
+    const seasonalCard = mapSeasonalCards([seasonalAPI], { node: { apiDepth: 0, code: '', level_desc: '' }, date: '',
+      config: { titleText: 'Summer Event', sequence: 2, details: 1, summary: 1, details_last_level: 6 } })[0]
+    render(<MemoryRouter><CardSidebar cards={cards} selectedType="seasonal" seasonalCard={seasonalCard}
+      cardStatus={{ seasonal: { summary: 1, details: 1, sequence: 2 }, sales: { details: 1, sequence: 3 }, stockloss: { details: 1, sequence: 1 }, nolinkcard: { details: 0, sequence: 4 } }} /></MemoryRouter>)
+    const entries = [...document.querySelectorAll('[data-selected]')]
+    expect(entries.map(e => e.querySelector('[class*=title], [class*=Title]')?.textContent)).toEqual(['Stock Loss', 'SUMMER EVENT', 'Sales'])
+    expect(document.querySelector('[aria-current="page"]')?.textContent).toContain('SUMMER EVENT')
+    expect(screen.getAllByRole('link', { name: /Go to details/ }).map(l => l.getAttribute('href'))).toContain('/quick-facts/details/seasonal')
+  })
+
+  it('renders details-enabled cards ordered by card-status sequence', () => {
+    render(
+      <MemoryRouter>
+        <CardSidebar
+          cards={cards}
+          selectedType="sales"
+          cardStatus={{
+            sales: { sequence: 3, details: 1 },
+            stockloss: { sequence: 1, details: 1 },
+            nolinkcard: { sequence: 2, details: 0 },
+          }}
+        />
+      </MemoryRouter>
+    )
+    const titles = Array.from(document.querySelectorAll('[data-selected]')).map(
+      el => el.textContent?.match(/Sales|Stock Loss|No Link/)?.[0]
+    )
+    expect(titles).toEqual(['Stock Loss', 'Sales'])
   })
 
   it('renders the first KPI displayValue for each card', () => {

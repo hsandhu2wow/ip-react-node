@@ -21,14 +21,19 @@ export function InfoModal({ title, body, onClose }: Props) {
         onClick={e => e.stopPropagation()}
       >
         <div className={styles.header}>
-          <span id="info-modal-title" className={styles.title}>{title}</span>
+          {title && (
+            <div className={styles.titleDiv}>
+              <span className={`material-icons ${styles.icon}`} aria-hidden="true">info_outlined</span>
+              <span id="info-modal-title">{title}</span>
+            </div>
+          )}
           <button
             className={styles.closeBtn}
             onClick={onClose}
             data-testid="info-modal-close"
             aria-label="Close"
           >
-            ✕
+            <span className={`material-icons ${styles.icon}`}>close</span>
           </button>
         </div>
         <div

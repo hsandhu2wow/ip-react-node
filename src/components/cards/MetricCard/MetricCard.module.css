@@ -64,15 +64,50 @@
 .kpiLabel { font-size: 12px; color: var(--color-text); margin-top: 3px; white-space: nowrap; }
 .kpiDivider { width: 1px; background: #e0e0e0; margin: 2px 0; flex-shrink: 0; }
 
-/* ── Chart ── */
-.chartArea { padding: 0 12px; margin: 8px 0; position: relative; width: 100%; }
+/* ── Chart containers ── */
+/* Angular .si-wrapper__content .qf-bar-chart (height comes from the inline style) */
+.barChart { position: relative; width: 100%; max-width: 800px; margin: auto; }
+/* Angular .qf-gauge-chart: width/height 100% × 180px */
+.pieChart { position: relative; width: 100%; }
 
 /* ── Table ── */
-.tableArea { padding: 0 12px 8px; overflow: auto; min-width: 0; position: relative; max-height: 336px; }
+/* Angular sqf-basic-table .tooltip-banner / .scroll-help */
+.tooltipBanner {
+  margin-bottom: 8px;
+  display: flex;
+  gap: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  align-items: center;
+  color: #676d70;
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: inherit;
+}
+.tooltipBannerIcon { font-size: 12px; width: 12px; height: 12px; }
+.scrollHelp { display: flex; padding-bottom: 8px; font-size: 12px; color: #676d70; gap: 4px; align-items: center; }
+.scrollHelpIcon { font-size: 14px; width: 14px; height: 14px; }
+.tooltipTable { width: 100%; border-collapse: collapse; font-size: 12px; }
+.tooltipTable th, .tooltipTable td { text-align: left; padding: 4px 20px 4px 0; height: 48px; line-height: 19px; border-bottom: 1px solid #e0e0e0; }
 
-@media (max-width: 600px) {
+/* Angular .qf-scroll-container(-wrapper): no padding — the card supplies the inset */
+.tableArea { height: auto; max-width: 100%; overflow: auto; min-width: 0; position: relative; max-height: 336px; }
+
+@media (max-width: 768px) {
   .tableArea { max-height: 644px; }
 }
+/* qf-styles desktop-lg `.sqf-tab-content-table .qf-scroll-container-wrapper` */
+@media (min-width: 1920px) {
+  .tableAreaInTabs { max-height: 320px; }
+}
+/* qf-styles tablet-lg..desktop-lg `.qf-summary-card__table--expanded` / `__tabs--expanded` */
+@media (min-width: 1024px) {
+  .tableAreaExpanded { max-height: none; }
+}
+
+/* Non-scrolling wrapper (Angular .qf-scroll-container-wrapper) that owns the shadow */
+.tableShadowWrap { position: relative; max-width: 100%; min-width: 0; }
 
 /* Right-edge scroll shadow — shown while a sticky-first-column table has
    more columns to scroll to, hidden once scrolled to the end. */
@@ -84,28 +119,84 @@
   width: 14px;
   height: 100%;
   background: linear-gradient(to left, rgba(100, 100, 100, 0.3), rgba(100, 100, 100, 0));
-  z-index: 5;
+  z-index: 99;
   pointer-events: none;
 }
 
-.table { width: 100%; min-width: max-content; border-collapse: collapse; font-size: 12px; }
+.table { width: 100%; border-collapse: collapse; font-size: 12px; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+.table { background: var(--color-surface, #fff); }
+/* mat-header-row sticky: true — every header cell sticks to the top of the scroller */
 .table th {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--color-surface, #fff);
+  letter-spacing: 0.0071428571em;
   text-align: left;
-  padding: 4px 8px;
-  height: 40px;
+  padding: 4px 6px 4px 8px;
+  height: 48px;
+  line-height: 19px;
   font-weight: 700;
   border-bottom: 1px solid var(--color-border);
-  color: var(--color-text);
+  color: #666666;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .table th:first-child, .table td:first-child { padding-left: 0; }
-.table td { padding: 4px 8px; height: 48px; line-height: 20px; border-bottom: 1px solid #f0f0f0; color: var(--color-text); font-weight: 500; white-space: nowrap; }
-.table tbody tr:hover { background: #f4f9fc; }
+.table td { padding: 4px 20px 4px 8px; height: 48px; line-height: 19px; border-bottom: 1px solid #f0f0f0; color: var(--color-text); font-weight: 500; letter-spacing: 0.0178571429em; overflow: hidden; text-overflow: ellipsis; }
+/* Angular sqf-basic-table: cell text clamps to two lines */
+.table td > span:not([class]), .headerLabel > div {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.table:not(.basicTable) tbody tr:not(.childRow):hover { background: #f4f9fc; }
+.table:not(.basicTable) tbody tr:not(.childRow):hover td { font-weight: 700; }
 .table tr:last-child td { border-bottom: none; }
 .childRow td { background: #fafafa; font-size: 12px; padding-left: 20px; color: #797979; font-weight: 400; }
 .firstCol { display: flex; align-items: center; gap: 2px; }
 .expandIcon { font-size: 18px; color: var(--color-text-secondary); flex-shrink: 0; }
-.sortIcon { font-size: 14px; vertical-align: middle; margin-left: 2px; color: var(--color-text-secondary); }
-.footerRow td { font-weight: 700; border-top: 1px solid var(--color-border); border-bottom: none; }
+/* Sortable headers mirror mat-sort-header: arrow hidden until hover, shown when active */
+.sortableHeader { cursor: pointer; user-select: none; }
+.headerContent { display: flex; align-items: center; letter-spacing: normal; }
+/* mat-sort-header-content */
+.headerLabel { display: flex; }
+.table th:global(.right-align) { text-align: right; }
+.table th:global(.center-align) { text-align: center; }
+:global(.right-align) .headerContent { justify-content: flex-end; text-align: right; }
+:global(.center-align) .headerContent { justify-content: center; text-align: center; }
+/* _layout.scss .w70 / .sm__w125 (≥769px) / .xsm__w70 (≤768px) on the first header of >5-column tables */
+.table th.w70 { width: 70px; }
+@media (min-width: 769px) { .table th.smW125 { width: 125px; } }
+@media (max-width: 768px) { .table th.xsmW70 { width: 70px; } }
+/* mat-sort-header-arrow: 12px layout box (margin-left 4px) with an overflowing 24px svg */
+.sortIcon {
+  position: relative;
+  display: block;
+  width: 12px;
+  height: 12px;
+  margin-left: 4px;
+  color: #333333;
+  opacity: 0;
+  transition: opacity 0.2s, transform 0.2s;
+}
+.sortIcon svg { position: absolute; top: 50%; left: 50%; margin: -12px 0 0 -12px; width: 24px; height: 24px; fill: currentColor; }
+/* sqf-basic-table `.qf-table__header.right-align div { width: 100% }` (encapsulated, so
+   only the label div); like mat-sort-header-arrow the 12px arrow may shrink */
+.basicTable :global(.right-align) .headerLabel > div { width: 100%; }
+.sortIconDesc { transform: rotate(180deg); }
+.sortableHeader:hover .sortIcon { opacity: 0.54; }
+.sortIconActive, .sortableHeader:hover .sortIconActive { opacity: 1; }
+.footerRow td { font-weight: 700; border-top: 1px solid #e0e0e0; border-bottom: none; }
+/* mat-footer-row sticky: true */
+.basicTable .footerRow td { position: sticky; bottom: 0; z-index: 10; background: var(--color-surface, #fff); }
+/* Angular sqf-basic-table (.qf-table__data): #666 regular text, mat-table 12% cell borders */
+.basicTable th, .basicTable td { border-bottom-color: rgba(0, 0, 0, 0.12); }
+.basicTable td { color: #666666; font-weight: 400; background: var(--color-surface, #fff); z-index: 0; }
+.basicTable .footerRow td { font-weight: 700; }
+.basicTable tbody tr:last-child td { border-bottom: 1px solid rgba(0, 0, 0, 0.12); }
 .expandToggle { color: var(--color-blue); cursor: pointer; font-size: 12px; padding: 4px 12px; background: none; border: none; font-family: var(--font-family); }
 
 /* Sticky first column — frozen while the rest of the table scrolls
@@ -113,18 +204,53 @@
 .stickyCol th:first-child, .stickyCol td:first-child {
   position: sticky;
   left: 0;
-  z-index: 2;
+  z-index: 10;
   background: var(--color-surface);
 }
-.stickyCol thead th:first-child { z-index: 3; }
-.stickyCol tbody tr:hover td:first-child { background: #f4f9fc; }
+/* sqf-basic-table `.qf-table__sticky-column` header/footer column0 z-index 21 */
+.stickyCol thead th:first-child, .basicTable.stickyCol .footerRow td:first-child { z-index: 21; }
+.stickyCol:not(.basicTable) tbody tr:not(.childRow):hover td:first-child { background: #f4f9fc; }
+/* sqf-nested-table `.qf-table__sticky-column` header column0 */
+.stickyCol:not(.basicTable) thead th:first-child { z-index: 101; }
 .stickyCol .childRow td:first-child { background: #fafafa; }
 .stickyCol .footerRow td:first-child { background: var(--color-surface); }
 
 /* ── Tabs ── */
-.tabs { display: flex; border-bottom: 1px solid var(--color-border); margin: 0 12px; }
+.tabs { display: flex; border-bottom: 1px solid var(--color-border); }
 .tab { padding: 6px 12px; font-size: 13px; cursor: pointer; border: none; background: none; border-bottom: 2px solid transparent; color: var(--color-text-secondary); font-family: var(--font-family); }
 .tabActive { border-bottom-color: var(--color-primary); color: var(--color-primary); font-weight: 600; }
+.tabPanel { display: flex; flex-direction: column; gap: 8px; }
+.tabTable { flex-grow: 1; height: 320px; overflow: auto; }
+.tabTablePlain { height: auto; }
+.tabRichText {
+  text-align: center;
+  font-size: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  align-items: center;
+  justify-content: center;
+  min-height: 357px;
+}
+.tabReportingTime {
+  padding: 4px 8px;
+  background: #e8edf5;
+  border-radius: 4px;
+  font-size: 12px;
+  line-height: 21px;
+  color: #666666;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.plainTable { margin-top: 16px; }
+.plainTable td { vertical-align: top; border-bottom: none; height: auto; min-height: 48px; }
+.plainTable td > span:not([class]) { display: table-cell; -webkit-line-clamp: unset; overflow: visible; }
+.tableRichText { font-size: 12px; }
+@media (max-width: 768px) {
+  .tabTable { height: auto; }
+  .tabRichText { min-height: auto; }
+}
 
 /* ── Footer ── */
 .footer { margin-top: auto; }
@@ -132,3 +258,9 @@
 .detailsLink { color: var(--color-blue); cursor: pointer; font-size: 14px; text-decoration: none; }
 .footerMeta { display: flex; justify-content: space-between; align-items: center; padding: 6px 12px; min-height: 36px; }
 .updateDate { font-size: 12px; color: var(--color-text-secondary); display: flex; gap: 4px; align-items: center; }
+
+/* Angular sqf-comments-table: .mobile-row / .pr4; mat-table cell borders */
+.commentsTable th, .commentsTable td { border-bottom-color: rgba(0, 0, 0, 0.12); }
+.commentsTable tbody tr:last-child td { border-bottom: 1px solid rgba(0, 0, 0, 0.12); }
+.commentsTable td.commentsMobileRow { padding: 4px 0; }
+.commentsTable td.commentsLastCell { padding-right: 4px; }

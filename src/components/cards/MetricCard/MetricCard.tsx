@@ -25,11 +25,11 @@ export function MetricCard({ card, isLoading }: Props) {
       <MetricCardHeader card={card} />
       <MetricCardKpiRow infoNumbers={card.infoNumbers} />
       {card.tabs ? (
-        <MetricCardTabs tabs={card.tabs} />
+        <MetricCardTabs tabs={card.tabs} isSummary cardName={card.cardName} />
       ) : card.chartData ? (
         <MetricCardChart chartData={card.chartData} />
       ) : null}
-      {card.tableData && <MetricCardTable tableData={card.tableData} />}
+      {card.tableData && <MetricCardTable tableData={card.tableData} isSummary />}
       <MetricCardFooter card={card} />
     </div>
   )

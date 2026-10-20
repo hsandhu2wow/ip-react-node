@@ -21,6 +21,11 @@ export function normalizePeriods(raw: unknown): NormalizedPeriods {
   if (!raw || typeof raw !== 'object') return result
 
   const obj = raw as Record<string, unknown>
+  if (Array.isArray(obj.cards)) {
+    result.periods.WTD = obj.cards as ISQFMetricCard[]
+    if (typeof obj.sortBy === 'string') result.sortBy.WTD = obj.sortBy
+    return result
+  }
   for (const period of PERIODS) {
     const value = obj[period]
     if (Array.isArray(value)) {

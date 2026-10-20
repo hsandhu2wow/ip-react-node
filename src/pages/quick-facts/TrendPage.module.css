@@ -120,11 +120,6 @@
   margin-top: 4px;
 }
 
-.subscriptionLink {
-  font-size: 12px;
-  color: #666;
-}
-
 .errorBanner {
   padding: 16px;
   color: #c0392b;
@@ -132,4 +127,15 @@
 
 .loading {
   padding: 16px;
+}
+
+/* weekly-facts-home .js-weekly-card__preview (QfCardsPreviewService.getPageCanvases) */
+.wfHome:global(.js-weekly-card__preview) {
+  max-width: none;
+  width: 1500px;
+  padding: 24px 48px;
+}
+
+.wfHome:global(.js-weekly-card__preview) .toolbar {
+  display: none;
 }

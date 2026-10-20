@@ -4,6 +4,7 @@ import {
   useContext,
   useState,
   useCallback,
+  useMemo,
 } from 'react'
 import type { ReactNode } from 'react'
 import { useSearchParams } from 'react-router-dom'
@@ -32,6 +33,8 @@ interface FilterContextType {
   selectedBreakdownAxis: BreakdownAxis
   setSelectedPeriod: (period: Period) => void
   setSelectedBreakdownAxis: (axis: BreakdownAxis) => void
+  /** Increments on every user breakdown selection (Angular breakdownAxisUpdated$ emissions) */
+  breakdownAxisChangeCount: number
 }
 
 const FilterContext = createContext<FilterContextType | null>(null)
@@ -40,38 +43,30 @@ export function FilterProvider({ children }: { children: ReactNode }) {
   const [searchParams, setSearchParams] = useSearchParams()
 
   const [treeNodes, setTreeNodes] = useState<IQFTree[]>([])
-  const [selectedNode, setSelectedNodeState] = useState<IQFTree | null>(null)
-
-  // Initialise date from URL ?date= param, defaulting to yesterday
-  const [selectedDate, setSelectedDateState] = useState<string>(() => {
-    return searchParams.get('date') || formatDate(getYesterdayDate())
-  })
+  const code = searchParams.get('code')
+  const selectedNode = useMemo(
+    () => (code ? findNodeByCode(treeNodes, code) : null) || getFirstSelectableNode(treeNodes),
+    [treeNodes, code],
+  )
+  const [defaultDate] = useState(() => formatDate(getYesterdayDate()))
+  const selectedDate = searchParams.get('date') || defaultDate
 
   /**
    * Called once by useFilterTree when the raw filter response arrives.
-   * Processes the tree, sets parent refs, and restores the node from ?code= param.
+   * Processes the tree and sets parent refs; the selected node follows ?code=.
    */
   const initTree = useCallback(
     (raw: ISQFGenericFilter[]) => {
       const tree = processFilterResponse(raw)
       if (!tree) return // empty/invalid API response — stay in loading state
       addParents(tree)
-      const flat = flattenTree(tree)
-      setTreeNodes(flat)
-
-      const code = searchParams.get('code')
-      const restoredNode = code ? findNodeByCode(flat, code) : null
-      const defaultNode = restoredNode || getFirstSelectableNode(flat)
-      if (defaultNode) setSelectedNodeState(defaultNode)
+      setTreeNodes(flattenTree(tree))
     },
-    // searchParams is stable for the lifetime of this context mount
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     []
   )
 
   const setSelectedNode = useCallback(
     (node: IQFTree) => {
-      setSelectedNodeState(node)
       setSearchParams(
         prev => {
           const next = new URLSearchParams(prev)
@@ -86,7 +81,6 @@ export function FilterProvider({ children }: { children: ReactNode }) {
 
   const setSelectedDate = useCallback(
     (date: string) => {
-      setSelectedDateState(date)
       setSearchParams(
         prev => {
           const next = new URLSearchParams(prev)
@@ -99,16 +93,11 @@ export function FilterProvider({ children }: { children: ReactNode }) {
     [setSearchParams]
   )
 
-  const [selectedPeriod, setSelectedPeriodState] = useState<Period>(() =>
-    searchParams.get('period') === 'YDAY' ? 'YDAY' : 'WTD'
-  )
-  const [selectedBreakdownAxis, setSelectedAxisState] = useState<BreakdownAxis>(() =>
-    searchParams.get('axis') === 'department' ? 'department' : 'childLevel'
-  )
+  const selectedPeriod: Period = searchParams.get('period') === 'YDAY' ? 'YDAY' : 'WTD'
+  const selectedBreakdownAxis: BreakdownAxis = searchParams.get('axis') === 'department' ? 'department' : 'childLevel'
 
   const setSelectedPeriod = useCallback(
     (period: Period) => {
-      setSelectedPeriodState(period)
       setSearchParams(
         prev => {
           const next = new URLSearchParams(prev)
@@ -121,9 +110,11 @@ export function FilterProvider({ children }: { children: ReactNode }) {
     [setSearchParams]
   )
 
+  const [breakdownAxisChangeCount, setBreakdownAxisChangeCount] = useState(0)
+
   const setSelectedBreakdownAxis = useCallback(
     (axis: BreakdownAxis) => {
-      setSelectedAxisState(axis)
+      setBreakdownAxisChangeCount(c => c + 1)
       setSearchParams(
         prev => {
           const next = new URLSearchParams(prev)
@@ -152,6 +143,7 @@ export function FilterProvider({ children }: { children: ReactNode }) {
         selectedBreakdownAxis,
         setSelectedPeriod,
         setSelectedBreakdownAxis,
+        breakdownAxisChangeCount,
       }}
     >
       {children}
@@ -163,4 +155,9 @@ export function useFilter(): FilterContextType {
   const ctx = useContext(FilterContext)
   if (!ctx) throw new Error('useFilter must be used within a FilterProvider')
   return ctx
+}
+
+/** Like useFilter, but returns null outside a FilterProvider (e.g. isolated card renders). */
+export function useOptionalFilter(): FilterContextType | null {
+  return useContext(FilterContext)
 }

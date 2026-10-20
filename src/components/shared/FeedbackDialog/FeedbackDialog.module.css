@@ -1,0 +1,345 @@
+/* Port of help-feedback.component.scss + the global app.scss rules (.help-feedback-popup,
+   .si-help__request, mat-form-field/mat-select/mat-checkbox/mat-chip overrides) that shape it. */
+
+.popup {
+  padding: 24px; /* mat-mdc-dialog-surface padding */
+  font-family: Arial, 'Helvetica Neue', Helvetica, sans-serif;
+  font-size: 16px;
+  color: #333;
+  text-align: left;
+}
+
+.closeButton {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.header {
+  margin: 0;
+  font-size: 16px;
+  line-height: normal;
+}
+
+.closeIconBtn {
+  width: 48px;
+  height: 48px;
+  padding: 12px;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: #333;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.closeIconBtn:hover { background: rgba(0, 0, 0, 0.04); }
+.closeIconBtn :global(.material-icons) { font-size: 24px; width: 24px; height: 24px; line-height: 24px; }
+
+/* <mat-divider class="p-2"> */
+.divider {
+  border-top: 1px solid rgba(0, 0, 0, 0.12);
+  padding: 8px;
+}
+
+.form {
+  font-size: 13px;
+}
+
+.embed {
+  padding: 0;
+  margin: 0;
+}
+
+.label,
+.reasonText {
+  display: block;
+  width: max-content;
+  max-width: 100%;
+  font-size: 14px;
+  line-height: normal;
+  padding: 0 0 8px 0;
+  margin: 0;
+}
+
+.formField {
+  position: relative;
+  width: 100%;
+  padding: 0 0 24px 0;
+}
+
+/* mat-spinner diameter 17 shown until the issue types arrive */
+.spinner {
+  position: absolute;
+  left: 16px;
+  top: 11.5px;
+  width: 17px;
+  height: 17px;
+  border: 2px solid #0d5127;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  z-index: 1;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── mat-select, outline appearance (.si-help__chips wrapper height 2.5rem) ── */
+.select {
+  position: relative;
+}
+
+.selectTrigger {
+  position: relative;
+  display: flex;
+  align-items: center;
+  height: 40px;
+  padding: 0 16px;
+  border-radius: 4px;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.38);
+  font-size: 14px;
+  color: rgba(0, 0, 0, 0.87);
+  cursor: pointer;
+  outline: none;
+  user-select: none;
+}
+.selectTrigger:hover { box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.87); }
+.selectTrigger:focus-visible,
+.selectTriggerOpen,
+.selectTriggerOpen:hover { box-shadow: inset 0 0 0 2px #198841; }
+
+.selectValue {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  line-height: 16px;
+}
+
+.selectArrowWrapper {
+  display: flex;
+  align-items: center;
+  height: 24px;
+  margin: 0 4px;
+}
+
+.selectArrow {
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 5px solid rgba(0, 0, 0, 0.54);
+}
+.selectTriggerOpen .selectArrow {
+  border-top-color: #198841;
+  transform: rotate(180deg);
+}
+
+.selectPanel {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 100%;
+  max-height: 275px;
+  overflow: auto;
+  padding: 8px 0;
+  background: #fff;
+  border-radius: 0 0 4px 4px;
+  box-shadow: 0 5px 5px -3px rgba(0, 0, 0, 0.2), 0 8px 10px 1px rgba(0, 0, 0, 0.14), 0 3px 14px 2px rgba(0, 0, 0, 0.12);
+  z-index: 10;
+}
+
+.option {
+  display: flex;
+  align-items: center;
+  min-height: 48px;
+  padding: 0 16px;
+  font-size: 14px;
+  color: rgba(0, 0, 0, 0.87);
+  cursor: pointer;
+}
+.optionActive { background: rgba(0, 0, 0, 0.04); }
+.optionSelected { background: rgba(0, 0, 0, 0.104); }
+
+/* ── reason textarea ── */
+.textArea {
+  display: block;
+  height: 160px;
+  width: 100%;
+  border: 1px solid rgba(0, 0, 0, 0.38);
+  border-radius: 4px;
+  padding: 8px;
+  font-family: inherit;
+  font-size: 14px;
+  color: #000;
+  background: #fff;
+  resize: none;
+}
+.textArea::placeholder {
+  font-size: 13px;
+}
+
+/* ── mat-chip-listbox ── */
+.chipList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 4px 0;
+}
+.chipList:empty { padding: 0; }
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  height: 32px;
+  padding-left: 12px;
+  border-radius: 16px;
+  background: rgba(0, 0, 0, 0.104);
+  font-size: 14px;
+  color: rgba(0, 0, 0, 0.87);
+}
+
+.chipLabel {
+  line-height: 20px;
+  letter-spacing: 0.0178571429em;
+  white-space: nowrap;
+}
+
+.chipRemove {
+  display: inline-flex;
+  margin: 0 8px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: rgba(0, 0, 0, 0.87);
+  opacity: 0.54;
+  cursor: pointer;
+}
+.chipRemove:hover { opacity: 1; }
+.chipRemove :global(.material-icons) { font-size: 18px; width: 18px; height: 18px; }
+
+/* ── bottom: attachments, checkbox, submit ── */
+.bottom {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  flex-direction: column;
+  color: #50575e;
+}
+
+.attachments {
+  padding: 16px;
+  border: 1px dashed;
+  margin-top: 16px;
+  margin-bottom: 16px;
+  border-radius: 4px;
+}
+.attachmentsDragOver {
+  border-style: solid;
+  background-color: #a5a5a5;
+}
+
+.attachmentsLinkWrapper {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-direction: row;
+  line-height: 140%;
+}
+
+.attachIcon {
+  font-size: 16px !important;
+  width: 16px;
+  height: 16px;
+  line-height: 16px !important;
+}
+
+.link {
+  color: #0c482c;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* mat-checkbox (.si-help-feedback__bottom .mat-mdc-checkbox .mat-internal-form-field) */
+.checkbox {
+  position: relative;
+  display: flex;
+  align-items: center;
+  margin: 0 0 8px 0;
+  font-size: 13px;
+  line-height: 20px;
+  letter-spacing: normal;
+  color: #50575e;
+  cursor: pointer;
+}
+
+.checkboxInput {
+  position: absolute;
+  opacity: 0;
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  cursor: pointer;
+}
+
+.checkboxBox {
+  flex: none;
+  display: inline-flex;
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(0, 0, 0, 0.54);
+  border-radius: 2px;
+  background: transparent;
+  transition: background-color 90ms, border-color 90ms;
+}
+
+.checkmark {
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+}
+.checkmark path {
+  stroke: #fff;
+  stroke-width: 3.12px;
+}
+
+.checkboxInput:checked + .checkboxBox {
+  background: #178841;
+  border-color: #178841;
+}
+.checkboxInput:checked + .checkboxBox .checkmark { opacity: 1; }
+.checkboxInput:focus-visible + .checkboxBox { outline: 2px solid rgba(23, 136, 65, 0.5); outline-offset: 2px; }
+
+.checkboxLabel {
+  padding-left: 8px; /* mat-checkbox margin-left 4px + mdc-label padding 4px */
+}
+
+/* mat-raised-button color="primary" m-2 si-btn si-help__button */
+.submit {
+  width: fit-content;
+  height: 48px;
+  margin: 8px 8px 8px 0;
+  padding: 8px 24px;
+  border: none;
+  border-radius: 4px;
+  background: #198841;
+  color: #fff;
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: 500;
+  letter-spacing: normal;
+  cursor: pointer;
+}
+.submit:hover:not(:disabled) { background: #1f9149; }
+.submit:disabled {
+  background: rgba(0, 0, 0, 0.12);
+  color: rgba(0, 0, 0, 0.38);
+  cursor: default;
+}
+
+/* app.scss .help-feedback-popup @include xsm */
+@media (max-width: 768px) {
+  .form { margin-top: 10px; }
+  .submit { width: 100%; }
+}

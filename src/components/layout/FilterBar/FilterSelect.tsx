@@ -12,10 +12,11 @@ interface Props<T extends string> {
   value: T
   onChange: (value: T) => void
   ariaLabel: string
+  className?: string
 }
 
 /** Compact dropdown used by the FilterBar for Period and Breakdown selection. */
-export function FilterSelect<T extends string>({ label, options, value, onChange, ariaLabel }: Props<T>) {
+export function FilterSelect<T extends string>({ label, options, value, onChange, ariaLabel, className }: Props<T>) {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
 
@@ -28,7 +29,7 @@ export function FilterSelect<T extends string>({ label, options, value, onChange
   }, [])
 
   return (
-    <div className={styles.wrapper} ref={ref}>
+    <div className={className ? `${styles.wrapper} ${className}` : styles.wrapper} ref={ref}>
       <button
         type="button"
         className={styles.trigger}
