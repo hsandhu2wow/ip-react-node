@@ -2,33 +2,45 @@
 import { useState, useEffect } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
 import { useAuth } from '../../../context/AuthContext'
+import { getActivePrefix } from '../navActiveMatch'
 import styles from './MobileNav.module.css'
 
 const ROUTE_TITLES: Record<string, { title: string; tagline?: string }> = {
   '/quick-facts': { title: 'Quick Facts', tagline: 'powered by Quick Facts' },
   '/weekly':      { title: 'Weekly' },
   '/trend':       { title: 'Trend' },
+  '/quick-facts/weekly': { title: 'Trend', tagline: 'powered by Weekly Facts and My Plan' },
+  '/quick-facts/myplan': { title: 'Trend', tagline: 'powered by Weekly Facts and My Plan' },
   '/dashboards':  { title: 'Dashboards' },
   '/pricing-simulator':     { title: 'Pricing Simulator' },
   '/availability-navigator':{ title: 'Availability Navigator' },
 }
 
-const BUYING_ITEMS = [
+interface NavItem {
+  icon: string
+  label: string
+  to: string
+  altPrefixes?: string[]
+  isSymbol?: boolean
+}
+
+const BUYING_ITEMS: NavItem[] = [
   { icon: 'calendar_today', label: 'Quick Facts',       to: '/quick-facts' },
   { icon: 'dashboard',      label: 'Dashboards',        to: '/dashboards' },
   { icon: 'attach_money',   label: 'Pricing Simulator', to: '/pricing-simulator' },
 ]
 
-const STORE_ITEMS = [
+const STORE_ITEMS: NavItem[] = [
   { icon: 'today',        label: 'Daily',      to: '/quick-facts' },
   { icon: 'date_range',   label: 'Weekly',     to: '/weekly' },
-  { icon: 'table_chart',  label: 'Trend',      to: '/trend' },
+  { icon: 'view_week',    label: 'Trend',      to: '/quick-facts/weekly', altPrefixes: ['/quick-facts/myplan'] },
   { icon: 'dashboard',    label: 'Dashboards', to: '/dashboards' },
 ]
 
-const STANDALONE_ITEMS = [
+const STANDALONE_ITEMS: NavItem[] = [
   { icon: 'shelves', label: 'Availability Navigator', to: '/availability-navigator', isSymbol: true },
 ]
+
 
 const WW_LOGO = (
   <svg width="40" height="32" viewBox="0 0 80 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -42,9 +54,8 @@ const WW_LOGO = (
 )
 
 function getRouteInfo(pathname: string) {
-  const key = Object.keys(ROUTE_TITLES).find(
-    k => pathname === k || pathname.startsWith(k + '/')
-  )
+  const keys = Object.keys(ROUTE_TITLES).sort((a, b) => b.length - a.length)
+  const key = keys.find(k => pathname === k || pathname.startsWith(k + '/'))
   return key ? ROUTE_TITLES[key] : { title: 'My Insights' }
 }
 
@@ -83,8 +94,13 @@ export function MobileNav() {
     return () => document.removeEventListener('keydown', handleKeyDown)
   }, [drawerOpen])
 
-  function isItemActive(to: string) {
-    return location.pathname === to || location.pathname.startsWith(to + '/')
+  const activePrefix = getActivePrefix(
+    location.pathname,
+    [...BUYING_ITEMS, ...STORE_ITEMS, ...STANDALONE_ITEMS].flatMap((item) => [item.to, ...(item.altPrefixes ?? [])])
+  )
+
+  function isItemActive(item: NavItem) {
+    return item.to === activePrefix || (item.altPrefixes?.includes(activePrefix) ?? false)
   }
 
   return (
@@ -149,7 +165,7 @@ export function MobileNav() {
               <span className={styles.groupLabelText}>Buying</span>
             </div>
             {BUYING_ITEMS.map(item => (
-              <DrawerItem key={item.to + item.label} {...item} isActive={isItemActive(item.to)} onClick={close} />
+              <DrawerItem key={item.to + item.label} {...item} isActive={isItemActive(item)} onClick={close} />
             ))}
           </div>
 
@@ -160,7 +176,7 @@ export function MobileNav() {
               <span className={styles.groupLabelText}>Store</span>
             </div>
             {STORE_ITEMS.map(item => (
-              <DrawerItem key={item.to + item.label} {...item} isActive={isItemActive(item.to)} onClick={close} />
+              <DrawerItem key={item.to + item.label} {...item} isActive={isItemActive(item)} onClick={close} />
             ))}
           </div>
 
@@ -170,7 +186,7 @@ export function MobileNav() {
               <div className={styles.groupLabelLine} />
             </div>
             {STANDALONE_ITEMS.map(item => (
-              <DrawerItem key={item.to} {...item} isActive={isItemActive(item.to)} onClick={close} />
+              <DrawerItem key={item.to} {...item} isActive={isItemActive(item)} onClick={close} />
             ))}
           </div>
         </div>

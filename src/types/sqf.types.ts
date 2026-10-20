@@ -75,6 +75,8 @@ export interface ISQFChartData {
 /** Table data returned by the backend — rows are objects keyed by column0, column1, etc. */
 export interface ISQFTableCell {
   displayValue?: string | number
+  /** Raw value used for column sorting */
+  value?: string | number | null
   color?: string
   cssClass?: string
 }
@@ -84,6 +86,7 @@ export interface ISQFTableRow {
   breakdown_table_data?: ISQFTableRow[]
   key?: string
   customFontWeight?: number
+  rowHeight?: string | number
 }
 
 export interface ISQFTableData {
@@ -98,13 +101,22 @@ export interface ISQFTableData {
   hasHTMLHeaders?: boolean
   headersCssClass?: string[]
   scrollHelpText?: { desktop?: string; mobile?: string }
+  tableWithoutHeaders?: boolean
+  customMinWidth?: string
+  richText?: string
+  /** Comments tables: headers/rows used on extra-small screens */
+  mobileHeaders?: Array<string | { text: string; tooltip?: string }>
+  mobileData?: ISQFTableRow[]
   /** @deprecated legacy field — backend now uses `data` */
   rows?: Array<(string | number | null)[]>
 }
 
 /** One tab within a tabbed metric card */
 export interface ISQFTabData {
-  label: string
+  tabName?: string
+  label?: string
+  richText?: string
+  reportingTime?: string
   chartData?: ISQFChartData
   tableData?: ISQFTableData
   infoNumbers?: ISQFInfoNumber[]
@@ -120,7 +132,9 @@ export interface IExpandableListItem {
 /** Error payload from the backend (mapped from Angular's error handling) */
 export interface ISQFCardError {
   cutOffTime?: string | null
-  generic?: boolean
+  /** Epoch ms of the data-load ETA, stamped alongside cutOffTime */
+  cutOffAt?: number
+  generic?: boolean | string
   level?: boolean
   wmd?: boolean
   /** Human-readable error heading, e.g. "Data refresh failed, we are currently investigating" */
@@ -132,7 +146,11 @@ export interface ISQFCardError {
 /** Core metric card shape — returned by /sqf/summaryCards and /sqf/detailCard */
 export interface ISQFMetricCard {
   cardName: string
-  cardType: 'summary' | 'details'
+  cardType: 'summary' | 'details' | 'SUMMARY' | 'DETAIL' | 'Summary' | 'Details'
+  /** Backend status, e.g. 'error-NoDataFound' */
+  status?: string
+  /** Overrides the "Departments" breakdown label for the department axis */
+  breakdownLabelOverride?: string
   cardTitle?: string
   cardHeader?: string
   reportingPeriod?: string
@@ -148,6 +166,7 @@ export interface ISQFMetricCard {
   canDrillDown?: boolean
   childCode?: string
   cardCode?: string
+  children?: Array<{ code: string; label: string }>
   jsId?: string
   // Tabbed/filtered card variant
   cards?: ISQFMetricCard[]
@@ -196,3 +215,108 @@ export interface IDataLoadETA {
 
 /** Computed ETA map keyed by metric name */
 export type ETAMap = Record<string, { time: Date; day?: string }>
+
+/** Reporting period offered by the Quick Facts filter */
+export type Period = 'WTD' | 'YDAY'
+
+/** Global breakdown axis: one level down the hierarchy, or departments */
+export type BreakdownAxis = 'childLevel' | 'department'
+
+/** Per-period value: a bare card array, or the original { cards, sortBy } shape */
+export type ISQFPeriodValue = ISQFMetricCard[] | { cards: ISQFMetricCard[]; sortBy?: string }
+
+/** summaryCards / detailCard response: only periods that have data are present */
+export type ISQFPeriodResponse = Partial<Record<Period, ISQFPeriodValue>>
+
+export type ISQFCardsResponse = ISQFPeriodResponse | ISQFMetricCard[] | { cards: ISQFMetricCard[]; sortBy?: string }
+
+/** Legacy Seasonal API, separate from the v4 generic metric-card payload. */
+export interface ISeasonalChartAPI { Day: string; Sales: string }
+export interface ISeasonalTableAPI {
+  CHILD_CODE: string
+  CHILD_DESC: string
+  PARENT_CODE: string
+  LEVEL?: string
+  SALES_TY: string
+  SALES_LY?: string
+  SALES_TY_LY_DIFF_PERC?: string
+  SELL_THRU_BY_COMMITMENT_TY?: string
+  SELL_THRU_BY_SOH_TY?: string
+  SALES_QTY_TY?: string
+  SALES_QTY_TY_VS_LY_PERC?: string
+  SOH?: string
+  OPTIMISED_SELL_THRU?: string
+}
+export interface ISeasonalCardAPI {
+  APP_LEVEL: string
+  Budget_TY: string
+  CHILD_DESC: string
+  CHILD_CODE: string
+  Card_Name: string
+  Card_id: string
+  LEVEL: string
+  isPinned: boolean
+  cardType: string
+  parentLevel: string
+  parentCode: string
+  metrics_chart?: ISeasonalChartAPI[]
+  metrics_main?: ISeasonalChartAPI[]
+  metrics_table: ISeasonalTableAPI[]
+  table_column_name: string
+  updated_time: string
+  SALES_TY: string
+  SALES_TY_LY_DIFF_PERC?: string
+  SALES_LY?: string
+  SALES_QTY_TY_VS_LY_PERC?: string | number
+  SELL_THRU_BY_COMMITMENT_TY?: string
+  SELL_THRU_BY_SOH_TY?: string
+  SALES_QTY_TY?: string | number
+  ZERO_SALES_SOH_ARTICLES?: string
+  isTableOnly?: boolean
+}
+export interface ISeasonalChart { day: string; sales: number }
+export interface ISeasonalTable {
+  state: string
+  parentCode: string
+  salesETD: string
+  salesETDUnFormatted: number
+  salesLyETD: string | null
+  salesVsLyETD: string | null
+  salesVsLyETDColorVal: string
+  sellThruByCommitment: string | null
+  sellThruByCommitmentColorVal: string
+  sellThruBySOH: string | null
+  sellThruBySOHColorVal: string
+  salesQtyTy: string | number
+  salesQtyTyColorVal: string
+  salesQtyTyVsLyPerc: string
+  salesQtyTyVsLyPercColorVal: string
+  soh: number | null
+  optimized_sell_thru: string | null
+}
+export interface ISeasonalCard extends Omit<ISQFMetricCard, 'chartData' | 'tableData' | 'error' | 'cardType'> {
+  error?: ISQFCardError | null
+  type: 'seasonal'
+  cardType: string
+  fullLocationName?: string
+  id?: string
+  title?: string
+  level?: string
+  isPinned?: boolean
+  parentLevel?: string
+  parentCode?: string
+  cardLevel?: string
+  updatedAt?: string
+  infoMainNumberFull?: number | null
+  infoMainNumber?: string
+  infoMainNumberText?: string
+  infoSubNumber?: string
+  infoSubDetails?: string
+  infoAdditional1?: string
+  infoAdditional1Text?: string
+  infoAdditional2?: string
+  infoAdditional2Text?: string
+  chartData?: ISeasonalChart[]
+  tableData?: ISeasonalTable[]
+  zero_sales_soh_articles?: number | null
+}

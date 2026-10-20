@@ -1,22 +1,19 @@
 import { useState, useEffect, Fragment } from 'react'
-import { Link } from 'react-router-dom'
-import type { ISQFMetricCard, ISQFInfoNumber, IExpandableListItem } from '../../../types/sqf.types'
+import { Link, useLocation } from 'react-router-dom'
+import type { ISQFMetricCard, ISQFInfoNumber, IExpandableListItem, BreakdownAxis } from '../../../types/sqf.types'
+import { useAxisCard } from '../../../hooks/useAxisCard'
+import { useOptionalFilter } from '../../../context/FilterContext'
+import { useAuth } from '../../../context/AuthContext'
+import { childLevelLabel } from '../../../utils/levelLabels'
+import { isLegacyBreakdownCard } from '../../../utils/breakdown'
 import { MetricCardSkeleton } from '../MetricCard/MetricCardSkeleton'
 import { MetricCardChart } from '../MetricCard/MetricCardChart'
 import { MetricCardTable } from '../MetricCard/MetricCardTable'
 import { MetricCardTabs } from '../MetricCard/MetricCardTabs'
 import { InfoModal } from '../../shared/InfoModal/InfoModal'
-import { REPORTING_PERIODS, isCutOffTimePast } from '../../../utils/formatters'
+import { sendQFDataToAnalytics } from '../../../utils/analytics'
+import { REPORTING_PERIODS, isCutOffTimePast, formatUpdatedTime } from '../../../utils/formatters'
 import styles from './SummaryCard.module.css'
-
-const RED = '#eb5757'
-const NEUTRAL = '#ebecec'
-
-function shouldShowRecognize(cardHeader?: string): boolean {
-  if (!cardHeader) return false
-  const h = cardHeader.toLowerCase()
-  return h !== RED && h !== NEUTRAL
-}
 
 function buildInitialFilters(card: ISQFMetricCard): Record<string, string> {
   const filters: Record<string, string> = {}
@@ -69,26 +66,26 @@ function KpiNumber({ kpi }: { kpi: ISQFInfoNumber }) {
   const [showTooltip, setShowTooltip] = useState(false)
   return (
     <div className={styles.kpiCol}>
-      <div className={styles.kpiValue} style={{ color: kpi.color || 'inherit' }}>
+      <span className={styles.kpiValue} style={{ color: kpi.color || 'inherit' }}>
         {kpi.displayValue}
-      </div>
-      <div className={styles.kpiLabel}>
-        {kpi.text}
+      </span>
+      <span className={styles.kpiLabel}>
+        <span>{kpi.text}</span>
         {kpi.infoMessage && (
           <div className={styles.tooltipWrapper}>
             <span
-              className={styles.infoIcon}
+              className={`material-icons ${styles.infoIcon}`}
               onClick={() => setShowTooltip(v => !v)}
               aria-label="More info"
             >
-              ℹ
+              info_outline
             </span>
             {showTooltip && (
               <div className={styles.tooltip}>{kpi.infoMessage}</div>
             )}
           </div>
         )}
-      </div>
+      </span>
     </div>
   )
 }
@@ -97,13 +94,20 @@ interface Props {
   card?: ISQFMetricCard
   isLoading?: boolean
   expandTable?: boolean
+  /** Global breakdown axis; when set, axis-driven cards ignore their own dropdowns */
+  axis?: BreakdownAxis
+  /** SQF support email shown in the filter-error state */
+  supportEmail?: string
 }
 
-export function SummaryCard({ card, isLoading, expandTable }: Props) {
+export function SummaryCard({ card, isLoading, expandTable, axis, supportEmail }: Props) {
+  const { axisDriven, axisCard } = useAxisCard(card, axis)
+  const filter = useOptionalFilter()
+  const { user } = useAuth()
+  const locationSearch = useLocation().search
   const [expanded, setExpanded] = useState(false)
   const [selectedFilters, setSelectedFilters] = useState<Record<string, string>>({})
   const [infoModalOpen, setInfoModalOpen] = useState(false)
-  const [recognizeLoading, setRecognizeLoading] = useState(false)
 
   const filterConfigKey = card?.filterKeys ? Object.keys(card.filterKeys).join(',') : ''
   const dropdownKeys = card?.dropdowns?.map(d => d.key).join(',') ?? ''
@@ -111,26 +115,45 @@ export function SummaryCard({ card, isLoading, expandTable }: Props) {
   useEffect(() => {
     if (!card) return
     if (card.cards) setSelectedFilters(buildInitialFilters(card))
-    setExpanded(Boolean(card.autoExpandForMobile))
+    // Angular: UTIL.browser.mobile() && card.autoExpandForMobile
+    setExpanded(/Mobi/i.test(window.navigator.userAgent) && Boolean(card.autoExpandForMobile))
   }, [card?.cardName, filterConfigKey, dropdownKeys])
+
+  // Angular onBreakdownAxisChanged: every header breakdown selection expands the table
+  const breakdownAxisChangeCount = filter?.breakdownAxisChangeCount ?? 0
+  const locationCode = filter?.selectedNode?.code
+  const axisResolved = !!card?.cards && !isLegacyBreakdownCard(card) && !!axisCard
+  useEffect(() => {
+    if (breakdownAxisChangeCount === 0) return
+    setExpanded(true)
+    if (axisResolved) sendQFDataToAnalytics('breakdownAxisChangeSummaryCard', card?.cardName, locationCode)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [breakdownAxisChangeCount])
 
   if (isLoading) return <MetricCardSkeleton />
   if (!card || card.hidden) return null
 
   let contentCard: ISQFMetricCard | null = card
   if (card.cards && card.filterKeys) {
-    contentCard = getFilteredSubCard(card, selectedFilters)
+    contentCard = axisDriven ? axisCard : getFilteredSubCard(card, selectedFilters)
   }
   const hasFilterError = card.cards != null && contentCard == null
 
-  const borderColor = card.cardHeader || 'var(--color-neutral)'
+  // Angular setComponentValues: header colour comes from the resolved (child) card
+  const cardHeader = contentCard?.cardHeader
+  const borderColor = cardHeader || 'var(--color-neutral)'
   const location = card.location?.split('-')[0].trim()
   const reportingPeriodKey = contentCard?.reportingPeriod ?? card.reportingPeriod
   const reportingPeriod = reportingPeriodKey
     ? REPORTING_PERIODS[reportingPeriodKey] ?? reportingPeriodKey
     : undefined
-  const showRecognize = shouldShowRecognize(card.cardHeader)
-  const cutOffPast = card.error?.cutOffTime ? isCutOffTimePast(card.error.cutOffTime) : false
+  const cutOffPast = isCutOffTimePast(card.error)
+  const isLegacy = !!card.cards && isLegacyBreakdownCard(card)
+  // Mirrors Angular SqfSummaryCardComponent.breakdownLabel
+  const breakdownLabel =
+    (axis ?? filter?.selectedBreakdownAxis) === 'childLevel'
+      ? childLevelLabel(filter?.selectedNode, user.portal)
+      : card.breakdownLabelOverride || 'Departments'
 
   const { infoNumbers, customInfoNumbers, chartData, tabs, tableData, richText, subHeading } =
     contentCard ?? ({} as ISQFMetricCard)
@@ -140,17 +163,19 @@ export function SummaryCard({ card, isLoading, expandTable }: Props) {
     card.isDetailsPageAvailable ||
     card.customDrillDownText ||
     card.updatedTime ||
-    hasCollapsible
+    tableData
   )
 
   function handleFilterChange(dropdownKey: string, value: string) {
     setSelectedFilters(prev => ({ ...prev, [dropdownKey]: value }))
     setExpanded(true)
+    sendQFDataToAnalytics('dropdownChangeSummaryCard', card?.cardName, locationCode)
   }
 
-  function handleRecognize() {
-    setRecognizeLoading(true)
-    setTimeout(() => setRecognizeLoading(false), 1500)
+  function toggleExpandTable() {
+    const next = !expanded
+    setExpanded(next)
+    if (next) sendQFDataToAnalytics('expandSummaryTable', card?.cardName, locationCode)
   }
 
   if (card.error) {
@@ -158,7 +183,7 @@ export function SummaryCard({ card, isLoading, expandTable }: Props) {
     return (
       <div className={styles.card} id={card.jsId} data-testid="summary-card-error">
         <div className={styles.header} style={{ borderTopColor: borderColor }}>
-          <div className={styles.headerLeft}>
+          <div className={`${styles.headerLeft} ${styles.errorHeaderLeft}`}>
             <div className={styles.cardTitle}>{card.cardTitle}</div>
           </div>
         </div>
@@ -197,23 +222,43 @@ export function SummaryCard({ card, isLoading, expandTable }: Props) {
   return (
     <>
       <div className={styles.card} id={card.jsId}>
-        <div className={styles.header} style={{ borderTopColor: borderColor }}>
+        <div
+          className={`${styles.header} ${subHeading ? styles.headerWithSubHeading : ''}`}
+          style={{ borderTopColor: borderColor }}
+        >
           <div className={styles.headerLeft}>
             <div className={styles.cardTitle}>{card.cardTitle}</div>
             <div className={styles.subTitle}>
               {location && (
                 <span className={styles.subTitleItem}>
-                  <span className={styles.subTitleIcon}>📍</span>
-                  {location}
+                  <span className={`material-icons ${styles.subTitleIcon}`}>room</span>
+                  <span className={`${styles.subTitleText} ${styles.location}`} title={location}>
+                    {location}
+                  </span>
                 </span>
               )}
               {reportingPeriod && (
                 <span className={styles.subTitleItem}>
-                  <span className={styles.subTitleIcon}>📅</span>
-                  {reportingPeriod}
+                  <span className={`material-icons ${styles.subTitleIcon}`}>calendar_today</span>
+                  <span className={styles.subTitleText}>{reportingPeriod}</span>
                 </span>
               )}
-              {card.dropdowns?.map(dd => (
+              {isLegacy && card.dropdowns?.map(dd => (
+                <div key={dd.key} className={styles.seg} role="group" aria-label={dd.key}>
+                  {dd.data.map(opt => (
+                    <button
+                      key={opt.key}
+                      type="button"
+                      className={`${styles.segBtn} ${selectedFilters[dd.key] === opt.key ? styles.segBtnActive : ''}`}
+                      aria-pressed={selectedFilters[dd.key] === opt.key}
+                      onClick={() => handleFilterChange(dd.key, opt.key)}
+                    >
+                      {opt.text}
+                    </button>
+                  ))}
+                </div>
+              ))}
+              {!axisDriven && !isLegacy && card.dropdowns?.map(dd => (
                 <span key={dd.key} className={styles.subTitleItem}>
                   <select
                     className={styles.dropdownSelect}
@@ -231,25 +276,19 @@ export function SummaryCard({ card, isLoading, expandTable }: Props) {
               ))}
             </div>
           </div>
-          {showRecognize && (
-            <div className={styles.headerRight}>
-              <button
-                className={styles.recognizeBtn}
-                onClick={handleRecognize}
-                disabled={recognizeLoading}
-                data-testid="recognize-btn"
-                aria-label="Recognize team"
-              >
-                {recognizeLoading ? <span className={styles.spinner} /> : '🎉'}
-              </button>
-            </div>
-          )}
         </div>
 
         {hasFilterError && (
           <div className={styles.errorContent}>
             <p className={styles.errorHeading}>Data temporarily unavailable</p>
-            <p className={styles.errorSubtext}>Our team is investigating.</p>
+            <p className={styles.errorSubtext}>
+              Our team is investigating. <br />For update or assistance, contact:{' '}
+              {supportEmail && (
+                <a className={styles.errorLink} href={`mailto:${supportEmail}`} target="_top">
+                  {supportEmail}
+                </a>
+              )}
+            </p>
           </div>
         )}
 
@@ -257,25 +296,39 @@ export function SummaryCard({ card, isLoading, expandTable }: Props) {
           <div className={styles.content}>
             {hasTopContent && (
               <div className={styles.contentTop}>
-                {subHeading && <div className={styles.subHeading}>{subHeading}</div>}
-                {infoNumbers && !customInfoNumbers && (
-                  <div className={styles.kpiRow}>
-                    {infoNumbers.map((kpi, i) => (
-                      <Fragment key={i}>
-                        {i > 0 && <div className={styles.kpiDivider} />}
-                        <KpiNumber kpi={kpi} />
-                      </Fragment>
-                    ))}
+                {(subHeading || (infoNumbers && !customInfoNumbers)) && (
+                  <div>
+                    {subHeading && <div className={styles.subHeading}>{subHeading}</div>}
+                    {infoNumbers && !customInfoNumbers && (
+                      <div className={styles.kpiRow}>
+                        {infoNumbers.map((kpi, i) => (
+                          <Fragment key={i}>
+                            {i > 0 && <div className={styles.kpiDivider} />}
+                            <KpiNumber kpi={kpi} />
+                          </Fragment>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 )}
                 {customInfoNumbers && (
-                  <div
-                    className={styles.customInfoNumbers}
-                    dangerouslySetInnerHTML={{ __html: customInfoNumbers }}
-                  />
+                  <div className={styles.kpiRow}>
+                    <div
+                      className={styles.customInfoNumbers}
+                      dangerouslySetInnerHTML={{ __html: customInfoNumbers }}
+                    />
+                  </div>
                 )}
                 {chartData && (
-                  <div className={styles.chartArea}>
+                  <div
+                    className={[
+                      styles.chartArea,
+                      customInfoNumbers ? styles.chartAreaHasCustomInfo : '',
+                      chartData.chartType === 'bar' || chartData.chartType === 'horizontalBar'
+                        ? ''
+                        : styles.chartAreaPie,
+                    ].join(' ')}
+                  >
                     <MetricCardChart chartData={chartData} />
                   </div>
                 )}
@@ -290,13 +343,41 @@ export function SummaryCard({ card, isLoading, expandTable }: Props) {
 
             {tabs && (
               <div className={`${styles.collapsible} ${expanded || expandTable ? styles.collapsibleExpanded : ''}`}>
-                <MetricCardTabs tabs={tabs} />
+                <MetricCardTabs tabs={tabs} isSummary expanded={expanded || expandTable} cardName={card.cardName} />
+              </div>
+            )}
+
+            {hasCollapsible && (
+              <div className={styles.breakdownRow}>
+                {!isLegacy && (
+                  <span className={styles.breakdownLabel}>
+                    <span className={`material-icons ${styles.subTitleIcon}`}>category</span>
+                    {breakdownLabel}
+                  </span>
+                )}
+                {!expandTable && (
+                  <button
+                    type="button"
+                    className={styles.expandToggle}
+                    onClick={toggleExpandTable}
+                    data-testid="expand-toggle"
+                    aria-expanded={expanded}
+                  >
+                    <span>{expanded ? 'Collapse' : 'Expand'}</span>
+                    <span
+                      className={`material-icons ${styles.expandArrow} ${expanded ? styles.expandArrowUp : ''}`}
+                      aria-hidden="true"
+                    >
+                      keyboard_arrow_down
+                    </span>
+                  </button>
+                )}
               </div>
             )}
 
             {tableData && (
               <div className={`${styles.collapsible} ${expanded || expandTable ? styles.collapsibleExpanded : ''}`}>
-                <MetricCardTable tableData={tableData} />
+                <MetricCardTable tableData={tableData} isSummary expanded={expanded || expandTable} />
               </div>
             )}
 
@@ -314,36 +395,22 @@ export function SummaryCard({ card, isLoading, expandTable }: Props) {
 
             {showFooter && (
               <div className={styles.footer}>
-                {(card.isDetailsPageAvailable || card.customDrillDownText || hasCollapsible) && (
-                  <div className={styles.footerLinks}>
-                    <div>
-                      {(card.isDetailsPageAvailable || card.customDrillDownText) && (
-                        <Link
-                          to={`/quick-facts/details/${card.cardName}`}
-                          className={styles.detailsLink}
-                        >
-                          Go to {card.customDrillDownText || 'details'}
-                        </Link>
-                      )}
-                    </div>
-                    {hasCollapsible && !expandTable && (
-                      <button
-                        className={styles.expandToggle}
-                        onClick={() => setExpanded(e => !e)}
-                        data-testid="expand-toggle"
+                <div className={styles.footerLinks}>
+                  <div className={styles.footerLinksLeft}>
+                    {(card.isDetailsPageAvailable || card.customDrillDownText) && (
+                      <Link
+                        to={{ pathname: `/quick-facts/details/${card.cardName}`, search: locationSearch }}
+                        className={styles.detailsLink}
                       >
-                        {expanded ? 'Collapse' : 'Expand'}
-                        <span>{expanded ? ' ▲' : ' ▼'}</span>
-                      </button>
+                        Go to {card.customDrillDownText || 'details'}
+                      </Link>
                     )}
                   </div>
-                )}
+                </div>
                 {card.updatedTime && (
                   <div className={styles.footerMeta}>
                     <span className={styles.updateDate}>
-                      Updated at {new Date(card.updatedTime).toLocaleString('en-AU', {
-                        month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit',
-                      })}
+                      Updated at {formatUpdatedTime(card.updatedTime)}
                     </span>
                     {card.dataInfo && (
                       <button
@@ -351,7 +418,8 @@ export function SummaryCard({ card, isLoading, expandTable }: Props) {
                         onClick={() => setInfoModalOpen(true)}
                         data-testid="metrics-info-btn"
                       >
-                        Metrics Info ℹ
+                        <span>Metrics Info</span>
+                        <span className={`material-icons ${styles.dataInfoIcon}`}>info_outlined</span>
                       </button>
                     )}
                   </div>

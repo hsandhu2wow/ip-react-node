@@ -2,6 +2,9 @@ import { useMemo } from 'react'
 import { useSummaryCards } from './useSummaryCards'
 import { useCardStatus } from './useCardStatus'
 import { useFilter } from '../context/FilterContext'
+import { usePeriodCards } from './usePeriodCards'
+import { useDataLoadETA } from './useDataLoadETA'
+import { stampCutOffTimes } from '../utils/eta'
 import type { ISQFMetricCard, IAvailableMetricCards } from '../types/sqf.types'
 
 export interface EnrichedSummaryResult {
@@ -20,23 +23,25 @@ export interface EnrichedSummaryResult {
  *   - selectedNode.apiDepth <= cardStatus[cardName].details_last_level
  */
 export function useEnrichedSummaryCards(): EnrichedSummaryResult {
-  const { selectedNode } = useFilter()
+  const { selectedNode, selectedDate } = useFilter()
   const summaryQuery = useSummaryCards()
+  const periodCards = usePeriodCards(summaryQuery.data)
   const statusQuery = useCardStatus()
+  const etaQuery = useDataLoadETA()
 
   const cardStatus = statusQuery.data ?? {}
   const apiDepth = selectedNode?.apiDepth ?? 0
 
   const data = useMemo<ISQFMetricCard[]>(
     () =>
-      (summaryQuery.data ?? []).map(card => ({
+      stampCutOffTimes(periodCards.cards, etaQuery.data, selectedDate).map(card => ({
         ...card,
         isDetailsPageAvailable:
           !!cardStatus[card.cardName]?.details &&
           apiDepth <= (cardStatus[card.cardName]?.details_last_level ?? 99),
       })),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [summaryQuery.data, cardStatus, apiDepth]
+    [periodCards.cards, cardStatus, apiDepth, etaQuery.data, selectedDate]
   )
 
   return {

@@ -4,62 +4,103 @@
   flex-direction: column;
 }
 
-/* ── Search row ── */
+/* ── Search row (Angular .qf-tree__form-field) ── */
 .searchRow {
   background: #fafafa;
-  min-height: 58px;
-  padding: 8px 12px 8px 20px;
+  height: 58px;
+  padding: 8px 0;
   margin-bottom: 2px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
 }
 
 .searchInput {
-  flex: 1;
+  flex: none;
+  width: 129px;
+  margin-left: 20px;
+  padding: 1px 2px;
   border: none;
-  background: transparent;
+  background: inherit;
   color: #9b9b9b;
   font-size: 12px;
-  letter-spacing: 0.02em;
   font-family: var(--font-family);
   outline: none;
 }
 .searchInput::placeholder { color: #9b9b9b; }
 .searchInput::-webkit-search-cancel-button { display: none; }
 
+/* mat-icon-button: 48x48, 24px icon */
 .searchIconBtn {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: none;
+  width: 48px;
+  height: 48px;
+  margin-left: 20px;
+  padding: 12px;
   border: none;
-  padding: 4px;
+  border-radius: 50%;
+  background: inherit;
   color: #9b9b9b;
   cursor: pointer;
   flex-shrink: 0;
 }
-.searchIconBtn .material-icons { font-size: 18px; }
 
-/* ── "Your location" row ── */
+/* ── "Your location" row (Angular .qf-tree__location) ── */
 .locationRow {
+  position: relative;
+  display: flex;
+  align-items: center;
+  height: 58px;
+  margin-bottom: 2px;
+  background: #fafafa;
+  opacity: 0.7;
+}
+.locationRow:hover,
+.locationRowSelected { opacity: 1; }
+
+/* mat-button: 36px min-height, padding 0 8px, 4px radius, weight 500 */
+.locationBtn {
   display: flex;
   align-items: center;
   gap: 8px;
-  height: 58px;
-  padding: 0 20px;
-  margin-bottom: 2px;
-  background: #fafafa;
+  width: calc(100% - 8px);
+  height: 44px;
+  margin-left: 8px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  font: inherit;
   font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.02em;
-  color: var(--color-text-secondary);
-  opacity: 0.7;
-  cursor: not-allowed;
+  font-weight: 500;
+  color: #4a4a4a;
+  text-align: left;
+  cursor: pointer;
+}
+.locationBtn:hover { background: rgba(0, 0, 0, 0.04); }
+
+/* mat-spinner diameter 18 */
+.locationSpinner {
+  position: absolute;
+  right: 10px;
+  width: 18px;
+  height: 18px;
+  box-sizing: border-box;
+  border: 2px solid #0d5127;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: locSpin 0.8s linear infinite;
+}
+@keyframes locSpin { to { transform: rotate(360deg); } }
+
+.noStore {
+  padding: 16px 24px;
+  color: red;
 }
 
-.locationRowIcon { font-size: 18px; }
+.locationRowIcon { font-size: 18px; width: 18px; height: 18px; }
 
 .noResults {
   padding: 16px 20px;
@@ -67,14 +108,16 @@
   color: var(--color-text-secondary);
 }
 
-/* ── Tree nodes ── */
+/* ── Tree nodes (Angular .qf-tree__node) ── */
 .node {
   display: flex;
   align-items: center;
   gap: 4px;
   min-height: 48px;
-  padding-right: 8px;
-  font-size: 15px;
+  font-size: 14px;
+  font-weight: 400;
+  color: rgba(0, 0, 0, 0.87);
+  white-space: nowrap;
   opacity: 0.7;
   cursor: pointer;
 }
@@ -93,29 +136,34 @@
 }
 
 .nodeName {
-  padding: 0 8px 0 8px;
+  padding: 0 8px 0 4px;
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
+/* mat-icon-button.mr8 with an 18px .qf-tree__node-icon */
 .toggleBtn {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
+  width: 48px;
+  height: 48px;
+  margin-right: 8px;
+  padding: 12px;
   flex-shrink: 0;
   border: none;
+  border-radius: 50%;
   background: none;
-  color: var(--color-text-secondary);
+  color: rgba(0, 0, 0, 0.87);
   cursor: pointer;
 }
-.toggleBtn .material-icons { font-size: 18px; }
+.toggleBtn:hover { background: rgba(0, 0, 0, 0.04); }
+.toggleBtn :global(.material-icons) { font-size: 18px; width: 24px; height: 24px; line-height: 24px; text-align: center; }
 
+/* .mr8.qf-tree__node-placeholder */
 .togglePlaceholder {
   display: inline-block;
-  width: 32px;
+  width: 48px;
+  margin-right: 8px;
   flex-shrink: 0;
 }
 

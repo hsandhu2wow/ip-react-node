@@ -1,30 +1,74 @@
 /* src/pages/quick-facts/DetailsPage.module.css */
+/* Mirrors Angular .dummy-wrapper > .si-wrapper__content.qf-details-home
+   (sqf-details-home.component.scss + per-breakpoint rules in core-qf/styles/qf-styles.scss) */
 .page {
-  padding-top: 24px;
-  padding-bottom: calc(var(--footer-height) + 24px);
+  background-color: #fafafa;
+  padding-bottom: 48px;
 }
 
+/* Mirrors Angular .si-breadcrumb (shown only when >1 level) */
 .breadcrumbs {
-  padding: 8px 24px;
-  font-size: 13px;
-  color: var(--color-text-secondary);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  list-style: none;
+  max-width: 900px;
+  margin: 0 8px;
+  padding: 0 0 0 4px;
 }
-.breadcrumb { }
-.breadcrumbSep { margin: 0 4px; color: var(--color-border); }
+/* Angular wraps breadcrumbs in .hide-xsm */
+@media (max-width: 768px) {
+  .breadcrumbs { display: none; }
+}
+.breadcrumb { display: flex; align-items: center; }
+.breadcrumbLink {
+  font-size: 13px;
+  color: var(--color-primary, #0d5127);
+  cursor: pointer;
+  text-decoration: underline;
+}
+.breadcrumbLink:hover { text-decoration: none; }
+.breadcrumbActive {
+  font-size: 13px;
+  font-weight: bold;
+  color: var(--color-primary, #0d5127);
+}
+.breadcrumbSep {
+  margin: 0 2px;
+  color: #cccccc;
+  font-size: 19px;
+  padding-top: 3px;
+}
 
+/* Mirrors .qf-details-home__detail-head-title */
 .pageHeader {
   display: flex;
-  align-items: center;
   justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 12px;
-  padding: 8px 0 20px;
+  align-items: center;
+  max-width: 900px;
+  margin: 0 8px;
+  padding-left: 4px;
+}
+@media (max-width: 768px) {
+  .pageHeader { width: 90%; margin: 0 auto; }
+}
+@media (max-width: 767px) {
+  .pageHeader { width: 100%; padding: 0 12px; }
+}
+@media (min-width: 1024px) {
+  .pageHeader, .breadcrumbs { margin: 0; }
+}
+@media (min-width: 1728px) and (max-width: 1919px) {
+  .pageHeader, .breadcrumbs { max-width: 1004px; }
+}
+@media (min-width: 1920px) {
+  .pageHeader, .breadcrumbs { max-width: 1224px; }
 }
 
 .pageTitle {
   font-size: 20px;
+  color: #333333;
   font-weight: 600;
-  color: var(--color-text);
   text-transform: capitalize;
 }
 
@@ -32,25 +76,33 @@
   position: relative;
 }
 
+/* Angular mat-button (text) with mat-icon; app.scss forces height 44px, letter-spacing normal */
 .sortDropdownBtn {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 4px 12px;
-  border: 1px solid var(--color-border);
+  padding: 0 8px;
+  height: 44px;
+  border: none;
   border-radius: 4px;
   background: none;
   font-size: 14px;
-  color: #4a4a4a;
+  font-weight: 500;
+  letter-spacing: normal;
+  color: rgba(0, 0, 0, 0.87);
   cursor: pointer;
   font-family: var(--font-family);
   white-space: nowrap;
 }
 .sortDropdownBtn:hover { background: rgba(0, 0, 0, 0.04); }
 
+/* .matIconStyle inside a mat-button */
 .sortIcon {
-  font-size: 16px;
-  opacity: 0.7;
+  font-size: 20px;
+  width: 15px;
+  height: 18px;
+  overflow: visible;
+  vertical-align: middle;
+  margin-right: 8px;
 }
 
 .sortDropdownMenu {
@@ -96,29 +148,140 @@
   font-size: 14px;
 }
 
-/* Two-column layout */
+/* Two-column layout — .qf-details-home */
 .layout {
   display: flex;
-  align-items: flex-start;
-  gap: 24px;
-  padding: 0 24px;
+  flex-direction: row;
+  margin-top: 8px;
+  overflow: hidden;
+  padding: 8px 32px 32px;
+  justify-content: center;
+  align-items: center;
 }
+@media (max-width: 1200px) {
+  .layout { display: block; padding: 0 8px 60px; }
+}
+@media (max-width: 767px) {
+  .layout { padding: 0 0 60px; margin: 0 auto; width: 100%; }
+}
+@media (max-width: 360px) {
+  .layout { min-width: 336px; }
+}
+@media (min-width: 361px) and (max-width: 767px) {
+  .layout { max-width: 503px; }
+}
+@media (min-width: 768px) and (max-width: 1023px) {
+  .layout { margin: 0 auto; padding: 0; width: 714px; }
+}
+/* Angular's (hide-md, empty) .qf-details-home__summary keeps its md 8px padding
+   in tablet-sm above xsm, leaving a 16px band above the detail column. */
+@media (min-width: 769px) and (max-width: 1023px) {
+  .layout { padding-top: 16px; }
+}
+/* mobile-landscape (max-width 1023px + landscape) overrides per Angular size class */
+@media (min-width: 768px) and (max-width: 1023px) and (orientation: landscape) {
+  .layout { width: 100%; max-width: 714px; }
+}
+@media (min-width: 361px) and (max-width: 767px) and (orientation: landscape) {
+  .layout { width: 600px; max-width: 600px; }
+}
+@media (min-width: 1024px) and (max-width: 1439px) {
+  .layout { display: flex; flex-direction: column; margin: 0 auto; padding: 0; width: 904px; }
+}
+@media (min-width: 1440px) {
+  .layout { margin: 0 auto; padding: 0; align-items: flex-start; }
+}
+@media (min-width: 1440px) and (max-width: 1727px) { .layout { width: 1280px; } }
+@media (min-width: 1728px) and (max-width: 1919px) { .layout { width: 1420px; } }
+@media (min-width: 1920px) { .layout { width: 1640px; } }
 
+/* .qf-details-home__detail */
 .detailColumn {
-  flex: 1;
+  padding-left: 24px;
+  width: 100%;
+  background: #fafafa;
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
   min-width: 0;
 }
+@media (max-width: 1200px) {
+  .detailColumn { padding: 0; margin-bottom: 0; }
+}
+@media (min-width: 1024px) and (max-width: 1439px) {
+  .detailColumn { margin: 0; padding: 0; }
+}
+@media (min-width: 1440px) {
+  .detailColumn { padding: 0; margin-left: 24px; }
+}
+@media (min-width: 1440px) and (max-width: 1727px) { .detailColumn { width: 864px; } }
+@media (min-width: 1728px) and (max-width: 1919px) { .detailColumn { width: 1004px; } }
+@media (min-width: 1920px) { .detailColumn { width: 1224px; } }
 
-.backLink {
-  display: inline-flex;
-  align-items: center;
-  gap: 2px;
-  font-size: 14px;
-  color: #4a4a4a;
-  text-decoration: none;
-  margin-bottom: 8px;
+/* Outer box of each .qf-details-card: max-width 900, margin 24px 8px with
+   :first-of-type margin-top 0; desktop/tablet-lg widen and drop side margins. */
+.cardSlot {
+  width: 100%;
+  max-width: 900px;
+  margin: 0 8px 24px;
+}
+/* mat-divider.qf-card-divider (border 0, so it only adds spacing) */
+.cardDivider { display: block; height: 2px; margin: 0 10px 15px; }
+/* .qf-details-card md margin 16px auto; :first-of-type (each card is first in its
+   host) keeps margin-top 0 */
+@media (max-width: 1200px) {
+  .cardSlot { max-width: unset; margin: 0 auto 16px; }
+}
+@media (max-width: 360px) {
+  .cardSlot { min-width: 336px; }
+}
+@media (min-width: 361px) and (max-width: 767px) {
+  .cardSlot { max-width: 503px; }
+}
+@media (min-width: 1024px) {
+  .cardSlot { margin-left: 0; margin-right: 0; }
+}
+@media (min-width: 1024px) and (max-width: 1439px) { .cardSlot { max-width: 904px; } }
+@media (min-width: 1440px) and (max-width: 1727px) { .cardSlot { max-width: 864px; } }
+@media (min-width: 1728px) and (max-width: 1919px) { .cardSlot { max-width: 1004px; } }
+@media (min-width: 1920px) { .cardSlot { max-width: 1224px; } }
+@media (min-width: 768px) and (max-width: 1023px) and (orientation: landscape) {
+  .cardSlot { width: 100%; max-width: 714px; }
+}
+@media (min-width: 361px) and (max-width: 767px) and (orientation: landscape) {
+  .cardSlot { width: 600px; max-width: 600px; }
 }
 
-.backLink:hover {
-  text-decoration: underline;
+/* Detail cards wrapper — .qf-home__cards inside .qf-details-home__detail */
+@media (max-width: 360px) {
+  .cardList { padding: 0 12px; max-width: 100vw; }
+}
+@media (min-width: 361px) and (max-width: 767px) {
+  .cardList { padding: 12px; max-width: 100vw; }
+}
+
+/* .qf-details-home__detail-back */
+.backLink {
+  display: flex;
+  align-items: center;
+  align-self: flex-start;
+  gap: 0;
+  font-size: 14px;
+  /* Angular mat-sidenav-content text colour */
+  color: rgba(0, 0, 0, 0.87);
+  text-decoration: none;
+  padding-top: 12px;
+  padding-bottom: 0;
+  cursor: pointer;
+}
+@media (max-width: 767px) {
+  .backLink { padding: 12px 4px 0 4px; }
+}
+
+.backIcon {
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
+  line-height: 21px;
 }

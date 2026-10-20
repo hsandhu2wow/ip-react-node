@@ -19,7 +19,7 @@ function convertToSingleTree(req: ISQFGenericFilter, depth: number): IQFTree {
   const expandable = hasChildren || hasLeafChildren
   const isLastNode = !hasChildren
 
-  return {
+  const node: IQFTree = {
     name: isLastNode
       ? req.name ? `${req.name} - ${req.code}` : 'n/a'
       : req.name || 'n/a',
@@ -33,6 +33,29 @@ function convertToSingleTree(req: ISQFGenericFilter, depth: number): IQFTree {
     leafChildren: req.leafChildren || null,
     alwaysHidden: req.alwaysHidden,
   }
+  if (!hasChildren && req.leafChildren?.length) {
+    const levelDesc = req.level_desc.toLowerCase() === 'store' ? 'Department' : 'Category'
+    node.children = req.leafChildren.map(leaf => ({
+      name: leaf.name,
+      code: leaf.code && !leaf.code.includes('-') ? `${node.code}-${leaf.code}` : leaf.code,
+      level: levelDesc.toLowerCase(),
+      level_desc: levelDesc,
+      depth: depth + 1,
+      apiDepth: 5,
+      children: [],
+      expandable: false,
+      selected: leaf.selected || false,
+      nonClickable: leaf.nonClickable || false,
+    }))
+  }
+  return node
+}
+
+/** Nearby-store tree for the "YOUR LOCATION" toggle (Angular SqfFilterService.setupNearbyStores). */
+export function setupNearbyStores(res: ISQFGenericFilter[]): IQFTree {
+  const root = convertToMultiNodeTree(res)
+  addParents(root)
+  return root
 }
 
 function convertToMultiNodeTree(reqs: ISQFGenericFilter[]): IQFTree {

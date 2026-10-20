@@ -1,0 +1,141 @@
+.wrapperContent {
+  padding: 4px 32px 24px;
+}
+
+.wfHome {
+  width: 100%;
+  border-radius: 4px;
+  background: #ffffff;
+  margin-top: 8px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--color-border);
+  padding-top: 16px;
+  color: var(--color-text);
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 0 12px 12px;
+}
+
+.selectLabel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.select {
+  height: 24px;
+  padding: 0 8px;
+  border-radius: 4px;
+  border: 1px solid #8c8c8c;
+  background: #fff;
+  font-size: 12px;
+  color: var(--color-text);
+}
+
+.toggleLabel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.toggleSwitch {
+  position: relative;
+  display: inline-block;
+  width: 36px;
+  height: 20px;
+  border-radius: 10px;
+  background: #8c8c8c;
+  transition: background-color 150ms ease;
+  flex-shrink: 0;
+}
+
+.toggleSwitchOn {
+  background: var(--color-primary);
+}
+
+.toggleInput {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.toggleThumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  transition: transform 150ms ease;
+  pointer-events: none;
+}
+
+.toggleSwitchOn .toggleThumb {
+  transform: translateX(16px);
+}
+
+.headerBlock {
+  padding: 12px 16px;
+}
+
+.title {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.subHeaderRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 4px;
+  font-size: 13px;
+  color: #444;
+}
+
+.metricsInfo {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.infoMessage {
+  font-size: 12px;
+  color: #666;
+  margin-top: 4px;
+}
+
+.errorBanner {
+  padding: 16px;
+  color: #c0392b;
+}
+
+.loading {
+  padding: 16px;
+}
+
+/* weekly-facts-home .js-weekly-card__preview (QfCardsPreviewService.getPageCanvases) */
+.wfHome:global(.js-weekly-card__preview) {
+  max-width: none;
+  width: 1500px;
+  padding: 24px 48px;
+}
+
+.wfHome:global(.js-weekly-card__preview) .toolbar {
+  display: none;
+}

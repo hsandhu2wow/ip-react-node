@@ -1,0 +1,18 @@
+.root { width: 100%; }
+.tooltipBanner { display: flex; gap: 4px; cursor: pointer; font-size: 12px; align-items: center; color: #676d70; border: 0; background: none; padding: 0; font-family: inherit; }
+.tooltipIcon { font-size: 12px; width: 12px; height: 12px; }
+.table { width: 100%; margin: 8px auto 0; table-layout: fixed; border-collapse: collapse; }
+.table thead tr { height: 40px; border-bottom: solid 1px #e0e0e0; }
+.table th, .table td { padding: 8px 4px 8px 8px; font-size: 12px; line-height: 18px; border: none; z-index: 0; }
+.table th:first-of-type, .table td:first-of-type { padding-left: 0; text-align: left; }
+.table th:last-of-type, .table td:last-of-type { padding-right: 0; }
+.table th { color: #666; font-weight: bold; position: sticky; top: 0; background: #fff; }
+.table th button { display: flex; align-items: center; font: inherit; color: inherit; text-align: start; border: 0; background: transparent; cursor: pointer; padding: 0; width: 100%; }
+.table th:global(.right-align), .table td:global(.right-align) { text-align: right; }
+.table th:global(.right-align) button { justify-content: flex-end; text-align: right; }
+.table td:global(.right-align) { padding-right: 20px; }
+.table td { color: #666; overflow-wrap: break-word; }
+.table td:global(.qf-table__data--negative) { color: #eb5757; }
+.table tbody tr { height: 46px; border-bottom: solid 1px #e0e0e0; }
+.table tbody tr:last-of-type { border-bottom: none; }
+.tableInfo { font-size: 12px; color: #333; height: 20px; margin-top: 10px; }

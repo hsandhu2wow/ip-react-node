@@ -1,109 +1,178 @@
-/* ── Base card ── */
+/* ── Base card (Angular .qf-summary-card) ── */
 .card {
   width: 100%;
   display: flex;
   flex-direction: column;
-  min-height: 380px;
+  min-height: 410px;
+  margin: 0;
+  padding: 0;
   background: var(--color-surface);
-  border: 1px solid var(--color-border);
+  border: 1px solid #d3d3d3;
   border-radius: 4px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.1);
   overflow: hidden;
 }
 
-/* ── Header ── */
-.header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  border-top: 4px solid var(--color-neutral);
-  padding: 10px 12px 0;
+@media (max-width: 768px) {
+  .card { overflow-x: hidden; overflow-y: auto; }
 }
 
-.headerLeft { flex: 1; min-width: 0; }
+/* ── Header (.qf-summary-card__header) ── */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  border-top: 4px solid var(--color-neutral);
+  border-radius: 3.74px 3.74px 0 0;
+}
+.headerWithSubHeading { margin-bottom: 4px; }
+
+.headerLeft {
+  display: flex;
+  flex-direction: column;
+  margin-left: 12px;
+  flex: 1;
+  min-width: 0;
+}
 
 .cardTitle {
   font-size: 18px;
+  line-height: 23.4px;
   font-weight: 700;
-  color: var(--color-text);
-  margin-bottom: 4px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  color: #333333;
+  padding-top: 8px;
+  padding-bottom: 0;
 }
 
 .subTitle {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
+  gap: 16px;
   align-items: center;
-  color: var(--color-text-secondary);
-  font-size: 12px;
-  margin-bottom: 8px;
+  color: #676d70;
+  font-size: 12.9px;
+  line-height: 13px;
 }
 
 .subTitleItem {
   display: flex;
   align-items: center;
-  gap: 3px;
+  gap: 4px;
+  padding: 6px 0 8px;
 }
 
-.subTitleIcon { font-size: 14px; }
+.subTitleText { font-size: 12px; line-height: 14px; }
+
+.location {
+  display: block;
+  max-width: 140px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.subTitleIcon {
+  width: 12.9px;
+  height: 13px;
+  font-size: 12.9px;
+  line-height: 13px;
+  vertical-align: text-top;
+  flex-shrink: 0;
+}
 
 .dropdownSelect {
   font-size: 12px;
   font-family: inherit;
   border: none;
   background: transparent;
-  color: var(--color-text-secondary);
+  color: #676d70;
   cursor: pointer;
   padding: 0;
 }
 
-.headerRight { flex-shrink: 0; padding-top: 2px; }
+.headerRight { flex-shrink: 0; }
 
+/* .qf-summary-card__recognize-button + mat-icon-button (48×48, 24px icon) */
 .recognizeBtn {
+  width: 48px;
+  height: 48px;
   background: none;
   border: none;
+  border-radius: 50%;
   cursor: pointer;
-  font-size: 20px;
-  padding: 4px;
-  color: var(--color-text-secondary);
+  font-size: 24px;
+  padding: 12px;
+  color: #616161;
   display: flex;
   align-items: center;
+  justify-content: center;
 }
+.recognizeBtn :global(.material-icons-outlined) { font-size: 24px; }
 .recognizeBtn:hover { color: var(--color-primary); }
 .recognizeBtn:disabled { opacity: 0.5; cursor: default; }
 
-/* ── Content ── */
-.content { display: flex; flex-direction: column; flex: 1; }
+/* ── Content (.qf-summary-card__content / __content-top) ── */
+.content { display: flex; flex-direction: column; margin-bottom: 0; }
 
-.contentTop { padding: 4px 12px 0; }
+.contentTop {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 248px;
+}
 
 .subHeading {
-  font-size: 13px;
-  color: var(--color-text-secondary);
-  margin-bottom: 6px;
+  color: #333333;
+  font-weight: 700;
+  font-size: 14px;
+  line-height: 150%;
+  margin: 0 0 12px 12px;
 }
 
-/* ── KPI numbers ── */
-.kpiRow { display: flex; align-items: stretch; padding: 4px 12px 8px; }
-.kpiCol { display: flex; flex-direction: column; padding-right: 14px; }
-.kpiCol:not(:first-child) { padding-left: 14px; }
-.kpiValue { font-size: 20px; font-weight: 700; line-height: 1.1; color: var(--color-text); }
+/* ── KPI numbers (.qf-summary-card__numbers / __number / __number-divider) ── */
+.kpiRow {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  width: 100%;
+}
+.kpiCol {
+  margin: 0 12px;
+  padding: 2px 0;
+  font-size: 20px;
+  line-height: 20px;
+  font-weight: 700;
+  color: #333333;
+}
+.kpiValue { display: inline; }
+/* .qf-summary-card__number-suffix + __main-kpi */
 .kpiLabel {
-  font-size: 12px;
-  color: var(--color-text);
-  margin-top: 3px;
-  white-space: nowrap;
   display: flex;
   align-items: center;
-  gap: 4px;
+  width: 100%;
+  padding-top: 2px;
+  font-size: 12px;
+  line-height: 14px;
+  font-weight: 400;
+  color: #333333;
+  opacity: 0.9;
+  white-space: nowrap;
 }
-.kpiDivider { width: 1px; background: #e0e0e0; margin: 2px 0; flex-shrink: 0; }
+.kpiDivider {
+  width: 0;
+  height: 34px;
+  border-left: 1px solid #e0e0e0;
+  align-self: center;
+  flex-shrink: 0;
+}
 
 .infoIcon {
-  font-size: 13px;
+  font-size: 14px;
+  width: 14px;
+  height: 14px;
+  margin-left: 2px;
+  vertical-align: middle;
   cursor: pointer;
   color: var(--color-text-secondary);
   position: relative;
@@ -126,19 +195,41 @@
 
 .tooltipWrapper { position: relative; display: inline-flex; }
 
-/* ── Custom info numbers ── */
-.customInfoNumbers { padding: 4px 12px 8px; }
+/* ── Custom info numbers (.qf-summary-card__numbers > __numbers-custom) ── */
+.customInfoNumbers { display: flex; gap: 2px; margin-top: 36px; }
 
-/* ── Chart ── */
-.chartArea { padding: 0 12px; margin: 8px 0; flex: 1; }
+/* ── Chart (.qf-summary-card__graph) ── */
+.chartArea {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  padding: 0 12px;
+  margin: auto;
+}
+.chartAreaHasCustomInfo { margin-top: 32px; }
+/* app-sqf-pie-chart host padding-top inside the summary graph */
+.chartAreaPie { padding-top: 20px; }
 
-/* ── Rich text ── */
-.richText { padding: 0 12px 8px; font-size: 13px; color: var(--color-text); }
+/* ── Rich text (.qf-summary-card__richText) ── */
+.richText { color: #333333; }
 
-/* ── Tabs / Table collapsible wrapper ── */
-.collapsible { overflow: hidden; }
-.collapsible:not(.collapsibleExpanded) { max-height: 0; }
-.collapsibleExpanded { max-height: none; }
+/* ── Tabs / Table (.qf-summary-card__table / __tabs) ── */
+.collapsible {
+  display: none;
+  overflow-x: hidden;
+  overflow-y: auto;
+  margin: 8px 12px 0;
+}
+.collapsibleExpanded { display: block; height: auto; max-height: 520px; }
+
+@media (max-width: 768px) {
+  .collapsibleExpanded { max-height: 100%; }
+}
+/* tablet-lg and up: qf-styles.scss lifts the cap on expanded tables/tabs */
+@media (min-width: 1024px) {
+  .collapsibleExpanded { max-height: none; }
+}
 
 /* ── Expandable list ── */
 .expandableList { border-top: 1px solid var(--color-border); }
@@ -165,77 +256,127 @@
   line-height: 1.6;
 }
 
-/* ── Footer ── */
-.footer { margin-top: auto; }
+/* ── Footer (.qf-summary-card__footer) ── */
+.footer { font-size: 14px; color: #333333; border-radius: 4px; }
 
 .footerLinks {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 8px 12px;
-  border-top: 1px solid var(--color-border);
+  height: 49px;
+  padding: 0 12px;
+  border-bottom: 1px solid #c3c3c3;
 }
 
+.footerLinksLeft { padding: 16px 0; }
+
 .detailsLink {
-  color: var(--color-blue);
+  color: #3f69ae;
   font-size: 14px;
   text-decoration: none;
   cursor: pointer;
+  padding: 0;
+}
+
+@media (max-width: 768px) {
+  .footerLinksLeft { padding: 0; }
+  .detailsLink { display: inline-block; padding: 16px 0; }
 }
 .detailsLink:hover { text-decoration: underline; }
+
+/* ── Breakdown row (Angular .qf-summary-card__breakdown-row) ── */
+.breakdownRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top: 1px solid #c3c3c3;
+  margin: 8px 12px 0;
+  padding: 6px 0 0;
+}
+
+.breakdownLabel {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12.9px;
+  color: #676d70;
+  font-weight: 600;
+}
 
 .expandToggle {
   display: flex;
   align-items: center;
-  gap: 4px;
-  font-size: 14px;
-  color: var(--color-text);
+  justify-content: flex-end;
+  font-size: 16px;
+  color: #4a4a4a;
   cursor: pointer;
   background: none;
   border: none;
   font-family: var(--font-family);
   padding: 0;
 }
-.expandToggle:hover { color: var(--color-primary); }
+/* Angular `&__slider` @include xsm */
+@media (max-width: 768px) {
+  .expandToggle { padding: 16px 0; }
+}
+
+.expandArrow {
+  font-size: 16px;
+  width: 16px;
+  height: 16px;
+  margin-left: 2px;
+  transition: transform 0.8s ease-in-out;
+}
+.expandArrowUp { transform: rotate(180deg); }
 
 .footerMeta {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 6px 12px;
-  min-height: 36px;
+  padding: 12px;
 }
 
-.updateDate { font-size: 12px; color: var(--color-text-secondary); }
+.updateDate {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  width: 70%;
+  font-size: 12px;
+  line-height: 14px;
+  color: #676d70;
+  padding: 4px 0;
+}
 
 .metricsInfoBtn {
   display: flex;
   align-items: center;
   gap: 4px;
   font-size: 12px;
-  color: var(--color-text-secondary);
+  color: #676d70;
   background: none;
   border: none;
   cursor: pointer;
   font-family: var(--font-family);
-  padding: 0;
+  padding: 4px;
 }
-.metricsInfoBtn:hover { color: var(--color-text); }
+.metricsInfoBtn:hover { background-color: #f5f5f5; border-radius: 4px; }
+.dataInfoIcon { font-size: 14px; width: 14px; height: 14px; }
 
-/* ── Errors ── */
+/* ── Errors (.qf-summary-card__error) ── */
 .errorContent {
-  flex: 1;
+  width: 90%;
+  margin: auto;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  padding: 24px;
   text-align: center;
+  color: #4a4a4a;
 }
-.errorHeading { font-size: 15px; font-weight: 700; color: var(--color-text); margin-bottom: 8px; max-width: 320px; }
-.errorSubtext { font-size: 13px; color: var(--color-text-secondary); line-height: 1.6; }
-.errorLink { color: var(--color-blue); }
-.errorImg { width: 72px; height: 72px; margin-bottom: 12px; }
+/* Angular h6 inside mat-card: 16px/19.2px bold, block width (90% of card) */
+.errorHeading { align-self: stretch; font-size: 16px; line-height: 19.2px; font-weight: 700; margin: 8px 0; }
+.errorSubtext { font-size: 9px; }
+.errorLink { color: inherit; }
+.errorImg { width: 84px; }
 
 /* ── Loading spinner ── */
 .spinner {
@@ -248,3 +389,45 @@
   animation: spin 0.7s linear infinite;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
+
+/* Angular error header: header-left also carries __title (extra padding-top) */
+.errorHeaderLeft { padding-top: 8px; }
+
+/* Legacy (pre-axis) cards: segmented toggle instead of a dropdown (Angular __seg) */
+.seg {
+  display: inline-flex;
+  border: 1px solid #d3d3d3;
+  border-radius: 6px;
+  overflow: hidden;
+  height: 26px;
+  box-sizing: border-box;
+}
+
+.segBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  border: none;
+  background: #fff;
+  color: #333;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 400;
+  cursor: pointer;
+  padding: 0 8px;
+  height: 24px;
+  line-height: 24px;
+  transition: background 150ms, color 150ms;
+}
+
+.segBtn:first-child { border-right: 1px solid #d3d3d3; }
+.segBtn:hover:not(.segBtnActive) { background: #f7f7f7; }
+.segBtnActive { background: var(--main-bg-color, #10542f); color: #fff; }
+
+/* .qf-summary-card__preview — added to the card root while it is captured for export */
+.card:global(.qf-summary-card__preview) { border: 1px solid #d3d3d3; }
+.card:global(.qf-summary-card__preview) .headerRight { display: none; }
+.card:global(.qf-summary-card__preview) .collapsible { height: auto; overflow-y: auto; }
+.card:global(.qf-summary-card__preview) .expandToggle { display: none; }
+.card:global(.qf-summary-card__preview) .footer { display: none; }

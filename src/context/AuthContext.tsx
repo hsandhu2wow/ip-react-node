@@ -15,7 +15,8 @@ interface AuthContextType {
 
 const STUB_USER: AuthUser = {
   name: 'Demo User',
-  portal: 'WW',
+  // Mirrors Angular environment.portal ('SI' in store-insights prod)
+  portal: import.meta.env.VITE_PORTAL || 'SI',
 }
 
 const AuthContext = createContext<AuthContextType>({

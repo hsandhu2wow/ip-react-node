@@ -5,6 +5,7 @@ import { AppShell } from './components/layout/AppShell/AppShell'
 import { QuickFactsLayout } from './pages/quick-facts/QuickFactsLayout'
 import { SummaryPage } from './pages/quick-facts/SummaryPage'
 import { DetailsPage } from './pages/quick-facts/DetailsPage'
+import { TrendPage } from './pages/quick-facts/TrendPage'
 import { ComingSoon } from './pages/coming-soon/ComingSoon'
 
 export default function App() {
@@ -23,6 +24,8 @@ export default function App() {
             <Route index element={<Navigate to="summary" replace />} />
             <Route path="summary" element={<SummaryPage />} />
             <Route path="details/:type" element={<DetailsPage />} />
+            <Route path="weekly" element={<TrendPage metric="weekly" />} />
+            <Route path="myplan" element={<TrendPage metric="myPlan" />} />
           </Route>
 
           <Route path="/weekly" element={<ProtectedRoute><ComingSoon /></ProtectedRoute>} />

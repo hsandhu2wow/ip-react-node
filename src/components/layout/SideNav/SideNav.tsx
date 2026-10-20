@@ -2,14 +2,19 @@
 import { useState, useEffect, useRef } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
 import { useAuth } from '../../../context/AuthContext'
+import { getActivePrefix } from '../navActiveMatch'
 import styles from './SideNav.module.css'
 
 const NAV_ITEMS = [
   { icon: 'today', label: 'Daily', to: '/quick-facts', prefix: '/quick-facts', badge: false },
   { icon: 'date_range', label: 'Weekly', to: '/weekly', prefix: '/weekly', badge: true },
-  { icon: 'table_chart', label: 'Trend', to: '/trend', prefix: '/trend', badge: true },
+  { icon: 'view_week', label: 'Trend', to: '/quick-facts/weekly', prefix: '/quick-facts/weekly', altPrefixes: ['/quick-facts/myplan'], badge: false },
   { icon: 'dashboard', label: 'Dashboards', to: '/dashboards', prefix: '/dashboards', badge: true },
 ]
+
+function allPrefixes(items: { prefix: string; altPrefixes?: string[] }[]): string[] {
+  return items.flatMap((item) => [item.prefix, ...(item.altPrefixes ?? [])])
+}
 
 const WW_LOGO = (
   <svg width="40" height="32" viewBox="0 0 80 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -27,6 +32,7 @@ export function SideNav() {
   const location = useLocation()
   const [menuOpen, setMenuOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
+  const activePrefix = getActivePrefix(location.pathname, allPrefixes(NAV_ITEMS))
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -48,8 +54,8 @@ export function SideNav() {
 
       {/* Nav items */}
       <div className={styles.nav}>
-        {NAV_ITEMS.map(({ icon, label, to, prefix, badge }) => {
-          const isActive = location.pathname === prefix || location.pathname.startsWith(prefix + '/')
+        {NAV_ITEMS.map(({ icon, label, to, prefix, altPrefixes: itemAltPrefixes, badge }) => {
+          const isActive = prefix === activePrefix || (itemAltPrefixes?.includes(activePrefix) ?? false)
           return (
             <NavLink
               key={to}

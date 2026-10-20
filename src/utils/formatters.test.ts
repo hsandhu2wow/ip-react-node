@@ -8,6 +8,7 @@ import {
   getYesterdayDate,
   REPORTING_PERIODS,
   isCutOffTimePast,
+  formatUpdatedTime,
 } from './formatters'
 
 describe('colorVal', () => {
@@ -91,15 +92,21 @@ describe('REPORTING_PERIODS', () => {
 })
 
 describe('isCutOffTimePast', () => {
-  it('returns true when cut-off time is in the past', () => {
-    // 00:00:00 UTC is always in the past by the time any test runs
-    expect(isCutOffTimePast('00:00:00')).toBe(true)
+  it('is true only when a stamped ETA has passed', () => {
+    expect(isCutOffTimePast({ cutOffTime: '7:30 AM', cutOffAt: Date.now() - 1000 })).toBe(true)
+    expect(isCutOffTimePast({ cutOffTime: '7:30 AM', cutOffAt: Date.now() + 60_000 })).toBe(false)
   })
 
-  it('returns false when cut-off time is far in the future', () => {
-    const now = new Date()
-    const futureHour = (now.getUTCHours() + 2) % 24
-    const futureStr = String(futureHour).padStart(2, '0') + ':59:59'
-    expect(isCutOffTimePast(futureStr)).toBe(false)
+  it('is false without a cut-off time or ETA', () => {
+    expect(isCutOffTimePast(undefined)).toBe(false)
+    expect(isCutOffTimePast({ cutOffTime: null, cutOffAt: Date.now() - 1000 })).toBe(false)
+    expect(isCutOffTimePast({ cutOffTime: '7:30 AM' })).toBe(false)
+  })
+})
+
+describe('formatUpdatedTime', () => {
+  it("formats like Angular 'MMM d, h:mm a'", () => {
+    expect(formatUpdatedTime(new Date(2026, 9, 10, 4, 55))).toBe('Oct 10, 4:55 AM')
+    expect(formatUpdatedTime(new Date(2026, 9, 1, 12, 5))).toBe('Oct 1, 12:05 PM')
   })
 })
