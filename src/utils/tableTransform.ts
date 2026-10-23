@@ -44,7 +44,7 @@ export function filterTableData(tableData: WfTableData, isExpanded: boolean): Fi
 
   const finalizeGroup = () => {
     if (currentGroupStartIdx !== -1) {
-      const groupCell = filtered[currentGroupStartIdx].find((c) => c.columnid === 0);
+      const groupCell = filtered[currentGroupStartIdx]?.find((c) => c.columnid === 0);
       if (groupCell) {
         groupCell.rowSpan = groupVisibleCount;
       }
@@ -61,9 +61,11 @@ export function filterTableData(tableData: WfTableData, isExpanded: boolean): Fi
       currentGroupStartIdx = filtered.length;
     }
 
-    const displayRow: FilteredTableRow = allowedIndexes.map((idx) => ({ ...row[idx] }));
+    const displayRow: FilteredTableRow = row
+      .filter((cell) => allowedIndexes.includes(cell.columnid))
+      .map((cell) => ({ ...cell }));
     const measureCell = displayRow.find((c) => c.columnid === measureColumnId);
-    const isKpi = !!measureCell?.tags && measureCell.tags.split(',').includes('KPI');
+    const isKpi = !!measureCell?.tags?.includes('KPI');
 
     const keepRow = !kpiFilterEnabled || isExpanded || isKpi;
     if (keepRow) {
@@ -82,14 +84,11 @@ export function filterTableData(tableData: WfTableData, isExpanded: boolean): Fi
   filtered.forEach((row, idx) => {
     const groupCell = row[0];
     if (groupCell?.rowSpan && groupCell.rowSpan > 1) {
-      remaining = groupCell.rowSpan;
-    }
-    if (remaining > 0) {
+      remaining = groupCell.rowSpan - 1;
+    } else if (remaining > 0) {
       remaining--;
-      if (remaining === 0 && idx !== filtered.length - 1) {
-        row.isGroupEnd = true;
-      }
     }
+    row.isGroupEnd = remaining === 0 && idx !== filtered.length - 1;
   });
 
   return { headers: filteredHeaders, rows: filtered };

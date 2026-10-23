@@ -8,10 +8,33 @@ supersedes Stage 4 of the October 14 roadmap.
 **Conclusion:** React has page endpoints and a basic grouped HTML table, but
 Weekly Facts/My Plan are **not parity-complete for any BU**. Source review
 identifies shared behavior and portal-specific branches; it does not certify
-all deployed data/configurations. The current 97.24% line coverage measures
+all deployed data/configurations. The October 20 baseline's 97.24% line coverage measures
 existing React code, not missing Angular functionality or browser pixels.
 
 ## Baseline and evidence
+
+### Implementation progress: October 23
+
+The documented baseline was committed/pushed on `document-migration-plan`
+(`07540f3`) and merged into `dev-branch` (`e657079`). Initial migration work
+is on **`feat/weekly-facts-myplan-parity`**, created from that merge, not on dev.
+Wireframes were excluded from these commits.
+
+The first implementation slice corrects alert/link/AI/hierarchy wire types;
+adds GET/POST subscription transport with source casing and multipart fields;
+handles response-defined history keys; applies server variance and table KPI
+expansion defaults; resets stale view/date on changed responses; and matches
+source columnid filtering, empty-group handling, KPI substring matching and
+singleton spacers. Subscription transport does not mean its UI is complete.
+The suite now has 267 passing tests and 97.62% line coverage under the same
+source-inclusion policy.
+
+This is partial work across plan Task 2 and the source-independent parts of
+Tasks 4/5, not completion of the entire tasks. Identity prerequisites,
+hierarchy/mobile/Half Year selection, source initializer quirks, table display
+contexts/layout, dialogs/actions and all-BU browser evidence remain open.
+The gap ledger below records the **October 21 assessment**; use this progress
+entry for which foundation issues have since changed.
 
 | Evidence | Reviewed baseline / limit |
 |---|---|

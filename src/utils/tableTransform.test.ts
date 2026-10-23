@@ -91,7 +91,7 @@ describe('filterTableData', () => {
     expect(result.rows[3].isGroupEnd).toBeFalsy();
   });
 
-  it('does not mark isGroupEnd for single-row groups (rowSpan of 1)', () => {
+  it('marks singleton group spacers except after the final table row', () => {
     const data: WfTableData = {
       headers,
       data: [
@@ -101,7 +101,52 @@ describe('filterTableData', () => {
       ],
     };
     const result = filterTableData(data, true);
-    expect(result.rows.every((r) => !r.isGroupEnd)).toBe(true);
+    expect(result.rows.map(row => !!row.isGroupEnd)).toEqual([true, true, false]);
+  });
+
+  it('handles consecutive empty KPI groups and an empty final group without mutating input', () => {
+    const data: WfTableData = {
+      headers,
+      kpiFilterEnabled: true,
+      data: [
+        [cell(0, { rowSpan: 1 }), cell(1), cell(2)],
+        [cell(0, { rowSpan: 1 }), cell(1), cell(2)],
+        [cell(0, { rowSpan: 2 }), cell(1, { tags: 'KPI' }), cell(2)],
+        [cell(0, { rowSpan: 0 }), cell(1, { tags: 'KPI' }), cell(2)],
+        [cell(0, { rowSpan: 1 }), cell(1), cell(2)],
+      ],
+    };
+    const original = structuredClone(data);
+    const result = filterTableData(data, false);
+    expect(result.rows).toHaveLength(2);
+    expect(result.rows.map(row => row[0].rowSpan)).toEqual([2, 0]);
+    expect(data).toEqual(original);
+  });
+
+  it('projects sparse and reordered cells by original columnid, preserving wire order', () => {
+    const data: WfTableData = {
+      headers: [
+        { text: 'Group', val: '0' },
+        { text: 'Hidden', val: '1', colType: 'excluded' },
+        { text: 'Value', val: '2', colType: 'selectedNode' },
+      ],
+      data: [
+        [cell(0, { rowSpan: 1 }), cell(2), cell(1)],
+        [cell(0, { rowSpan: 1 }), cell(2)],
+      ],
+    };
+    const result = filterTableData(data, true);
+    expect(result.rows.map(row => row.map(item => item.columnid))).toEqual([[0, 2], [0, 2]]);
+  });
+
+  it('uses source KPI substring matching on the configured measure column', () => {
+    const data: WfTableData = {
+      headers,
+      kpiFilterEnabled: true,
+      measureColumnId: 2,
+      data: [[cell(0, { rowSpan: 1 }), cell(1), cell(2, { tags: 'Other,KPI - priority' })]],
+    };
+    expect(filterTableData(data, false).rows).toHaveLength(1);
   });
 
   it('handles empty table without throwing', () => {

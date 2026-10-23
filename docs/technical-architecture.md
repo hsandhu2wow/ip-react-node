@@ -1,7 +1,8 @@
 # Technical architecture and development
 
 Reviewed October 14, 2026 against React `c97525f` and Angular `02a9cf698`;
-Weekly Facts/My Plan contracts reviewed again October 21 at the same HEADs.
+Weekly Facts/My Plan contracts reviewed again October 21 at the same HEADs;
+initial migration work started October 23 on `feat/weekly-facts-myplan-parity`.
 This describes the **current implementation**. Required changes are tracked in
 the [status report](migration-status.md) and
 [migration plan](superpowers/plans/2026-10-14-angular-react-migration.md).
@@ -164,9 +165,11 @@ horizontal bar/pie/doughnut. `gauge` currently uses Doughnut and excludes the
 `needle` dataset; this does not establish source gauge parity.
 
 TrendPage selects card views/history, renders the grouped/KPI table and
-variance CSS. Its initial variance is false and expansion true, ignoring
-server defaults. History lookup explicitly supports month, otherwise weekNo;
-not every source `dateFilterKey`/Half Year behavior is implemented.
+variance CSS. The October 23 slice uses response-defined `dateFilterKey`
+(default weekNo), root variance defaults and each table's KPI/defaultExpanded
+configuration. Page selections/variance reset on changed response identity or
+metric; expansion resets on changed tables. Full source load/viewport/history
+lifecycle, card-level Half Year and hierarchy fallback are not implemented.
 Metadata, banner/AI/hierarchy/mobile/subscription configuration in types is
 not equivalent to implemented UI.
 
@@ -181,15 +184,18 @@ The existing Python Weekly registry remains authoritative for measures, view
 order, HTML and settings. Local SI GET responses confirmed generic history
 keys `monthNo`/`halfNo`, array hierarchy variants, object My Plan trend contents,
 card-level Half Year selection and My Plan's variance-true default.
-Types currently omit important hierarchy/AI/card fields, incorrectly declare
-alerts as booleans and toolkit/usage links as strings rather than
-`{displayText,link}`. `available_views` contains card keys, joined to card
+October 23 corrections model hierarchy/AI/card fields, object alerts,
+`{displayText,link}` links and dynamic history properties. Subscription API
+functions now read/save through `/wf/...` or lowercase `/myplan/...` with
+JSON-string FormData arrays and natural rejection propagation. These wrappers
+are not yet wired into a preferences dialog. `available_views` contains card keys, joined to card
 labels when constructing the subscription dialog; it is not the dialog's
 checkbox-object array.
 
 The future selection boundary must distinguish desktop history/hierarchy,
 card-level My Plan Half Year and mobile preview/committed state. The table
-boundary needs original-column projection, source KPI/group spans, child/peer
+boundary now uses original-column membership, source KPI substring matching,
+empty-group guards and singleton group spacers. It still needs child/peer
 and mobile rules, WFM/double-goal/three-column layout and computed sticky
 geometry. Global backend-HTML styles and external per-BU theme variables
 remain separate from CSS Module layout. Shared auth/filter/action adapters
@@ -241,7 +247,9 @@ not run tests or lint. `npm run lint` has no tracked ESLint configuration.
 
 The [README](../README.md#commands-and-tests) lists commands. Removal of the
 obsolete MetricCard's five tests leaves the active card suites unchanged.
-The October 20 test expansion passed 248 tests across 33 files. New query tests
+The October 20 test expansion passed 248 tests across 33 files; the October 23
+foundation adds 19 behavioral cases for 267 passing tests in the same 33 files.
+New query tests
 exercise real React Query hooks and API wrappers with mocked HTTP transport,
 covering filter changes, request gating, errors and cached hierarchy/status.
 Page tests render real card components while controlling query/filter state.
@@ -269,8 +277,8 @@ Tests run offline, not against a live or production backend.
 application files, excluding tests, setup and type declarations. Text, HTML
 and JSON summaries are written under ignored `coverage/`. A global line threshold
 of **95.01%** is enforced. Other coverage metrics have no enforced threshold.
-The measured result is 97.24% lines, 96.09% statements,
-88.82% branches and 96.63% functions, versus 58.37% initial line coverage
+The October 23 measured result is 97.62% lines, 96.63% statements,
+89.92% branches and 97.58% functions, versus 58.37% initial line coverage
 with the same scope. CSS and Angular/browser parity remain outside this metric.
 
 Cleanup also removed unimported Vite starter styles/assets, unused barrel

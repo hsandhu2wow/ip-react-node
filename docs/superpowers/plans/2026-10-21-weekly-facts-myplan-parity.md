@@ -12,9 +12,20 @@
 
 ## Scope, authority and execution rules
 
-This is a **future implementation plan**, not a completion report.
-No application behavior, deployment, subscriptions or saved business data was
-changed while writing it. The detailed requirements, source map, real local
+**Execution update, October 23:** The baseline is merged into `dev-branch`
+(`e657079`); migration starts on `feat/weekly-facts-myplan-parity`.
+The initial slice implements Task 2's response types and subscription
+transport, dynamic-key/default/response-reset portions of Task 4, and
+source column-membership/KPI/group fixes from Task 5. Task checkboxes remain
+open where the complete task needs identity integration, qualified fixtures,
+display contexts or browser evidence. No full task/all-BU completion is claimed.
+See the [progress register](../../weekly-facts-myplan-parity.md#implementation-progress-october-23).
+
+This is an implementation plan, not a completion report. At creation on
+October 21, no application behavior, deployment, subscriptions or saved
+business data was changed while writing it. The October 23 progress entry
+above records the initial application changes; no deployment or live
+subscription mutation was performed. The detailed requirements, source map, real local
 response observations, BU matrix and source discrepancies are in the
 [parity assessment](../../weekly-facts-myplan-parity.md).
 
@@ -32,9 +43,9 @@ that behavior, then rerun. Do not rewrite every component before the first
 failing assertion. Code examples below pin critical contracts; surrounding
 UI must satisfy the source-derived acceptance cases, not a redesigned mockup.
 
-For implementation commits, stage only the task's explicit files. Commit
-only with permission; the current user's changes remain **uncommitted**.
-If commits are authorized, use a scoped message and the repository-required
+For implementation commits, stage only the task's explicit files. The user
+authorized committing/pushing the baseline, merging it into dev and starting
+the feature branch on October 23. Use a scoped message and the repository-required
 Copilot co-author trailer. Never `git add .` in this dirty worktree.
 
 ### Delivery order and gates
@@ -782,7 +793,8 @@ replace realistic fixtures to make these commands green.
 
 ## Completion record and handoff
 
-The October 21 deliverable is the source assessment and this plan only.
+The October 21 deliverable was the source assessment and this plan only.
+Implementation began October 23 in the scoped feature branch described above.
 Implementation may use task-by-task subagents or inline execution with review
 checkpoints when requested; neither mode is started by this document.
 Before implementation, obtain missing authorized BU/session/theme evidence and

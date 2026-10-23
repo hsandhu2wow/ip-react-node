@@ -5,6 +5,23 @@ Broad review: **October 14, 2026**; focused Weekly Facts/My Plan review:
 including user-visible behavior, permissions, integrations and responsive UI.
 This is a source/history assessment, **not runtime or production certification**.
 
+## Implementation update: October 23
+
+The documentation/cleanup/test baseline is pushed on `document-migration-plan`
+at `07540f3`, merged and pushed to `dev-branch` at `e657079`. The initial
+Weekly/MyPlan migration slice is on `feat/weekly-facts-myplan-parity`, created
+from that dev merge; it is not part of dev until separately integrated.
+Wireframes were excluded and the other checkout was not changed.
+
+This slice fixes dynamic history keys, server variance/KPI expansion defaults,
+response/table selection resets, source columnid membership, empty KPI groups,
+KPI substring matching and singleton spacers. It also corrects wire types and
+adds subscription transport (not preferences UI). There are 267 passing tests
+in 33 files with 97.62% line coverage; this remains unit/integration evidence,
+not all-BU/browser acceptance. The assessment/gap ledger below retain their
+review dates; the [focused progress entry](weekly-facts-myplan-parity.md#implementation-progress-october-23)
+identifies remaining prerequisites and scope.
+
 ## Review baseline and limits
 
 | Item | React | Angular |
@@ -295,8 +312,8 @@ the full applications have been exercised.
 | G08 | No feature-alert workflow; card InfoModal uses 90%/480px/80vh and raw body HTML instead of source QfPopup contract | Alerts/acknowledgment/responsive panel — 2C; separate SQF/Weekly dimensions, HTML transformation and close/focus behavior — 3, 4 |
 | G09 | Basic table shows sort icon but does not sort; chart gauge uses Doughnut and ignores needle | Match source sorting/chart variants and data formatting — 3 |
 | G10 | Recognition timer, feedback/download disabled | Real requests, previews/artifacts and failure/cancel states — 3 |
-| G11 | Trend defaults false/true, no Weekly/MyPlan switch, history handles month or weekNo; observed monthNo/halfNo do not resolve; empty KPI group can throw | Detailed WF03–WF08 selection/table/default/mobile work and per-BU evidence — 4 |
-| G12 | Metrics Info/subscriptions are text; AI/banner/action configs mostly unused | Detailed WF09–WF14 overlays, subscriptions, gated integrations and source events/artifacts — 4 |
+| G11 | October 23 fixes dynamic history/defaults, response/table resets and group bugs; feature switch, hierarchy/mobile/Half Year/layout parity still open | Remaining WF03–WF08 source lifecycle, selection/table/mobile work and per-BU evidence — 4 |
+| G12 | Metrics Info/subscriptions are text; subscription transport/types added October 23 but UI/actions remain absent | Detailed WF09–WF14 overlays, subscriptions, gated integrations and source events/artifacts — 4 |
 | G13 | Whole source route families missing/placeholder | Independent application source designs and end-to-end delivery — 5 |
 | G14 | V8 coverage with above-95% line gate and offline API-derived fixtures; no browser parity runner, ESLint config or CI test job | Differential coverage, targeted/full suites and operational acceptance — 0, 6 |
 

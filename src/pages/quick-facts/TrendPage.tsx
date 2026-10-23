@@ -28,10 +28,7 @@ function getSelectedTab(activeCard: WfCardData | undefined, selectedDateFilter: 
   if (Array.isArray(activeCard.cardContents)) {
     const dateFilterKey = activeCard.dateFilterKey || 'weekNo';
     const filterValue = selectedDateFilter || activeCard.dateFilterValues?.[0] || '';
-    return activeCard.cardContents.find((c) => {
-      if (dateFilterKey === 'month') return c.month === filterValue;
-      return c.weekNo === filterValue;
-    });
+    return activeCard.cardContents.find((c) => c[dateFilterKey] === filterValue);
   }
   if (activeCard.cardContents) {
     return activeCard.cardContents;
@@ -41,10 +38,19 @@ function getSelectedTab(activeCard: WfCardData | undefined, selectedDateFilter: 
 
 export function TrendPage({ metric }: TrendPageProps) {
   const { data: wfData, isLoading, isError } = useTrendData(metric);
+  const [previousData, setPreviousData] = useState(wfData);
+  const [previousMetric, setPreviousMetric] = useState(metric);
   const [selectedTabKey, setSelectedTabKey] = useState<string>('');
   const [selectedDateFilter, setSelectedDateFilter] = useState<string>('');
-  const [showVariance, setShowVariance] = useState(false);
-  const [isExpanded, setIsExpanded] = useState(true);
+  const [showVariance, setShowVariance] = useState(wfData?.varianceFlag?.value ?? false);
+
+  if (previousData !== wfData || previousMetric !== metric) {
+    setPreviousData(wfData);
+    setPreviousMetric(metric);
+    setSelectedTabKey('');
+    setSelectedDateFilter('');
+    setShowVariance(wfData?.varianceFlag?.value ?? false);
+  }
 
   const tabs = useMemo(() => wfData?.cards ?? [], [wfData]);
   const activeCard = useMemo(
@@ -53,6 +59,15 @@ export function TrendPage({ metric }: TrendPageProps) {
   );
   const selectedTab = useMemo(() => getSelectedTab(activeCard, selectedDateFilter), [activeCard, selectedDateFilter]);
   const tableData = selectedTab?.tableData;
+  const defaultExpanded = tableData?.kpiFilterEnabled
+    ? tableData.defaultExpanded ?? false
+    : true;
+  const [previousTable, setPreviousTable] = useState(tableData);
+  const [isExpanded, setIsExpanded] = useState(defaultExpanded);
+  if (previousTable !== tableData || previousData !== wfData || previousMetric !== metric) {
+    setPreviousTable(tableData);
+    setIsExpanded(defaultExpanded);
+  }
 
   if (isLoading) {
     return (

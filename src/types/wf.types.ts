@@ -16,11 +16,28 @@ export interface WfBanner {
   text: string;
 }
 
+export interface WfAlert {
+  type: string;
+  title?: string;
+  text: string;
+}
+
+export interface WfLink {
+  displayText: string;
+  link: string;
+}
+
+export interface WfHierarchyDropdown {
+  allowedViews?: string[];
+  label?: string;
+  filterDropdown: { displayValue: string; filterKey: string }[];
+}
+
 export interface WfTableHeader {
   text: string;
   val: string;
   tooltip?: string;
-  alert?: boolean;
+  alert?: WfAlert;
   colSpan?: number;
   cssClass?: string;
   columnWidth?: string;
@@ -37,7 +54,7 @@ export interface WfTableCell {
   borderLeftColor?: string;
   borderRightColor?: string;
   infoMessage?: string;
-  alert?: boolean;
+  alert?: WfAlert;
   tags?: string;
   cssClass?: string;
   rowSpan?: number;
@@ -58,6 +75,7 @@ export interface WfTableData {
 }
 
 export interface WfCardContents {
+  [key: string]: unknown;
   seq?: number;
   weekNo?: string;
   month?: string;
@@ -71,7 +89,9 @@ export interface WfCardData {
   cardContents?: WfCardContents | WfCardContents[];
   displayName: string;
   mobileDisplayName?: string;
+  mobileInfo?: string;
   key: string;
+  toggleChildLevelKey?: string;
   hasFiscalWeeks?: boolean;
   hasMobileView?: boolean;
   hasHistoryData?: boolean;
@@ -98,8 +118,14 @@ export interface WfPageData {
   title?: string;
   cardType?: string;
   banner?: WfBanner;
-  toolkit_link?: string;
-  usage_dashboard_link?: string;
+  toolkit_link?: WfLink;
+  usage_dashboard_link?: WfLink;
+  hierarchyDropdown?: WfHierarchyDropdown;
+  ai_insights?: {
+    header?: string;
+    insights?: string;
+    button_text?: string;
+  };
   is_web_subscription_enabled?: boolean;
   available_views?: string[];
   metricsInfo?: WfMetricsInfo;
@@ -114,3 +140,9 @@ export interface WfError {
 }
 
 export type WfMetric = 'weekly' | 'myPlan';
+
+export interface WfUserSubscriptions {
+  subscribed_locations: string[];
+  subscribed_views: string[];
+  is_store_user?: boolean;
+}

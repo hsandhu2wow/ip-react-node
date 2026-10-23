@@ -5,7 +5,7 @@ The objective is **one-to-one functional and visual parity**, not a redesign:
 routes, permissions, data, interactions, analytics, responsive behavior and
 integrations must match the agreed Angular baseline.
 
-**Status as of October 21, 2026:** partial migration. Quick Facts summary/details
+**Status as of October 23, 2026:** partial migration. Quick Facts summary/details
 and basic Weekly Facts/My Plan tables exist. Authentication is still a demo
 stub, several actions are inert, and most other Angular applications are not
 migrated. Implemented components and passing unit tests, when available, do not
@@ -100,9 +100,10 @@ tooltips. A second pass adds chart data/label/tooltip callbacks, nested tables,
 scroll shadows, tab switching and hierarchy/URL state persistence.
 The fixture-driven application tests now cover routing, provider/query
 integration, period/breakdown selection, location/date changes and query errors.
-The October 20 run passed all **248 tests**. Using the same source scope as the initial
-measurement, line coverage increased from **58.37% to 97.24%**;
-statements are 96.09%, branches 88.82% and functions 96.63%. Coverage includes all application
+The October 23 run passed all **267 tests** (248 at the October 20 baseline).
+Using the same source scope as the initial measurement, line coverage increased
+from **58.37% to 97.62%**; statements are 96.63%, branches 89.92% and
+functions 97.58%. Coverage includes all application
 TS/TSX files, excluding tests, setup and type declarations. It does not measure
 CSS, browser rendering or Angular parity. Generated reports are ignored by Git.
 Chart tests mock the canvas renderer and verify the data/options passed to it,
@@ -126,8 +127,8 @@ running API, credentials or network access; these are not production snapshots.
 | `/quick-facts` | Redirects to summary |
 | `/quick-facts/summary` | Summary cards |
 | `/quick-facts/details/:type` | Details, sorting, sidebar and child drill-down |
-| `/quick-facts/weekly` | Partial Weekly Facts table; generic history, mobile and integrations incomplete |
-| `/quick-facts/myplan` | Partial My Plan table; Half Year/defaults/mobile and integrations incomplete |
+| `/quick-facts/weekly` | Initial history/default/grouping fixes; hierarchy/mobile/layout/integrations incomplete |
+| `/quick-facts/myplan` | Initial history/default/grouping fixes; card-level Half Year/mobile/integrations incomplete |
 | `/weekly`, `/trend`, `/dashboards` | Coming Soon |
 | `/pricing-simulator`, `/availability-navigator` | Coming Soon; these names do not replace Angular's routes |
 | Other paths | Redirect to Quick Facts; not source-equivalent application coverage |
@@ -138,9 +139,12 @@ Metrics Info/subscription labels have no action flow. Consult the
 [gap matrix](docs/migration-status.md#feature-parity-matrix) before declaring a
 feature complete.
 
-The October 21 Weekly/MyPlan review confirmed real local SI responses with
-`monthNo`/`halfNo` history keys and My Plan variance enabled by default, which
-the current React page does not handle correctly. Other gaps include hierarchy
+The October 23 initial Weekly/MyPlan migration slice adds response-defined
+history keys (including observed `monthNo`/`halfNo`), server variance/KPI
+expansion defaults, selection resets on new responses, source grouping/column
+membership fixes and typed subscription transport. The subscription UI is
+still not implemented, and existing inert labels are not working actions.
+Remaining gaps include card-level Half Year, hierarchy
 selection, mobile column projection, WFM/goal/sticky layouts and working
 subscriptions/AI/export. The new plan covers source-specific behavior and
 qualification for every enabled BU. Only one local SI profile was probed;
@@ -159,5 +163,5 @@ Keep migration changes scoped to their feature and accompanying tests/docs.
 Do not overwrite another checkout's local work, copy environment secrets or
 treat wireframes as the source specification. Wireframes are excluded from
 this documentation change; some remain tracked in this branch, so avoid
-indiscriminate staging. No application changes or deployment are part of this
-documentation refresh.
+indiscriminate staging. The October 23 initial implementation is scoped to the
+Weekly/MyPlan feature branch; no deployment or shared dispatch change was made.
