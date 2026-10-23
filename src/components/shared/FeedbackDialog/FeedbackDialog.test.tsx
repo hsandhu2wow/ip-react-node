@@ -88,7 +88,8 @@ describe('FeedbackDialog', () => {
 
     expect(mockClient.post).toHaveBeenCalledTimes(1)
     const [url, body] = mockClient.post.mock.calls[0] as [string, FormData]
-    expect(url).toBe('/feedbackPopup')
+    // Flask registers /api/feedbackPopup/ — without the slash it 308-redirects cross-origin in dev
+    expect(url).toBe('/feedbackPopup/')
     expect([...body.keys()]).toEqual([
       'image0', 'image1', 'reason', 'feedback', 'contactMe', 'requestOrigin', 'issueType', 'url',
     ])

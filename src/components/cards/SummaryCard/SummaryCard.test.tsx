@@ -42,6 +42,11 @@ describe('SummaryCard', () => {
     expect(screen.getByText('$1.2M')).toBeDefined()
   })
 
+  it('shows recognize button when cardHeader is green (not red/neutral)', () => {
+    renderCard({ card: baseCard })
+    expect(document.querySelector('[data-testid="recognize-btn"]')).not.toBeNull()
+  })
+
   it('hides recognize button when cardHeader is red (#eb5757)', () => {
     renderCard({ card: { ...baseCard, cardHeader: '#eb5757' } })
     expect(document.querySelector('[data-testid="recognize-btn"]')).toBeNull()
@@ -52,6 +57,11 @@ describe('SummaryCard', () => {
     expect(document.querySelector('[data-testid="recognize-btn"]')).toBeNull()
   })
 
+  it('keeps recognition available when no header colour is set', () => {
+    renderCard({ card: { ...baseCard, cardHeader: undefined } })
+    expect(document.querySelector('[data-testid="recognize-btn"]')).not.toBeNull()
+  })
+
   describe('breakdown cards use the resolved child header (Angular setComponentValues)', () => {
     const breakdownCard = (parentHeader: string | undefined, childHeader: string): ISQFMetricCard => ({
       ...baseCard,
@@ -59,6 +69,12 @@ describe('SummaryCard', () => {
       filterKeys: { breakdown: 'breakdown' },
       dropdowns: [{ key: 'breakdown', data: [{ key: 'department', text: 'Departments' }] }],
       cards: [{ ...baseCard, cardHeader: childHeader, keys: { breakdown: 'department' } }],
+    })
+
+    it('shows recognition and the child colour when only the child header is green', () => {
+      renderCard({ card: breakdownCard(undefined, '#219653'), axis: 'department' })
+      expect(document.querySelector('[data-testid="recognize-btn"]')).not.toBeNull()
+      expect((screen.getByText('Sales').closest('[style]') as HTMLElement).style.borderTopColor).toBe('rgb(33, 150, 83)')
     })
 
     it('hides recognition when the resolved child header is red', () => {

@@ -15,7 +15,11 @@ import { formatDate, getYesterdayDate } from '../../../utils/formatters'
 import type { IQFTree } from '../../../types/sqf.types'
 import { LocationTree } from './LocationTree'
 import { DatePicker, DATE_PANEL_WIDTH } from './DatePicker'
+import { useEscapeToClose } from './useEscapeToClose'
+import { useCardsPreview } from '../../shared/PreviewDialog/cardsPreviewContext'
+import { FeedbackDialog } from '../../shared/FeedbackDialog/FeedbackDialog'
 import { useTrendActions } from '../../../context/TrendActionsContext'
+import { useCardStatus } from '../../../hooks/useCardStatus'
 import styles from './FilterBar.module.css'
 import { sendQFDataToAnalytics } from '../../../utils/analytics'
 
@@ -39,6 +43,7 @@ export function FilterBar() {
   const { user } = useAuth()
 
   const { pathname } = useLocation()
+  const { preview } = useCardsPreview()
   const isQuickAssistPage = pathname.includes('quick-assist')
   const detailsType = matchPath('/quick-facts/details/:type', pathname)?.params.type
   const isSummaryPage = pathname.startsWith('/quick-facts/summary')
@@ -75,9 +80,17 @@ export function FilterBar() {
   const datePickerRef = useRef<HTMLDivElement>(null)
   const dateLabelRef = useRef<HTMLSpanElement>(null)
   const [datePanelLeft, setDatePanelLeft] = useState(0)
+  const [feedbackOpen, setFeedbackOpen] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const mobileMenuRef = useRef<HTMLDivElement>(null)
   const trendActions = useTrendActions()
+  const { data: cardStatus } = useCardStatus()
+  // Angular sqf-filter selectedCardType — passed to the feedback popup as `header`
+  const selectedCardType = detailsType ? cardStatus?.[detailsType]?.titleText || detailsType : undefined
+
+  useEscapeToClose(dropdownOpen, () => setDropdownOpen(false))
+  useEscapeToClose(datePickerOpen, () => setDatePickerOpen(false))
+  useEscapeToClose(mobileMenuOpen, () => setMobileMenuOpen(false))
 
   // Close dropdowns when clicking outside
   useEffect(() => {
@@ -274,6 +287,37 @@ export function FilterBar() {
             <span className="material-icons">mail_outline</span>
           </button>
         )}
+        <button
+          type="button"
+          className={styles.iconBtn}
+          title="Send feedback"
+          aria-label="Send feedback"
+          onClick={() => setFeedbackOpen(true)}
+        >
+          <span className="material-icons">forum</span>
+        </button>
+        {!isQuickAssistPage && (
+          <button
+            type="button"
+            className={styles.iconBtn}
+            title="Download"
+            aria-label="Download"
+            onClick={() => void preview('pdf')}
+          >
+            <span className="material-icons">play_for_work</span>
+          </button>
+        )}
+        {!isQuickAssistPage && (
+          <button
+            type="button"
+            className={styles.iconBtn}
+            title="Print"
+            aria-label="Print"
+            onClick={() => void preview('print')}
+          >
+            <span className="material-icons">print</span>
+          </button>
+        )}
       </div>
 
       {/* Angular .qf-filter__option-menu (hide-sm): mobile more_vert menu */}
@@ -301,9 +345,20 @@ export function FilterBar() {
                 Subscription preferences
               </button>
             )}
+            <button
+              type="button"
+              role="menuitem"
+              className={styles.mobileMenuItem}
+              onClick={() => { setMobileMenuOpen(false); setFeedbackOpen(true) }}
+            >
+              <span className="material-icons">forum</span>
+              Give Feedback
+            </button>
           </div>
         )}
       </div>
+
+      <FeedbackDialog open={feedbackOpen} onClose={() => setFeedbackOpen(false)} header={selectedCardType} />
     </div>
   )
 }

@@ -153,6 +153,12 @@ describe('FilterBar header actions (Angular sqf-filter right section)', () => {
     mockTrendActions.mockReset()
   })
 
+  it('opens the feedback popup with the selected card type as header on details pages', () => {
+    setup({ path: '/quick-facts/details/sales' })
+    fireEvent.click(screen.getByLabelText('Send feedback'))
+    expect(screen.getByTestId('feedback-dialog').textContent).toBe('Sales')
+  })
+
   it('hides AI insights and subscription buttons when not enabled', () => {
     setup({ path: '/quick-facts/weekly' })
     expect(screen.queryByText('AI Insights')).toBeNull()
@@ -177,13 +183,16 @@ describe('FilterBar header actions (Angular sqf-filter right section)', () => {
     expect(openSubscription).toHaveBeenCalledOnce()
   })
 
-  it('mobile menu offers subscription when enabled', () => {
+  it('mobile menu offers subscription (when enabled) and feedback', () => {
     const openSubscription = vi.fn()
     mockTrendActions.mockReturnValue({ ...DEFAULT_TREND_ACTIONS, subscriptionEnabled: true, openSubscription })
     setup({ path: '/quick-facts/weekly' })
     fireEvent.click(screen.getByLabelText('More options'))
     fireEvent.click(screen.getByRole('menuitem', { name: /Subscription preferences/ }))
     expect(openSubscription).toHaveBeenCalledOnce()
+    fireEvent.click(screen.getByLabelText('More options'))
+    fireEvent.click(screen.getByRole('menuitem', { name: /Give Feedback/ }))
+    expect(screen.getByTestId('feedback-dialog')).toBeDefined()
   })
 })
 
@@ -236,12 +245,11 @@ describe('FilterBar scroll behaviour (Angular makeFilterSticky)', () => {
 
   it('closes the mobile kebab menu on scroll', () => {
     setPageSize(390)
-    mockTrendActions.mockReturnValue({ ...DEFAULT_TREND_ACTIONS, subscriptionEnabled: true })
     setup({ path: '/quick-facts/weekly' })
     fireEvent.click(screen.getByLabelText('More options'))
-    expect(screen.getByRole('menuitem', { name: /Subscription preferences/ })).toBeDefined()
+    expect(screen.getByRole('menuitem', { name: /Give Feedback/ })).toBeDefined()
     scrollTo(20)
-    expect(screen.queryByRole('menuitem', { name: /Subscription preferences/ })).toBeNull()
+    expect(screen.queryByRole('menuitem', { name: /Give Feedback/ })).toBeNull()
   })
 })
 
@@ -261,5 +269,38 @@ describe('FilterBar date picker positioning', () => {
     const panel = container.querySelector('[style*="left"]') as HTMLElement
     expect(panel.style.left).toBe('-112px')
     Object.defineProperty(window, 'innerWidth', { configurable: true, value: original })
+  })
+})
+
+describe('FilterBar popups close on Escape (mat-menu / mat-datepicker)', () => {
+  beforeEach(() => vi.clearAllMocks())
+
+  const escape = () => fireEvent.keyDown(document, { key: 'Escape' })
+
+  it('closes the location, date, period, breakdown and kebab popups', () => {
+    setup()
+    const location = screen.getByRole('button', { name: /location_on/ })
+    const date = screen.getByRole('button', { name: /today/ })
+    for (const trigger of [
+      location,
+      date,
+      screen.getByLabelText('Reporting period'),
+      screen.getByLabelText('Breakdown'),
+      screen.getByLabelText('More options'),
+    ]) {
+      fireEvent.click(trigger)
+      expect(trigger.getAttribute('aria-expanded')).toBe('true')
+      escape()
+      expect(trigger.getAttribute('aria-expanded')).toBe('false')
+    }
+  })
+
+  it('closes the card-type menu on details pages', () => {
+    setup({ path: '/quick-facts/details/sales' })
+    const trigger = screen.getByLabelText('Card type')
+    fireEvent.click(trigger)
+    expect(trigger.getAttribute('aria-expanded')).toBe('true')
+    escape()
+    expect(trigger.getAttribute('aria-expanded')).toBe('false')
   })
 })

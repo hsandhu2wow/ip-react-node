@@ -19,7 +19,11 @@ export interface FeedbackPayload {
   application_names?: string
 }
 
-/** Angular HelpService.submitFeedbackPopup — multipart POST /feedbackPopup */
+/**
+ * Angular HelpService.submitFeedbackPopup — multipart POST /feedbackPopup/.
+ * Flask registers the route with a trailing slash; without it Flask answers 308 and the
+ * redirect points at the proxied backend host, which the browser blocks as cross-origin.
+ */
 export async function submitFeedback(payload: FeedbackPayload): Promise<unknown> {
   const formData = new FormData()
   payload.images.forEach((image, i) => formData.append(`image${i}`, image, image.name))
@@ -32,6 +36,6 @@ export async function submitFeedback(payload: FeedbackPayload): Promise<unknown>
   if (payload.dashboardId) formData.append('dashboardId', payload.dashboardId)
   if (payload.application_names) formData.append('application_names', payload.application_names)
   formData.append('url', payload.url)
-  const res = await client.post('/feedbackPopup', formData)
+  const res = await client.post('/feedbackPopup/', formData)
   return res.data
 }

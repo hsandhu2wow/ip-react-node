@@ -53,7 +53,7 @@ describe('NpsSurvey (Angular showNPSSurvey + qf-nps-survey)', () => {
     fireEvent.change(screen.getByPlaceholderText('Share your thoughts here'), { target: { value: 'Great' } })
     fireEvent.click(submit)
     await waitFor(() => expect(mockClient.post).toHaveBeenCalled())
-    expect(mockClient.post.mock.calls[0][0]).toBe('/npsSurvey')
+    expect(mockClient.post.mock.calls[0][0]).toBe('/npsSurvey/')
     expect(Object.fromEntries(formOf().entries())).toEqual({
       feedback: '9', qaFeedback: 'Great', requestOrigin: 'sqf', campaignId: '42',
       url: '/quick-facts/summary?code=National',

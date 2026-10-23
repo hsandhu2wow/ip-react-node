@@ -60,6 +60,21 @@ describe('ProfileCard (Angular sqf-profile-card)', () => {
     expect(getStoreProfileRoleNames).toHaveBeenCalledWith('1248')
   })
 
+  it('previews the card for PDF, Google Slide and print from its menu', () => {
+    render(<ProfileCard card={card} storeCode="1248" />)
+    fireEvent.click(screen.getByLabelText('Card options'))
+    fireEvent.click(screen.getByRole('menuitem', { name: /Print/ }))
+    expect(preview).toHaveBeenLastCalledWith('print', [card])
+    fireEvent.click(screen.getByLabelText('Card options'))
+    fireEvent.click(screen.getByRole('menuitem', { name: /Download/ }))
+    fireEvent.click(screen.getByRole('menuitem', { name: /PDF/ }))
+    expect(preview).toHaveBeenLastCalledWith('pdf', [card])
+    fireEvent.click(screen.getByLabelText('Card options'))
+    fireEvent.click(screen.getByRole('menuitem', { name: /Download/ }))
+    fireEvent.click(screen.getByRole('menuitem', { name: /Google Slide/ }))
+    expect(preview).toHaveBeenLastCalledWith('slide', [card])
+  })
+
   it('shows the error state with support email', () => {
     render(<ProfileCard card={{ error: true }} storeCode="1248" supportEmail="help@x.com" />)
     expect(screen.getByText('Error occurred while fetching store data')).toBeDefined()

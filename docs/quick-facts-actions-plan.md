@@ -149,3 +149,7 @@ Verified against Angular source (`sqf/**`, `core-qf/**`, `shared/components/univ
 - Metrics Info popup: `qf-popup` (info_outlined icon, 16px bold title, 14px/140% body, faded `hr`, 530×648 max).
 - Print/download preview: `#333` close icon, "Generating..." 13px `#178841` with 16px bottom margin.
 - Angular's local feedback dialog fails to load its form, so React keeps the intended design.
+
+## Escape closes filter-bar popups
+
+Angular `mat-menu`/`mat-datepicker` close on Escape. `useEscapeToClose` (FilterBar) now does the same for location, date, period, breakdown, card-type and kebab popups. E2E (Playwright, mutations intercepted): summary/details load, filters, date, location, download, print, feedback (+image), recognise (PDF attached), kebab menu — all pass.

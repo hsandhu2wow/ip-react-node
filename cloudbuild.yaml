@@ -1,17 +1,38 @@
 steps:
+  # Decrypt the per-BU config (BUCKET_URL, SITE_TITLE, PORTAL, ...) with KMS, same as the Angular build.
+  # Projects without a matching file fall back to the bundled defaults.
+  - name: "gcr.io/cloud-builders/gcloud"
+    id: decrypt-config
+    entrypoint: bash
+    args:
+      - "-c"
+      - |
+        if [ -f "configs/env-config-$PROJECT_ID.json.enc" ]; then
+          gcloud kms decrypt \
+            --ciphertext-file="configs/env-config-$PROJECT_ID.json.enc" \
+            --plaintext-file=env-config.json \
+            --location=australia-southeast1 \
+            --keyring="$PROJECT_ID" \
+            --key=si-cicd
+        else
+          echo "No configs/env-config-$PROJECT_ID.json.enc found, using default theme config"
+        fi
+
   # Install dependencies (Vite 7 / rolldown require Node 20.19+ or 22.12+;
   # gcr.io/cloud-builders/npm ships an old Node 19, so use an official Node image instead)
   - name: "node:22"
     id: install
     entrypoint: npm
     args: ["ci"]
+    waitFor: ["-"]
 
   # Build the React app (tsc -b && vite build) -> outputs to dist/
   - name: "node:22"
     id: build
     entrypoint: npm
     args: ["run", "build"]
-    waitFor: ["install"]
+    # "prebuild" (scripts/prebuild.mjs) turns env-config.json into VITE_* values first
+    waitFor: ["install", "decrypt-config"]
 
   # Deploy the built app to the App Engine "ip-react" service
   - name: "gcr.io/google.com/cloudsdktool/cloud-sdk"

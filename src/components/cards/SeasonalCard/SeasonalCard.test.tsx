@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { fireEvent, render, screen, within } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { SeasonalDetailsCard, SeasonalSummaryCard } from './SeasonalCard'
 import { mapSeasonalCards } from '../../../api/seasonal'
@@ -52,6 +52,15 @@ describe('legacy Seasonal card shells', () => {
     expect(screen.queryByLabelText('Seasonal Sales chart')).toBeNull()
     expect(screen.queryByRole('button', { name: 'Recognize' })).toBeNull()
     expect(screen.queryByRole('button', { name: /Expand/ })).toBeNull()
+  })
+
+  it('recognizes only green cards, passes the legacy card and resets loading after opening', async () => {
+    const preview = vi.fn(() => Promise.resolve())
+    wrap(<SeasonalSummaryCard card={card} />, preview)
+    fireEvent.click(screen.getByRole('button', { name: 'Recognize' }))
+    expect(preview).toHaveBeenCalledWith('recognize', [card])
+    expect(analytics).toHaveBeenCalledWith('recognizeQFSummaryCard', 'seasonal', 'AU')
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Recognize' })).not.toBeDisabled())
   })
 
   it.each([

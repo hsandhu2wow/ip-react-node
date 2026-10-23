@@ -5,6 +5,7 @@ import { useCFCChildCodes } from '../../../hooks/useCFCChildCodes'
 import { useFilter } from '../../../context/FilterContext'
 import { getOrderedCardDropDown, isCFCNode } from '../../../utils/cardDropdown'
 import styles from './FilterSelect.module.css'
+import { useEscapeToClose } from './useEscapeToClose'
 
 interface Props {
   selectedType: string
@@ -20,6 +21,7 @@ export function CardTypeDropdown({ selectedType, apiDepth, className }: Props) {
   const { search } = useLocation()
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
+  useEscapeToClose(open, () => setOpen(false))
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {

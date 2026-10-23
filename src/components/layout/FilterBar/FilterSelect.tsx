@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import styles from './FilterSelect.module.css'
+import { useEscapeToClose } from './useEscapeToClose'
 
 interface Option<T extends string> {
   value: T
@@ -19,6 +20,7 @@ interface Props<T extends string> {
 export function FilterSelect<T extends string>({ label, options, value, onChange, ariaLabel, className }: Props<T>) {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
+  useEscapeToClose(open, () => setOpen(false))
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {

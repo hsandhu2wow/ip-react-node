@@ -3,6 +3,7 @@ import { useTrendData } from '../../hooks/useTrendData';
 import { TrendTable } from '../../components/trend/TrendTable';
 import { SubscriptionDialog } from '../../components/trend/SubscriptionDialog';
 import { AiInsightsSidenav } from '../../components/trend/AiInsightsSidenav';
+import { FeedbackDialog } from '../../components/shared/FeedbackDialog/FeedbackDialog';
 import { PreviewPageCards } from '../../components/shared/PreviewDialog/cardsPreviewContext';
 import {
   buildAvailableViews,
@@ -57,6 +58,7 @@ export function TrendPage({ metric }: TrendPageProps) {
   const [selectedDateFilter, setSelectedDateFilter] = useState<string>('');
   const [showVariance, setShowVariance] = useState(false);
   const [isExpanded, setIsExpanded] = useState(true);
+  const [aiFeedbackOpen, setAiFeedbackOpen] = useState(false);
 
   const tabs = useMemo(() => wfData?.cards ?? [], [wfData]);
   const activeCard = useMemo(
@@ -130,7 +132,9 @@ export function TrendPage({ metric }: TrendPageProps) {
       onClose={() => setAiInsightsOpen(false)}
       header={wfData.ai_insights?.header}
       insightsHtml={wfData.ai_insights?.insights}
+      onHelpUsImprove={() => setAiFeedbackOpen(true)}
     >
+      <FeedbackDialog open={aiFeedbackOpen} onClose={() => setAiFeedbackOpen(false)} header="WFAIPanel" />
       <PreviewPageCards
         pageData
         getCards={() => [

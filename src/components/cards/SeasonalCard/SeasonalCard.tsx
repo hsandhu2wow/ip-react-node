@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom'
 import type { ISeasonalCard, IQFTree } from '../../../types/sqf.types'
 import { useAuth } from '../../../context/AuthContext'
 import { useOptionalFilter } from '../../../context/FilterContext'
+import { useCardsPreview } from '../../shared/PreviewDialog/cardsPreviewContext'
 import { sendQFDataToAnalytics } from '../../../utils/analytics'
 import { formatUpdatedTime } from '../../../utils/formatters'
 import { SeasonalBarChart } from './SeasonalBarChart'
@@ -26,7 +27,9 @@ function SeasonalShell({ card, expandTable, selectedNode, detailsLastLevel, onDr
   const { user } = useAuth()
   const filter = useOptionalFilter()
   const { search } = useLocation()
+  const { preview } = useCardsPreview()
   const [expanded, setExpanded] = useState(false)
+  const [recognizeLoading, setRecognizeLoading] = useState(false)
   useEffect(() => { if (!card) setExpanded(false) }, [card])
   if (card?.hidden) return null
   const prefix = details ? 'qf-details-card' : 'qf-summary-card'
@@ -43,6 +46,12 @@ function SeasonalShell({ card, expandTable, selectedNode, detailsLastLevel, onDr
   const child = node?.children?.[0]
   const nextLevel = c?.canDrillDown && child && child.apiDepth <= (detailsLastLevel ?? -1)
     ? `${child.children?.[0]?.level_desc || child.leafChildren?.[0]?.level_desc || 'Category'} details` : ''
+  async function recognize() {
+    if (!c) return
+    setRecognizeLoading(true)
+    sendQFDataToAnalytics(details ? 'recognizeQFDetailsCard' : 'recognizeQFSummaryCard', 'seasonal', filter?.selectedNode?.code)
+    try { await preview('recognize', [c]) } finally { setRecognizeLoading(false) }
+  }
   const numbers = c && (details ? <div className={cls('numbers')}>
     {[
       [c.infoMainNumber, c.infoMainNumberText], [c.infoSubNumber, c.infoSubDetails],
@@ -64,7 +73,7 @@ function SeasonalShell({ card, expandTable, selectedNode, detailsLastLevel, onDr
   const concerns = <p className={cls('error-sub-text')}>For any concerns please contact: <a className={cls('error-link')} href={`mailto:${email || ''}`} target="_top">{email}</a></p>
   const bigw = <>This metric card is currently unavailable. <br /><br /></>
   const wmd = <>WMD Metric card is currently unavailable due to source data changes. Please click <a href="https://storeinsights.woolworths.com.au/dashboards/tableau/1573" target="_blank" rel="noreferrer"><u>here</u></a> to access the WMD dashboard for more information. Apologies for inconvenience.</>
-  return <article id={c?.jsId} className={`${details ? styles.details : styles.summary} ${prefix}${!c ? ` ${cls('centered')}` : ''}`}>
+  return <article id={c?.jsId} data-expanded={expanded} className={`${details ? styles.details : styles.summary} ${prefix}${!c ? ` ${cls('centered')}` : ''}`}>
     {c && <div className={`${cls('header')} ${cls(`header--${error ? 'error' : c.status?.toLowerCase() || 'white'}`)}`} style={!error && !details ? { borderTopColor: c.cardHeader } : undefined}>
       <div className={`${cls('header-left')}${!c.canDrillDown ? ` ${cls('header-left--non-click')}` : ''}${error && !details ? ` ${cls('title')}` : ''}`}>
         <div className={cls('title')}><span title={!c.canDrillDown ? 'No further drill down available' : undefined}>
@@ -80,6 +89,11 @@ function SeasonalShell({ card, expandTable, selectedNode, detailsLastLevel, onDr
           </div>}
         </div>}
       </div>
+      {!error && <div className={cls('header-right')}><div className={cls('recognize-button')}>
+        {c.status?.toLowerCase() === 'green' && <button className={sharedStyles.recognizeBtn} onClick={recognize} disabled={recognizeLoading} aria-label="Recognize">
+          {recognizeLoading ? <span className={sharedStyles.spinner} role="progressbar" aria-label="Opening recognition" /> : <span aria-hidden="true" className="material-icons-outlined">celebration</span>}
+        </button>}
+      </div></div>}
     </div>}
     {c && !error && <div className={cls('content')}>
       {details ? <>

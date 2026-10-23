@@ -8,10 +8,19 @@ import { MetricCardChart } from '../MetricCard/MetricCardChart'
 import { MetricCardTable } from '../MetricCard/MetricCardTable'
 import { MetricCardTabs } from '../MetricCard/MetricCardTabs'
 import { InfoModal } from '../../shared/InfoModal/InfoModal'
+import { useCardsPreview } from '../../shared/PreviewDialog/cardsPreviewContext'
 import { useOptionalFilter } from '../../../context/FilterContext'
 import { sendQFDataToAnalytics } from '../../../utils/analytics'
 import { REPORTING_PERIODS, isCutOffTimePast, formatUpdatedTime } from '../../../utils/formatters'
 import styles from './DetailsCard.module.css'
+
+const RED = '#eb5757'
+const NEUTRAL = '#ebecec'
+
+function shouldShowRecognize(cardHeader?: string): boolean {
+  const h = cardHeader?.toLowerCase()
+  return h !== RED && h !== NEUTRAL
+}
 
 function buildInitialFilters(card: ISQFMetricCard): Record<string, string> {
   const filters: Record<string, string> = {}
@@ -162,6 +171,8 @@ export function DetailsCard({
   const { axisDriven, axisCard } = useAxisCard(card, axis)
   const [selectedFilters, setSelectedFilters] = useState<Record<string, string>>({})
   const [infoModalOpen, setInfoModalOpen] = useState(false)
+  const [recognizeLoading, setRecognizeLoading] = useState(false)
+  const { preview } = useCardsPreview()
   const [selectedDept, setSelectedDept] = useState('')
 
   const filterConfigKey = card?.filterKeys ? Object.keys(card.filterKeys).join(',') : ''
@@ -201,6 +212,7 @@ export function DetailsCard({
   const reportingPeriod = reportingPeriodKey
     ? REPORTING_PERIODS[reportingPeriodKey] ?? reportingPeriodKey
     : undefined
+  const showRecognize = shouldShowRecognize(card.cardHeader)
   const cutOffPast = isCutOffTimePast(card.error)
   const isLegacy = !!card.cards && isLegacyBreakdownCard(card)
   const { nextLevel, isStore, childCode } = computeDrillDown(card, selectedNode ?? null, detailsLastLevel)
@@ -212,6 +224,13 @@ export function DetailsCard({
   function handleFilterChange(dropdownKey: string, value: string) {
     setSelectedFilters(prev => ({ ...prev, [dropdownKey]: value }))
     sendQFDataToAnalytics('dropdownChangeDetailsCard', card?.cardName, locationCode)
+  }
+
+  function handleRecognize() {
+    setRecognizeLoading(true)
+    sendQFDataToAnalytics('recognizeQFDetailsCard', card?.cardName, locationCode)
+    // Angular onRecognizePreview: spinner until the preview dialog has opened
+    preview('recognize', [card as ISQFMetricCard]).finally(() => setRecognizeLoading(false))
   }
 
   // ── Error state ─────────────────────────────────────────────────────────
@@ -303,6 +322,19 @@ export function DetailsCard({
               ))}
             </div>
           </div>
+          {showRecognize && (
+            <div className={styles.headerRight}>
+              <button
+                className={styles.recognizeBtn}
+                onClick={handleRecognize}
+                disabled={recognizeLoading}
+                data-testid="details-recognize-btn"
+                aria-label="Recognize team"
+              >
+                {recognizeLoading ? <span className={styles.spinner} /> : <span className="material-icons-outlined">celebration</span>}
+              </button>
+            </div>
+          )}
         </div>
 
         {/* ── Filter error ── */}

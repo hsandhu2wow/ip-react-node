@@ -67,9 +67,19 @@ describe('DetailsCard', () => {
     expect(screen.getByText('Store 1234')).toHaveAttribute('title', 'No further drill down available')
   })
 
+  it('shows recognize button when cardHeader is not red/neutral', () => {
+    renderCard({ card: baseCard })
+    expect(document.querySelector('[data-testid="details-recognize-btn"]')).not.toBeNull()
+  })
+
   it('hides recognize button when cardHeader is red', () => {
     renderCard({ card: { ...baseCard, cardHeader: '#eb5757' } })
     expect(document.querySelector('[data-testid="details-recognize-btn"]')).toBeNull()
+  })
+
+  it('keeps recognition available for nested cards without an outer header colour', () => {
+    renderCard({ card: { ...baseCard, cardHeader: undefined } })
+    expect(screen.getByRole('button', { name: 'Recognize team' })).toBeInTheDocument()
   })
 
   it('shows updated time in footer', () => {

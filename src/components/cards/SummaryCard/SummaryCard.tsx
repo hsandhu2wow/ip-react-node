@@ -11,9 +11,18 @@ import { MetricCardChart } from '../MetricCard/MetricCardChart'
 import { MetricCardTable } from '../MetricCard/MetricCardTable'
 import { MetricCardTabs } from '../MetricCard/MetricCardTabs'
 import { InfoModal } from '../../shared/InfoModal/InfoModal'
+import { useCardsPreview } from '../../shared/PreviewDialog/cardsPreviewContext'
 import { sendQFDataToAnalytics } from '../../../utils/analytics'
 import { REPORTING_PERIODS, isCutOffTimePast, formatUpdatedTime } from '../../../utils/formatters'
 import styles from './SummaryCard.module.css'
+
+const RED = '#eb5757'
+const NEUTRAL = '#ebecec'
+
+function shouldShowRecognize(cardHeader?: string): boolean {
+  const h = cardHeader?.toLowerCase()
+  return h !== RED && h !== NEUTRAL
+}
 
 function buildInitialFilters(card: ISQFMetricCard): Record<string, string> {
   const filters: Record<string, string> = {}
@@ -108,6 +117,8 @@ export function SummaryCard({ card, isLoading, expandTable, axis, supportEmail }
   const [expanded, setExpanded] = useState(false)
   const [selectedFilters, setSelectedFilters] = useState<Record<string, string>>({})
   const [infoModalOpen, setInfoModalOpen] = useState(false)
+  const [recognizeLoading, setRecognizeLoading] = useState(false)
+  const { preview } = useCardsPreview()
 
   const filterConfigKey = card?.filterKeys ? Object.keys(card.filterKeys).join(',') : ''
   const dropdownKeys = card?.dropdowns?.map(d => d.key).join(',') ?? ''
@@ -147,6 +158,7 @@ export function SummaryCard({ card, isLoading, expandTable, axis, supportEmail }
   const reportingPeriod = reportingPeriodKey
     ? REPORTING_PERIODS[reportingPeriodKey] ?? reportingPeriodKey
     : undefined
+  const showRecognize = shouldShowRecognize(cardHeader)
   const cutOffPast = isCutOffTimePast(card.error)
   const isLegacy = !!card.cards && isLegacyBreakdownCard(card)
   // Mirrors Angular SqfSummaryCardComponent.breakdownLabel
@@ -176,6 +188,13 @@ export function SummaryCard({ card, isLoading, expandTable, axis, supportEmail }
     const next = !expanded
     setExpanded(next)
     if (next) sendQFDataToAnalytics('expandSummaryTable', card?.cardName, locationCode)
+  }
+
+  function handleRecognize() {
+    setRecognizeLoading(true)
+    sendQFDataToAnalytics('recognizeQFSummaryCard', card?.cardName, locationCode)
+    // Angular onRecognizePreview: spinner until the preview dialog has opened
+    preview('recognize', [card as ISQFMetricCard]).finally(() => setRecognizeLoading(false))
   }
 
   if (card.error) {
@@ -221,7 +240,7 @@ export function SummaryCard({ card, isLoading, expandTable, axis, supportEmail }
 
   return (
     <>
-      <div className={styles.card} id={card.jsId}>
+      <div className={styles.card} id={card.jsId} data-expanded={expanded || expandTable}>
         <div
           className={`${styles.header} ${subHeading ? styles.headerWithSubHeading : ''}`}
           style={{ borderTopColor: borderColor }}
@@ -276,6 +295,19 @@ export function SummaryCard({ card, isLoading, expandTable, axis, supportEmail }
               ))}
             </div>
           </div>
+          {showRecognize && (
+            <div className={styles.headerRight}>
+              <button
+                className={styles.recognizeBtn}
+                onClick={handleRecognize}
+                disabled={recognizeLoading}
+                data-testid="recognize-btn"
+                aria-label="Recognize team"
+              >
+                {recognizeLoading ? <span className={styles.spinner} /> : <span className="material-icons-outlined">celebration</span>}
+              </button>
+            </div>
+          )}
         </div>
 
         {hasFilterError && (

@@ -23,7 +23,7 @@ export async function getNPSSurveyFlag(): Promise<INpsSurveyFlag> {
   return res.data || {}
 }
 
-/** Angular HelpService.submitNPSSurvey — multipart POST /npsSurvey */
+/** Angular HelpService.submitNPSSurvey — multipart POST /npsSurvey/ (exact Flask route, avoids the 308 redirect) */
 export async function submitNPSSurvey(req: NpsSurveyPayload): Promise<unknown> {
   const form = new FormData()
   if (req.feedback) form.append('feedback', req.feedback)
@@ -32,6 +32,6 @@ export async function submitNPSSurvey(req: NpsSurveyPayload): Promise<unknown> {
   if (req.qaRating) form.append('qaRating', req.qaRating)
   if (req.qaFeedback) form.append('qaFeedback', req.qaFeedback)
   form.append('url', req.url)
-  const res = await client.post('/npsSurvey', form)
+  const res = await client.post('/npsSurvey/', form)
   return res.data
 }

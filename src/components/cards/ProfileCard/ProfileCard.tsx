@@ -1,5 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { getStoreProfileRoleNames, type IQFProfileRole, type IQFStoreProfile } from '../../../api/storeProfile'
+import { useCardsPreview, type DocExportType } from '../../shared/PreviewDialog/cardsPreviewContext'
+import type { PreviewCard } from '../../shared/RecognizeDialog/recognize'
 import { useAuth } from '../../../context/AuthContext'
 import { formatUpdatedTime } from '../../../utils/formatters'
 import styles from './ProfileCard.module.css'
@@ -30,9 +32,12 @@ const BIGW_FIELDS: Array<[string, string, string?]> = [
 /** Port of Angular sqf-profile-card (METRO/PEL store-level summary card). */
 export function ProfileCard({ card, storeCode, supportEmail }: Props) {
   const { user } = useAuth()
+  const { preview } = useCardsPreview()
   const [expanded, setExpanded] = useState(false)
   const [roles, setRoles] = useState<IQFProfileRole[]>(card?.roles ?? [])
   const [roleNamesFetched, setRoleNamesFetched] = useState(false)
+  const [menu, setMenu] = useState<'closed' | 'main' | 'download'>('closed')
+  const menuRef = useRef<HTMLDivElement>(null)
 
   // Angular @Input() set card: reset expansion/roles whenever the card changes
   useEffect(() => {
@@ -40,6 +45,20 @@ export function ProfileCard({ card, storeCode, supportEmail }: Props) {
     setRoleNamesFetched(false)
     setRoles(card?.roles ?? [])
   }, [card])
+
+  useEffect(() => {
+    if (menu === 'closed') return
+    const onDown = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setMenu('closed')
+    }
+    document.addEventListener('mousedown', onDown)
+    return () => document.removeEventListener('mousedown', onDown)
+  }, [menu])
+
+  function doPreview(type: DocExportType) {
+    setMenu('closed')
+    void preview(type, [card as unknown as PreviewCard])
+  }
 
   function toggleExpanded() {
     setExpanded(e => !e)
@@ -87,7 +106,7 @@ export function ProfileCard({ card, storeCode, supportEmail }: Props) {
   const address = card.storeAddress ?? {}
 
   return (
-    <div id={card.jsId} className={styles.card}>
+    <div id={card.jsId} className={styles.card} data-expanded={expanded}>
       <div className={`${styles.header} ${styles.headerGreen}`}>
         <div className={`${styles.headerLeft} ${styles.nonClick}`}>
           <div className={styles.title}><span>STORE PROFILE</span></div>
@@ -95,6 +114,39 @@ export function ProfileCard({ card, storeCode, supportEmail }: Props) {
             <span className={`material-icons ${styles.subTitleIcon}`} aria-hidden="true">room</span>
             <span className={styles.subTitleText}>{card.title}</span>
           </div>
+        </div>
+        <div className={styles.headerRight} ref={menuRef}>
+          <button
+            type="button"
+            className={styles.menuBtn}
+            aria-label="Card options"
+            aria-haspopup="menu"
+            aria-expanded={menu !== 'closed'}
+            onClick={() => setMenu(m => (m === 'closed' ? 'main' : 'closed'))}
+          >
+            <span className="material-icons">more_vert</span>
+          </button>
+          {menu !== 'closed' && (
+            <div className={styles.menu} role="menu">
+              <button type="button" role="menuitem" className={styles.menuItem} onClick={() => setMenu('download')}>
+                <span className="material-icons">play_for_work</span> Download
+                <span className={`material-icons ${styles.subMenuArrow}`} aria-hidden="true">arrow_right</span>
+              </button>
+              {menu === 'download' && (
+                <div className={`${styles.menu} ${styles.subMenu}`} role="menu">
+                  <button type="button" role="menuitem" className={styles.menuItem} onClick={() => doPreview('pdf')}>
+                    <span className="material-icons">picture_as_pdf</span> PDF
+                  </button>
+                  <button type="button" role="menuitem" className={styles.menuItem} onClick={() => doPreview('slide')}>
+                    <span className="material-icons">file_copy</span> Google Slide
+                  </button>
+                </div>
+              )}
+              <button type="button" role="menuitem" className={styles.menuItem} onClick={() => doPreview('print')}>
+                <span className="material-icons">print</span> Print
+              </button>
+            </div>
+          )}
         </div>
       </div>
       <div className={styles.content}>

@@ -1,4 +1,6 @@
 // src/pages/quick-facts/SummaryPage.tsx
+import { useRef } from 'react'
+import { useEqualCardHeights } from '../../hooks/useEqualCardHeights'
 import { useSeasonalCard } from '../../hooks/useSeasonalCard'
 import { SeasonalSummaryCard } from '../../components/cards/SeasonalCard/SeasonalCard'
 import { useEnrichedSummaryCards } from '../../hooks/useEnrichedSummaryCards'
@@ -20,6 +22,8 @@ export function SummaryPage() {
   // Mirrors Angular SqfLayoutComponent.getPageTitle / getPoweredByText
   const isSI = ['SI', 'METRO'].includes(user.portal)
   const enrichedQuery = useEnrichedSummaryCards()
+  const gridRef = useRef<HTMLDivElement>(null)
+  useEqualCardHeights(gridRef)
   const supportEmail = useSupportEmail().data
 
   const isLoading = !isLoaded || enrichedQuery.isLoading
@@ -96,7 +100,7 @@ export function SummaryPage() {
           </div>
         )}
 
-        <div className="card-grid">
+        <div className="card-grid" ref={gridRef}>
           {isLoading
             ? Array.from({ length: SKELETON_COUNT }).map((_, i) => (
                 <div key={i} className="metric-card-slot">

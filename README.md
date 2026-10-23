@@ -80,6 +80,23 @@ permission or authentication mechanism. Never put credentials in `VITE_*`
 variables: Vite embeds them in the browser bundle. Restart Vite after changing
 environment variables.
 
+### Per-BU logo, favicon and theme
+
+Same setup as the Angular app. Cloud Build decrypts
+`configs/env-config-$PROJECT_ID.json.enc` with KMS (keyring `$PROJECT_ID`, key
+`si-cicd`) into `env-config.json`, then `npm run build` runs
+`scripts/prebuild.mjs` (the equivalent of Angular's `prebuild.js`). It copies
+only the frontend values (`BUCKET_URL`, `SITE_TITLE`, `PORTAL`, `GCP_CLIENT_ID`,
+`GCP_API_KEY`) into the git-ignored `.env.production.local` as `VITE_*`
+variables. The app then loads `logo.svg`, `favicon.ico`, `home.png` and
+`env.css` from the BU's `BUCKET_URL` (see `src/config/theme.ts`). The sidebar
+label follows the portal (`360FM`, `PEOPLE`, otherwise "Insights Portal").
+
+To onboard a BU/environment, add its `env-config-<project-id>.json.enc` to
+`configs/`. Without that file (or `env-config.json`) the build uses the bundled
+defaults in `public/assets/`. For a local one-off, put a plain `env-config.json`
+in the repo root or set `ENV_CONFIG_PATH`; it is git-ignored.
+
 ### Google Slides export (optional)
 
 The Quick Facts "Google Slide" export (`preview('slide')`, a port of Angular

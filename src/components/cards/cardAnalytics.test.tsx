@@ -72,6 +72,12 @@ describe('SummaryCard analytics (Angular sqf-summary-card)', () => {
     expect(send).toHaveBeenCalledWith('dropdownChangeSummaryCard', 'sales', undefined)
   })
 
+  it('sends recognizeQFSummaryCard on recognise', () => {
+    wrap(<SummaryCard card={base} />)
+    fireEvent.click(screen.getByTestId('recognize-btn'))
+    expect(send).toHaveBeenCalledWith('recognizeQFSummaryCard', 'sales', undefined)
+  })
+
   it('sends breakdownAxisChangeSummaryCard when the header axis resolves a child card', () => {
     wrap(<FilterProvider><AxisButton /><AxisSummary card={axisCard} /></FilterProvider>)
     expect(send).not.toHaveBeenCalled()
@@ -85,6 +91,12 @@ describe('DetailsCard analytics (Angular sqf-details-card)', () => {
     wrap(<DetailsCard card={{ ...legacy, cardType: 'details' }} />)
     fireEvent.click(screen.getByRole('button', { name: 'MTD' }))
     expect(send).toHaveBeenCalledWith('dropdownChangeDetailsCard', 'sales', undefined)
+  })
+
+  it('sends recognizeQFDetailsCard on recognise', () => {
+    wrap(<DetailsCard card={{ ...base, cardType: 'details' }} />)
+    fireEvent.click(screen.getByTestId('details-recognize-btn'))
+    expect(send).toHaveBeenCalledWith('recognizeQFDetailsCard', 'sales', undefined)
   })
 
   it('sends breakdownAxisChangeQFDetailsCard when the header axis resolves a child card', () => {
