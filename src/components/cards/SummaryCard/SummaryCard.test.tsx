@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest'
-import { render, screen, fireEvent } from '@testing-library/react'
+import { afterEach, describe, it, expect, vi } from 'vitest'
+import { act, render, screen, fireEvent } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { SummaryCard } from './SummaryCard'
 import type { ISQFMetricCard } from '../../../types/sqf.types'
@@ -22,6 +22,7 @@ const baseCard: ISQFMetricCard = {
 }
 
 describe('SummaryCard', () => {
+  afterEach(() => vi.useRealTimers())
   it('renders skeleton when isLoading=true', () => {
     renderCard({ isLoading: true })
     expect(document.querySelector('[data-testid="metric-card-skeleton"]')).not.toBeNull()
@@ -127,5 +128,83 @@ describe('SummaryCard', () => {
     const select = document.querySelector('select') as HTMLSelectElement
     fireEvent.change(select, { target: { value: 'mtd' } })
     expect(screen.getByText('$5M')).toBeDefined()
+  })
+
+  it('toggles explanatory KPI text independently of metric values', () => {
+    renderCard({ card: {
+      ...baseCard,
+      infoNumbers: [
+        { displayValue: '$1M', text: 'Sales', infoMessage: 'Includes online orders' },
+        { displayValue: '$2M', text: 'Plan' },
+      ],
+    } })
+    expect(screen.queryByText('Includes online orders')).not.toBeInTheDocument()
+    fireEvent.click(screen.getByLabelText('More info'))
+    expect(screen.getByText('Includes online orders')).toBeInTheDocument()
+    fireEvent.click(screen.getByLabelText('More info'))
+    expect(screen.queryByText('Includes online orders')).not.toBeInTheDocument()
+  })
+
+  it('expands backend HTML sections and respects their initial state', () => {
+    renderCard({ card: { ...baseCard, expandable_list: [
+      { header: '<b>Closed section</b>', content: '<p>Hidden explanation</p>' },
+      { header: 'Open section', content: '<p>Visible explanation</p>', isExpanded: true },
+    ] } })
+    expect(screen.queryByText('Hidden explanation')).not.toBeInTheDocument()
+    expect(screen.getByText('Visible explanation')).toBeInTheDocument()
+    fireEvent.click(screen.getByText('Closed section'))
+    expect(screen.getByText('Hidden explanation')).toBeInTheDocument()
+    fireEvent.click(screen.getByText('Open section'))
+    expect(screen.queryByText('Visible explanation')).not.toBeInTheDocument()
+  })
+
+  it('disables recognition until its existing loading simulation completes', () => {
+    vi.useFakeTimers()
+    renderCard({ card: baseCard })
+    const button = screen.getByTestId('recognize-btn')
+    fireEvent.click(button)
+    expect(button).toBeDisabled()
+    act(() => vi.advanceTimersByTime(1500))
+    expect(button).toBeEnabled()
+  })
+
+  it('renders custom KPI HTML and collapses/expands table content', () => {
+    renderCard({ card: {
+      ...baseCard, subHeading: 'Report explanation',
+      customInfoNumbers: '<strong>Custom KPI</strong>', richText: '<p>Metric notes</p>',
+      tableData: { headers: ['Location'], data: [{ column0: { displayValue: 'Sydney' } }] },
+    } })
+    expect(screen.getByText('Custom KPI').tagName).toBe('STRONG')
+    expect(screen.getByText('Report explanation')).toBeInTheDocument()
+    expect(screen.getByText('Metric notes')).toBeInTheDocument()
+    const tableWrapper = screen.getByRole('table').parentElement!.parentElement!
+    const collapsedClass = tableWrapper.className
+    fireEvent.click(screen.getByTestId('expand-toggle'))
+    expect(screen.getByTestId('expand-toggle')).toHaveTextContent('Collapse')
+    expect(tableWrapper.className).not.toBe(collapsedClass)
+    fireEvent.click(screen.getByTestId('expand-toggle'))
+    expect(tableWrapper.className).toBe(collapsedClass)
+  })
+
+  it('distinguishes pending refresh from an expired cutoff and preserves support links', () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-10-19T09:00:00Z'))
+    const pending = renderCard({ card: { ...baseCard, error: { cutOffTime: '10:00:00', supportEmail: 'help@example.com' } } })
+    expect(screen.getByText(/expected to complete by 10:00:00/)).toBeInTheDocument()
+    expect(screen.getByRole('img')).toHaveAttribute('src', '/assets/images/Data_refresh_empty_state.svg')
+    expect(screen.getByRole('link', { name: 'help@example.com' })).toHaveAttribute('href', 'mailto:help@example.com')
+    pending.unmount()
+    renderCard({ card: { ...baseCard, error: { cutOffTime: '08:00:00', message: 'Refresh delayed' } } })
+    expect(screen.getByText('Refresh delayed')).toBeInTheDocument()
+    expect(screen.getByRole('img')).toHaveAttribute('src', '/assets/images/Data_refresh_failed_empty_state.svg')
+  })
+
+  it('closes the Metrics Info overlay without removing the card', () => {
+    renderCard({ card: { ...baseCard, dataInfo: { title: 'Info', body: '<p>Explanation</p>' } } })
+    fireEvent.click(screen.getByTestId('metrics-info-btn'))
+    expect(screen.getByRole('dialog')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Close' }))
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    expect(screen.getByText('Sales')).toBeInTheDocument()
   })
 })

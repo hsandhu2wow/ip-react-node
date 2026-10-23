@@ -5,6 +5,20 @@
 **Reference:** Angular implementation in `store-insights/src/app/sqf/` — `WeeklyFactsHomeComponent`,
 `WeeklyFactsTableComponent`, `WeeklyFactsService`, `IWF.d.ts`, `weekly_facts/urls.py`, `weekly_facts/data.py`.
 
+> **Historical design, reviewed 2026-10-14:** Core routes/table rendering were
+> implemented, but not every behavior below. In particular, the current page
+> has no Weekly/My Plan view switch, Metrics Info is inert text, server variance/
+> expansion defaults are not applied, and PageBar was removed. Wireframes were
+> earlier references, not the current source of truth. Use the
+> [parity status](../../migration-status.md) and
+> [current roadmap](../plans/2026-10-14-angular-react-migration.md).
+>
+> **Superseded for full-parity scope on 2026-10-21:** Use the
+> [Weekly Facts/My Plan assessment](../../weekly-facts-myplan-parity.md) and
+> [detailed implementation plan](../plans/2026-10-21-weekly-facts-myplan-parity.md).
+> The desktop-only scope and deferrals below are historical, not exclusions
+> from the required all-BU migration.
+
 ---
 
 ## Problem

@@ -6,6 +6,14 @@
 **Status:** Approved  
 **Scope:** Phase 1 — `/quick-facts` Summary and Details pages only
 
+> **Historical specification:** This records the initial June scope and stack.
+> The current implementation uses React 19/Router 7/Vite 8, and Weekly/My Plan
+> core tables now exist. Full-app migration follows the committed Angular
+> baseline, not the earlier wireframe-only scope. See the
+> [current architecture](../../technical-architecture.md),
+> [parity status](../../migration-status.md) and
+> [October 14 roadmap](../plans/2026-10-14-angular-react-migration.md).
+
 ---
 
 ## 1. Project Overview

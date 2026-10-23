@@ -1,7 +1,14 @@
 # React App Tutorial — For Angular Developers
 
 > This tutorial explains **every layer** of the `ip-react-node` app using Angular analogies.
-> Every concept is backed by actual code from the codebase.
+> Examples explain the codebase; simplified examples are not complete page implementations.
+
+> **Reviewed October 14, 2026:** Use the [technical architecture](technical-architecture.md)
+> for current contracts and the [migration status](migration-status.md) and
+> [roadmap](superpowers/plans/2026-10-14-angular-react-migration.md) for parity
+> gaps and future work. After the October 20 test expansion this worktree has
+> 33 test files, demo
+> authentication and only a partial Angular migration.
 
 ---
 
@@ -63,7 +70,7 @@ createRoot(document.getElementById('root')!).render(
 | `provideRouter(routes)` | `<BrowserRouter>` wrapping |
 | `provideHttpClient()` | `<QueryClientProvider>` wrapping |
 | `providers: [MyService]` | Wrapping with a `<Provider>` component |
-| `NgZone` / change detection | `<StrictMode>` — warns about bad patterns in dev |
+| `NgZone` / change detection | React state/render updates; `<StrictMode>` adds development checks, not change detection |
 
 **Key insight:** In React there is no module system or decorator-based DI. Instead, "global providers" are **components** that wrap the tree. Anything below `<QueryClientProvider>` can access React Query. Anything below `<BrowserRouter>` can use routing hooks. This is the React equivalent of Angular's root-level providers.
 
@@ -272,6 +279,8 @@ These are then used in CSS Modules:
     <Route index element={<Navigate to="summary" replace />} />
     <Route path="summary" element={<SummaryPage />} />
     <Route path="details/:type" element={<DetailsPage />} />
+    <Route path="weekly" element={<TrendPage metric="weekly" />} />
+    <Route path="myplan" element={<TrendPage metric="myPlan" />} />
   </Route>
 
   <Route path="/weekly" element={<ProtectedRoute><ComingSoon /></ProtectedRoute>} />
@@ -287,10 +296,14 @@ In `QuickFactsLayout.tsx`, the `<Outlet />` is where child routes render:
 export function QuickFactsLayout() {
   return (
     <FilterProvider>
-      <PageBar />
-      <FilterBar />
-      <div className={styles.content}>
-        <Outlet />   {/* SummaryPage or DetailsPage renders here */}
+      <div style={{ '--page-bar-height': '0px' } as React.CSSProperties}>
+        <FilterBar />
+        <div className={styles.content}>
+          <Outlet />   {/* SummaryPage, DetailsPage or TrendPage */}
+        </div>
+        <footer className={styles.footer}>
+          <span>Store Insights · Powered by Quick Facts</span>
+        </footer>
       </div>
     </FilterProvider>
   )
@@ -298,6 +311,10 @@ export function QuickFactsLayout() {
 ```
 
 ### Route guard = `ProtectedRoute`
+
+The current provider always supplies authenticated demo context with portal
+`WW`; logout reloads the page. This is not the Angular backend/IAP bootstrap,
+role checks or source feature permissions.
 
 Angular uses `CanActivate`. React has no built-in guard — you build your own as a component:
 
@@ -341,7 +358,10 @@ import { NavLink, Navigate } from 'react-router-dom'
 <Navigate to="/quick-facts/summary" replace />
 ```
 
-`NavLink` automatically adds an active class when the URL matches — equivalent to `routerLinkActive`.
+`NavLink` exposes active state to its render/class callbacks and adds
+`aria-current` when active. This app also uses `getActivePrefix` for overlapping
+Daily/Trend paths; a plain string `className` does not automatically incorporate
+that custom active styling.
 
 ### Reading query params (URL search params)
 
@@ -354,13 +374,19 @@ import { useSearchParams } from 'react-router-dom'
 const [searchParams, setSearchParams] = useSearchParams()
 const code = searchParams.get('code')   // ?code=WW001
 
-// Update URL query params without navigation:
+// Replace the current history entry with updated query params:
 setSearchParams(prev => {
   const next = new URLSearchParams(prev)
   next.set('code', node.code)
   return next
 }, { replace: true })
 ```
+
+The filter also stores `selectedPeriod` (`WTD`/`YDAY`) and
+`selectedBreakdownAxis` (`childLevel`/`department`) in `period`/`axis` query
+parameters. Initialization reads URL state, but arbitrary browser-history URL
+changes are not fully synchronized back into context. Existing page/sidebar
+links do not explicitly carry search parameters.
 
 ---
 
@@ -634,16 +660,17 @@ export async function getSummaryCards(
   apiDepth: number,
   date: string,
   code?: string
-): Promise<ISQFMetricCard[]> {
+): Promise<ISQFPeriodResponse | ISQFMetricCard[]> {
   const path = apiDepth && code
     ? `/sqf/summaryCards/${apiDepth}/${date}/${code}`
     : `/sqf/summaryCards/0/${date}`
-  const res = await client.get<ISQFMetricCard[]>(path)
+  const res = await client.get<ISQFPeriodResponse | ISQFMetricCard[]>(path)
   return res.data
 }
 ```
 
-Angular equivalent:
+Historical array-only Angular example (current source also supports
+period-keyed and wrapper responses):
 ```typescript
 getSummaryCards(apiDepth: number, date: string, code?: string): Observable<ISQFMetricCard[]> {
   const path = apiDepth && code
@@ -669,7 +696,7 @@ export function useSummaryCards() {
     // enabled = only fetch when isLoaded (like combineLatest with a boolean guard)
     enabled: isLoaded,
 
-    staleTime: 0,  // always re-fetch when component mounts
+    staleTime: 0,  // immediately stale; eligible for normal mount/focus refetch
   })
 }
 ```
@@ -680,13 +707,14 @@ export function useSummaryCards() {
 
 ```tsx
 export function SummaryPage() {
-  const summaryQuery = useSummaryCards()
+  // Simplified composition; actual page also handles hierarchy loading/order.
+  const summaryQuery = useEnrichedSummaryCards()
 
   // Three states: loading, error, success
   if (summaryQuery.isLoading) return <Skeleton />
   if (summaryQuery.isError)   return <ErrorBanner />
 
-  const cards = summaryQuery.data || []
+  const cards = summaryQuery.data
   return <div>{cards.map(c => <SummaryCard card={c} />)}</div>
 }
 ```
@@ -706,8 +734,16 @@ Angular equivalent with `async` pipe:
 | `isLoading` | `loading$` BehaviorSubject |
 | `isError` | `error$` BehaviorSubject |
 | `data` | value from `async` pipe |
-| `staleTime: 0` | no caching |
+| `staleTime: 0` | Cached data is immediately stale, not uncached |
 | Retry config in `QueryClient` | `retryWhen()` operator |
+
+Summary/details endpoints may return `{ WTD, YDAY }`, each containing a card
+array or `{ cards, sortBy }`. `usePeriodCards` normalizes/selects the active
+period before enrichment/rendering; do not map the raw response as an array.
+The current fallback is derived and does not write back to context/URL.
+Changing period alone selects from fetched data rather than adding a request
+parameter. Unsupported shapes currently normalize to no cards, a parity/error
+handling gap rather than a recommended validation pattern.
 
 ---
 
@@ -720,17 +756,27 @@ In Angular you extract logic into services. In React you extract stateful logic 
 ### `useFilterTree` — triggers when the filter context initialises
 
 ```ts
-// src/hooks/useFilterTree.ts (simplified concept)
+// src/hooks/useFilterTree.ts
 export function useFilterTree() {
   const { initTree } = useFilter()
 
-  useQuery({
-    queryKey: ['sqf', 'universal-filter'],
+  const query = useQuery({
+    queryKey: ['sqf', 'filter-tree'],
     queryFn: getUniversalFilter,
-    onSuccess: (data) => initTree(data),   // calls FilterContext.initTree once data arrives
+    staleTime: Infinity,
+    gcTime: Infinity,
   })
+
+  useEffect(() => {
+    if (query.data) initTree(query.data)
+  }, [query.data, initTree])
+
+  return query
 }
 ```
+
+TanStack Query v5 removed query `onSuccess` callbacks; this effect follows the
+actual implementation. Hook imports are omitted from the example.
 
 Called once inside `FilterBar`:
 ```tsx
@@ -774,21 +820,21 @@ Here's what happens when you open `/quick-facts/summary` and change the location
          /quick-facts → <ProtectedRoute><QuickFactsLayout /></ProtectedRoute>
 
 3. QuickFactsLayout renders:
-   <FilterProvider>        ← creates selectedNode/selectedDate state
+   <FilterProvider>        ← location/date/period/axis state
      <FilterBar />         ← calls useFilterTree() → GET /api/sqf/getUniversalFilterGeneric
      <Outlet />            ← renders SummaryPage
 
 4. FilterBar receives API response:
    → initTree(rawData) is called
-   → tree is flattened, selectedNode defaults to first selectable node
+   → tree is flattened, selectedNode restores URL code or uses first selectable node
    → isLoaded becomes true
-   → URL gets ?code=WW001&date=2026-06-30
+   → defaults are not automatically written into the URL
 
 5. SummaryPage watches isLoaded:
    useSummaryCards() → queryKey includes selectedNode.code
    → enabled: isLoaded = true
    → GET /api/sqf/summaryCards/1/2026-06-30/WW001
-   → data arrives → cards render
+   → data arrives → period selection + card-status enrichment → cards render
 
 6. User changes location dropdown:
    → setSelectedNode(newNode) called
@@ -813,9 +859,8 @@ AppShell
 └── <div.main>     (margin-left: 56px on desktop, padding-top: 56px on mobile)
     └── children
         └── QuickFactsLayout (for /quick-facts routes)
-            ├── PageBar    (position: sticky, sticks below app bar)
-            ├── FilterBar  (position: sticky, sticks below PageBar)
-            ├── <Outlet>   (SummaryPage or DetailsPage)
+            ├── FilterBar  (position: sticky, below mobile app bar)
+            ├── <Outlet>   (SummaryPage, DetailsPage or TrendPage)
             └── <footer>
 ```
 
@@ -845,18 +890,15 @@ Instead of JS calculations for offsets, CSS custom properties do it automaticall
   padding-top: var(--mob-appbar-height); /* auto: 0 desktop, 56px mobile */
 }
 
-/* PageBar.module.css */
-.container {
-  position: sticky;
-  top: var(--mob-appbar-height);   /* sticks at top of viewport content area */
-}
-
 /* FilterBar.module.css */
 .filterBar {
   position: sticky;
-  top: calc(var(--mob-appbar-height) + var(--page-bar-height));  /* below PageBar */
+  top: calc(var(--mob-appbar-height) + var(--page-bar-height));
 }
 ```
+
+`PageBar` was removed in the August changes. The current route layout sets
+`--page-bar-height: 0px`; the retained CSS variable is not a rendered tab bar.
 
 **Why `sticky` not `fixed`?** `position: fixed` escapes the document flow and needs manual `left: 56px` to avoid the sidenav. `position: sticky` sticks within its parent's scroll container — which already has the correct `margin-left` applied by AppShell. Much simpler.
 

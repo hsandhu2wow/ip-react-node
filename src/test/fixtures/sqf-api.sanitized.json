@@ -1,0 +1,722 @@
+{
+  "provenance": {
+    "capturedAt": "2026-10-20",
+    "baseUrl": "http://localhost:8080/api",
+    "endpoints": [
+      "/sqf/getUniversalFilterGeneric",
+      "/sqf/getSQFMetricCardsStatus",
+      "/sqf/summaryCards/0/2026-10-19",
+      "/sqf/detailCard/sales_v4/0/2026-10-19"
+    ],
+    "sanitization": "Pruned to one metric per period, two subcards/rows/columns/KPIs, and one hierarchy branch. All identities, business values, titles, free text and timestamps replaced. Original response structure, period/filter keys and rendering flags retained. Chart payloads omitted."
+  },
+  "hierarchy": [
+    {
+      "name": "Fixture National",
+      "code": "fixture-national",
+      "level": 0,
+      "level_desc": "National",
+      "selected": true,
+      "nonClickable": false,
+      "children": [
+        {
+          "name": "Fixture child",
+          "code": "fixture-child",
+          "level": 1,
+          "level_desc": "State",
+          "selected": false,
+          "nonClickable": false
+        }
+      ]
+    }
+  ],
+  "status": {
+    "fixture_metric": {
+      "summary": 1,
+      "details": 1,
+      "sequence": 1,
+      "summary_start_level": 0,
+      "summary_last_level": 5,
+      "details_start_level": 0,
+      "details_last_level": 5,
+      "is_generic_api": 1,
+      "titleText": "Fixture Sales"
+    }
+  },
+  "summary": {
+    "WTD": [
+      {
+        "cardHeader": "#eb5757",
+        "cardName": "fixture_metric",
+        "cardTitle": "Fixture Sales",
+        "cardType": "SUMMARY",
+        "childCode": "fixture-child",
+        "dropdowns": [
+          {
+            "key": "tableBreakdown",
+            "data": [
+              {
+                "key": "hierarchy",
+                "text": "Fixture breakdown 1"
+              },
+              {
+                "key": "department",
+                "text": "Fixture breakdown 2"
+              }
+            ]
+          }
+        ],
+        "filterKeys": {
+          "key1": "tableBreakdown"
+        },
+        "location": "Fixture location",
+        "isGenericCardApi": "true",
+        "reportingPeriod": "WTD",
+        "dataInfo": {
+          "title": "Fixture metric information",
+          "body": "<p>Sanitized fixture explanation.</p>"
+        },
+        "cards": [
+          {
+            "keys": {
+              "key1": "hierarchy"
+            },
+            "cardHeader": "#eb5757",
+            "infoNumbers": [
+              {
+                "displayValue": "10",
+                "text": "Fixture KPI 1",
+                "color": "#219653",
+                "val": 10
+              },
+              {
+                "displayValue": "11",
+                "text": "Fixture KPI 2",
+                "color": "#b10200",
+                "val": 11
+              }
+            ],
+            "tableData": {
+              "type": "basic",
+              "headers": [
+                "Column 0",
+                "Column 1"
+              ],
+              "data": [
+                {
+                  "column0": {
+                    "displayValue": "Fixture row 1",
+                    "color": "#219653"
+                  },
+                  "column1": {
+                    "displayValue": 10,
+                    "color": "#219653"
+                  }
+                },
+                {
+                  "column0": {
+                    "displayValue": "Fixture row 2",
+                    "color": "#219653"
+                  },
+                  "column1": {
+                    "displayValue": 11,
+                    "color": "#219653"
+                  }
+                }
+              ],
+              "footer": [
+                {
+                  "column0": {
+                    "displayValue": "Fixture row 1",
+                    "color": "#219653"
+                  },
+                  "column1": {
+                    "displayValue": 10,
+                    "color": "#219653"
+                  }
+                }
+              ],
+              "freeze_first_column": true,
+              "hasHTMLHeaders": true,
+              "sortCol": "column0",
+              "sortOrder": "desc"
+            }
+          },
+          {
+            "keys": {
+              "key1": "department"
+            },
+            "cardHeader": "#eb5757",
+            "infoNumbers": [
+              {
+                "displayValue": "10",
+                "text": "Fixture KPI 1",
+                "color": "#219653",
+                "val": 10
+              },
+              {
+                "displayValue": "11",
+                "text": "Fixture KPI 2",
+                "color": "#b10200",
+                "val": 11
+              }
+            ],
+            "tableData": {
+              "type": "basic",
+              "headers": [
+                "Column 0",
+                "Column 1"
+              ],
+              "data": [
+                {
+                  "column0": {
+                    "displayValue": "Fixture row 1",
+                    "color": "#219653"
+                  },
+                  "column1": {
+                    "displayValue": 10,
+                    "color": "#219653"
+                  }
+                },
+                {
+                  "column0": {
+                    "displayValue": "Fixture row 2",
+                    "color": "#219653"
+                  },
+                  "column1": {
+                    "displayValue": 11,
+                    "color": "#219653"
+                  }
+                }
+              ],
+              "footer": [
+                {
+                  "column0": {
+                    "displayValue": "Fixture row 1",
+                    "color": "#219653"
+                  },
+                  "column1": {
+                    "displayValue": 10,
+                    "color": "#219653"
+                  }
+                }
+              ],
+              "freeze_first_column": true,
+              "hasHTMLHeaders": true,
+              "sortCol": "column0",
+              "sortOrder": "desc"
+            }
+          }
+        ],
+        "updatedTime": "2026-10-19T00:00:00Z",
+        "updatedtime": "2026-10-19T00:00:00Z"
+      }
+    ],
+    "YDAY": [
+      {
+        "cardHeader": "#eb5757",
+        "cardName": "fixture_metric",
+        "cardTitle": "Fixture Sales",
+        "cardType": "SUMMARY",
+        "childCode": "fixture-child",
+        "dropdowns": [
+          {
+            "key": "tableBreakdown",
+            "data": [
+              {
+                "key": "hierarchy",
+                "text": "Fixture breakdown 1"
+              },
+              {
+                "key": "department",
+                "text": "Fixture breakdown 2"
+              }
+            ]
+          }
+        ],
+        "filterKeys": {
+          "key1": "tableBreakdown"
+        },
+        "location": "Fixture location",
+        "isGenericCardApi": "true",
+        "reportingPeriod": "YDAY",
+        "dataInfo": {
+          "title": "Fixture metric information",
+          "body": "<p>Sanitized fixture explanation.</p>"
+        },
+        "cards": [
+          {
+            "keys": {
+              "key1": "hierarchy"
+            },
+            "cardHeader": "#eb5757",
+            "infoNumbers": [
+              {
+                "displayValue": "10",
+                "text": "Fixture KPI 1",
+                "color": "#219653",
+                "val": 10
+              },
+              {
+                "displayValue": "11",
+                "text": "Fixture KPI 2",
+                "color": "#eb5757",
+                "val": 11
+              }
+            ],
+            "tableData": {
+              "type": "basic",
+              "headers": [
+                "Column 0",
+                "Column 1"
+              ],
+              "data": [
+                {
+                  "column0": {
+                    "displayValue": "Fixture row 1",
+                    "color": "#219653"
+                  },
+                  "column1": {
+                    "displayValue": 10,
+                    "color": "#219653"
+                  }
+                },
+                {
+                  "column0": {
+                    "displayValue": "Fixture row 2",
+                    "color": "#219653"
+                  },
+                  "column1": {
+                    "displayValue": 11,
+                    "color": "#219653"
+                  }
+                }
+              ],
+              "footer": [
+                {
+                  "column0": {
+                    "displayValue": "Fixture row 1",
+                    "color": "#219653"
+                  },
+                  "column1": {
+                    "displayValue": 10,
+                    "color": "#219653"
+                  }
+                }
+              ],
+              "freeze_first_column": true,
+              "hasHTMLHeaders": true,
+              "sortCol": "column0",
+              "sortOrder": "desc"
+            }
+          },
+          {
+            "keys": {
+              "key1": "department"
+            },
+            "cardHeader": "#eb5757",
+            "infoNumbers": [
+              {
+                "displayValue": "10",
+                "text": "Fixture KPI 1",
+                "color": "#219653",
+                "val": 10
+              },
+              {
+                "displayValue": "11",
+                "text": "Fixture KPI 2",
+                "color": "#eb5757",
+                "val": 11
+              }
+            ],
+            "tableData": {
+              "type": "basic",
+              "headers": [
+                "Column 0",
+                "Column 1"
+              ],
+              "data": [
+                {
+                  "column0": {
+                    "displayValue": "Fixture row 1",
+                    "color": "#219653"
+                  },
+                  "column1": {
+                    "displayValue": 10,
+                    "color": "#219653"
+                  }
+                },
+                {
+                  "column0": {
+                    "displayValue": "Fixture row 2",
+                    "color": "#219653"
+                  },
+                  "column1": {
+                    "displayValue": 11,
+                    "color": "#219653"
+                  }
+                }
+              ],
+              "footer": [
+                {
+                  "column0": {
+                    "displayValue": "Fixture row 1",
+                    "color": "#219653"
+                  },
+                  "column1": {
+                    "displayValue": 10,
+                    "color": "#219653"
+                  }
+                }
+              ],
+              "freeze_first_column": true,
+              "hasHTMLHeaders": true,
+              "sortCol": "column0",
+              "sortOrder": "desc"
+            }
+          }
+        ],
+        "updatedTime": "2026-10-19T00:00:00Z",
+        "updatedtime": "2026-10-19T00:00:00Z"
+      }
+    ]
+  },
+  "details": {
+    "WTD": [
+      {
+        "cardHeader": "#219653",
+        "cardName": "fixture_metric",
+        "cardTitle": "Fixture Sales",
+        "cardType": "DETAIL",
+        "childCode": "fixture-child",
+        "dropdowns": [
+          {
+            "key": "tableBreakdown",
+            "data": [
+              {
+                "key": "hierarchy",
+                "text": "Fixture breakdown 1"
+              },
+              {
+                "key": "department",
+                "text": "Fixture breakdown 2"
+              }
+            ]
+          }
+        ],
+        "filterKeys": {
+          "key1": "tableBreakdown"
+        },
+        "location": "Fixture location",
+        "isGenericCardApi": "true",
+        "reportingPeriod": "WTD",
+        "dataInfo": {
+          "title": "Fixture metric information",
+          "body": "<p>Sanitized fixture explanation.</p>"
+        },
+        "cards": [
+          {
+            "keys": {
+              "key1": "hierarchy"
+            },
+            "cardHeader": "#219653",
+            "infoNumbers": [
+              {
+                "displayValue": "10",
+                "text": "Fixture KPI 1",
+                "color": "#219653",
+                "val": 10
+              },
+              {
+                "displayValue": "11",
+                "text": "Fixture KPI 2",
+                "color": "#146a30",
+                "val": 11
+              }
+            ],
+            "tableData": {
+              "type": "basic",
+              "headers": [
+                "Column 0",
+                "Column 1"
+              ],
+              "data": [
+                {
+                  "column0": {
+                    "displayValue": "Fixture row 1",
+                    "color": "#219653"
+                  },
+                  "column1": {
+                    "displayValue": 10,
+                    "color": "#219653"
+                  }
+                },
+                {
+                  "column0": {
+                    "displayValue": "Fixture row 2",
+                    "color": "#219653"
+                  },
+                  "column1": {
+                    "displayValue": 11,
+                    "color": "#219653"
+                  }
+                }
+              ],
+              "footer": [
+                {
+                  "column0": {
+                    "displayValue": "Fixture row 1",
+                    "color": "#219653"
+                  },
+                  "column1": {
+                    "displayValue": 10,
+                    "color": "#219653"
+                  }
+                }
+              ],
+              "freeze_first_column": true,
+              "hasHTMLHeaders": true,
+              "sortCol": "column0",
+              "sortOrder": "asc"
+            }
+          },
+          {
+            "keys": {
+              "key1": "department"
+            },
+            "cardHeader": "#219653",
+            "infoNumbers": [
+              {
+                "displayValue": "10",
+                "text": "Fixture KPI 1",
+                "color": "#219653",
+                "val": 10
+              },
+              {
+                "displayValue": "11",
+                "text": "Fixture KPI 2",
+                "color": "#146a30",
+                "val": 11
+              }
+            ],
+            "tableData": {
+              "type": "basic",
+              "headers": [
+                "Column 0",
+                "Column 1"
+              ],
+              "data": [
+                {
+                  "column0": {
+                    "displayValue": "Fixture row 1",
+                    "color": "#219653"
+                  },
+                  "column1": {
+                    "displayValue": 10,
+                    "color": "#219653"
+                  }
+                },
+                {
+                  "column0": {
+                    "displayValue": "Fixture row 2",
+                    "color": "#219653"
+                  },
+                  "column1": {
+                    "displayValue": 11,
+                    "color": "#219653"
+                  }
+                }
+              ],
+              "footer": [
+                {
+                  "column0": {
+                    "displayValue": "Fixture row 1",
+                    "color": "#219653"
+                  },
+                  "column1": {
+                    "displayValue": 10,
+                    "color": "#219653"
+                  }
+                }
+              ],
+              "freeze_first_column": true,
+              "hasHTMLHeaders": true,
+              "sortCol": "column0",
+              "sortOrder": "asc"
+            }
+          }
+        ],
+        "updatedTime": "2026-10-19T00:00:00Z",
+        "updatedtime": "2026-10-19T00:00:00Z"
+      }
+    ],
+    "YDAY": [
+      {
+        "cardHeader": "#219653",
+        "cardName": "fixture_metric",
+        "cardTitle": "Fixture Sales",
+        "cardType": "DETAIL",
+        "childCode": "fixture-child",
+        "dropdowns": [
+          {
+            "key": "tableBreakdown",
+            "data": [
+              {
+                "key": "hierarchy",
+                "text": "Fixture breakdown 1"
+              },
+              {
+                "key": "department",
+                "text": "Fixture breakdown 2"
+              }
+            ]
+          }
+        ],
+        "filterKeys": {
+          "key1": "tableBreakdown"
+        },
+        "location": "Fixture location",
+        "isGenericCardApi": "true",
+        "reportingPeriod": "YDAY",
+        "dataInfo": {
+          "title": "Fixture metric information",
+          "body": "<p>Sanitized fixture explanation.</p>"
+        },
+        "cards": [
+          {
+            "keys": {
+              "key1": "hierarchy"
+            },
+            "cardHeader": "#219653",
+            "infoNumbers": [
+              {
+                "displayValue": "10",
+                "text": "Fixture KPI 1",
+                "color": "#219653",
+                "val": 10
+              },
+              {
+                "displayValue": "11",
+                "text": "Fixture KPI 2",
+                "color": "#219653",
+                "val": 11
+              }
+            ],
+            "tableData": {
+              "type": "basic",
+              "headers": [
+                "Column 0",
+                "Column 1"
+              ],
+              "data": [
+                {
+                  "column0": {
+                    "displayValue": "Fixture row 1",
+                    "color": "#219653"
+                  },
+                  "column1": {
+                    "displayValue": 10,
+                    "color": "#219653"
+                  }
+                },
+                {
+                  "column0": {
+                    "displayValue": "Fixture row 2",
+                    "color": "#219653"
+                  },
+                  "column1": {
+                    "displayValue": 11,
+                    "color": "#219653"
+                  }
+                }
+              ],
+              "footer": [
+                {
+                  "column0": {
+                    "displayValue": "Fixture row 1",
+                    "color": "#219653"
+                  },
+                  "column1": {
+                    "displayValue": 10,
+                    "color": "#219653"
+                  }
+                }
+              ],
+              "freeze_first_column": true,
+              "hasHTMLHeaders": true,
+              "sortCol": "column0",
+              "sortOrder": "asc"
+            }
+          },
+          {
+            "keys": {
+              "key1": "department"
+            },
+            "cardHeader": "#219653",
+            "infoNumbers": [
+              {
+                "displayValue": "10",
+                "text": "Fixture KPI 1",
+                "color": "#219653",
+                "val": 10
+              },
+              {
+                "displayValue": "11",
+                "text": "Fixture KPI 2",
+                "color": "#219653",
+                "val": 11
+              }
+            ],
+            "tableData": {
+              "type": "basic",
+              "headers": [
+                "Column 0",
+                "Column 1"
+              ],
+              "data": [
+                {
+                  "column0": {
+                    "displayValue": "Fixture row 1",
+                    "color": "#219653"
+                  },
+                  "column1": {
+                    "displayValue": 10,
+                    "color": "#219653"
+                  }
+                },
+                {
+                  "column0": {
+                    "displayValue": "Fixture row 2",
+                    "color": "#219653"
+                  },
+                  "column1": {
+                    "displayValue": 11,
+                    "color": "#219653"
+                  }
+                }
+              ],
+              "footer": [
+                {
+                  "column0": {
+                    "displayValue": "Fixture row 1",
+                    "color": "#219653"
+                  },
+                  "column1": {
+                    "displayValue": 10,
+                    "color": "#219653"
+                  }
+                }
+              ],
+              "freeze_first_column": true,
+              "hasHTMLHeaders": true,
+              "sortCol": "column0",
+              "sortOrder": "asc"
+            }
+          }
+        ],
+        "updatedTime": "2026-10-19T00:00:00Z",
+        "updatedtime": "2026-10-19T00:00:00Z"
+      }
+    ]
+  }
+}

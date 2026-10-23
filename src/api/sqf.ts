@@ -4,18 +4,11 @@ import type {
   ISQFMetricCard,
   ISQFPeriodResponse,
   IAvailableMetricCards,
-  IDataLoadETA,
 } from '../types/sqf.types'
 
 /** Returns the hierarchy tree for the filter dropdown */
 export async function getUniversalFilter(): Promise<ISQFGenericFilter[]> {
   const res = await client.get<ISQFGenericFilter[]>('/sqf/getUniversalFilterGeneric')
-  return res.data
-}
-
-/** Returns ETA timestamps for each metric's data load */
-export async function getDataLoadETA(): Promise<IDataLoadETA[]> {
-  const res = await client.get<IDataLoadETA[]>('/sqf/getDataLoadETA')
   return res.data
 }
 
@@ -60,20 +53,5 @@ export async function getDetailCard(
     ? `/sqf/detailCard/${metric}/${apiDepth}/${date}/${code}`
     : `/sqf/detailCard/${metric}/0/${date}`
   const res = await client.get<ISQFPeriodResponse | ISQFMetricCard[]>(path)
-  return res.data
-}
-
-/**
- * Returns the seasonal metric card.
- */
-export async function getSeasonalMetric(
-  apiDepth: number,
-  date: string,
-  code?: string
-): Promise<ISQFMetricCard[]> {
-  const path = apiDepth && code
-    ? `/sqf/seasonalMetric/${apiDepth}/${date}/${code}`
-    : `/sqf/seasonalMetric/0/${date}`
-  const res = await client.get<ISQFMetricCard[]>(path)
   return res.data
 }

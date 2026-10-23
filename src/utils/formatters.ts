@@ -84,14 +84,6 @@ export function getYesterdayDate(): Date {
   return new Date(Date.now() - 86_400_000)
 }
 
-/** CSS colour variables keyed by colorVal result */
-export const COLOR_CSS_VAR: Record<string, string> = {
-  positive: 'var(--color-positive)',
-  negative: 'var(--color-negative)',
-  neutral:  'var(--color-neutral)',
-  amber:    'var(--color-amber)',
-}
-
 /**
  * Returns true when the given UTC cut-off time string (HH:MM:SS) is in the past.
  * Used to decide whether to show "data will be ready by X" or a generic error.

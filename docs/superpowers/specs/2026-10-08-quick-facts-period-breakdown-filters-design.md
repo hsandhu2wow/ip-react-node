@@ -3,6 +3,14 @@
 Date: 2026-10-08
 Source of truth: `dsa-buying-insights` (backend `store-insights/backend/sqf/metric_card_v2.py`, Angular `sqf-filter`, `sqf-cards.service.ts`, `sqf-filter.service.ts`), commits Aug–Oct 2026.
 
+> **Historical design, reviewed 2026-10-14:** The feature landed in `c97525f`,
+> but this document describes intent, not verified parity. Current hooks return
+> raw responses (no query `select`); period fallback is derived without context/
+> URL writeback; and the date picker remains rendered on Trend routes.
+> Analytics exclusions apply only to that earlier slice. See the
+> [current implementation](../../technical-architecture.md) and
+> [full migration plan](../plans/2026-10-14-angular-react-migration.md).
+
 ## Problem
 
 The backend `summaryCards` and `detailCard` endpoints now return period-keyed data

@@ -188,15 +188,6 @@ export interface IAvailableCardConfig {
 /** Map of cardName → config, from getSQFMetricCardsStatus */
 export type IAvailableMetricCards = Record<string, IAvailableCardConfig>
 
-/** One entry from getDataLoadETA */
-export interface IDataLoadETA {
-  METRIC: string
-  Expected_Time: string // "HH:MM:SS" UTC
-}
-
-/** Computed ETA map keyed by metric name */
-export type ETAMap = Record<string, { time: Date; day?: string }>
-
 /** Reporting period offered by the Quick Facts filter */
 export type Period = 'WTD' | 'YDAY'
 
