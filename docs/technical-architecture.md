@@ -2,7 +2,8 @@
 
 Reviewed October 14, 2026 against React `c97525f` and Angular `02a9cf698`;
 Weekly Facts/My Plan contracts reviewed again October 21 at the same HEADs;
-initial migration work started October 23 on `feat/weekly-facts-myplan-parity`.
+initial migration work started October 23 on `feat/weekly-facts-myplan-parity`,
+with hierarchy/projection/dialog updates on October 26.
 This describes the **current implementation**. Required changes are tracked in
 the [status report](migration-status.md) and
 [migration plan](superpowers/plans/2026-10-14-angular-react-migration.md).
@@ -168,17 +169,21 @@ TrendPage selects card views/history, renders the grouped/KPI table and
 variance CSS. The October 23 slice uses response-defined `dateFilterKey`
 (default weekNo), root variance defaults and each table's KPI/defaultExpanded
 configuration. Page selections/variance reset on changed response identity or
-metric; expansion resets on changed tables. Full source load/viewport/history
-lifecycle, card-level Half Year and hierarchy fallback are not implemented.
-Metadata, banner/AI/hierarchy/mobile/subscription configuration in types is
-not equivalent to implemented UI.
+metric; expansion resets on changed tables. The October 26 `trendSelection.ts`
+boundary owns desktop view/date/hierarchy state, source-specific fallback and
+retention of the displayed table on unmatched filters. Page hierarchy controls
+follow `allowedViews`; child/peer controls follow each card's toggle key and
+retain their selection across loads. Full source load/viewport lifecycle and
+card-level Half Year remain incomplete. Banner/AI/mobile/subscription
+configuration in types is not equivalent to implemented UI.
 
 ### Weekly Facts/My Plan: reviewed source contract and target boundary
 
 The [focused assessment](weekly-facts-myplan-parity.md) and
 [implementation plan](superpowers/plans/2026-10-21-weekly-facts-myplan-parity.md)
-document the full port. They describe **planned**, not already implemented,
-selection utilities, dialogs, AI panel, fixtures and browser tooling.
+document the full port. Desktop selection and Weekly information dialogs are
+partially implemented; AI, qualified trend fixtures and browser tooling remain
+planned. The dated progress register distinguishes these stages.
 
 The existing Python Weekly registry remains authoritative for measures, view
 order, HTML and settings. Local SI GET responses confirmed generic history
@@ -192,12 +197,14 @@ are not yet wired into a preferences dialog. `available_views` contains card key
 labels when constructing the subscription dialog; it is not the dialog's
 checkbox-object array.
 
-The future selection boundary must distinguish desktop history/hierarchy,
-card-level My Plan Half Year and mobile preview/committed state. The table
+The selection boundary must still add card-level My Plan Half Year and
+mobile preview/committed state without changing desktop rules. The table
 boundary now uses original-column membership, source KPI substring matching,
-empty-group guards and singleton group spacers. It still needs child/peer
-and mobile rules, WFM/double-goal/three-column layout and computed sticky
-geometry. Global backend-HTML styles and external per-BU theme variables
+empty-group guards and singleton group spacers. Its optional typed display
+context adds desktop child/peer and mobile parent/child/hierarchy/date/WFM
+projection; the page wires desktop controls only. Original column IDs also
+associate sparse rows with their headers. WFM/double-goal/three-column layout,
+mobile state wiring and computed sticky geometry remain open. Global backend-HTML styles and external per-BU theme variables
 remain separate from CSS Module layout. Shared auth/filter/action adapters
 must be integrated rather than reimplemented inside TrendPage.
 
@@ -215,6 +222,14 @@ It is not an implementation of Angular's separate feature-alert acknowledgment
 dialog. That missing workflow changed on October 13; see the status report for
 its 720px component, viewport panel constraints and source scrolling caveat.
 Weekly's source `WFPopupComponent` is another distinct popup contract.
+The new `TrendInfoDialog` implements Weekly Metrics Info and header/cell alert
+actions with trusted HTML, source icon mapping, maximum 530px by 648px sizing
+and no initial autofocus. Its portal owns keyboard/backdrop dismissal, scroll
+locking, focus trapping and restoration; it is cleared on page-response/metric
+changes. Optional refresh metadata is supported at the component boundary;
+composed mobile information remains future work. Structured Axios errors show
+the backend title/message/support email and remove stale page content, retaining
+an explicit fallback for errors without a response body.
 Angular SQF card Metrics Info uses `QfPopupComponent` (maximum 530px by 648px,
 `autoFocus: false`, info icon and its body-HTML transformation). The current
 React modal is not yet equivalent in sizing, icon, HTML handling or focus options.
@@ -248,7 +263,10 @@ not run tests or lint. `npm run lint` has no tracked ESLint configuration.
 The [README](../README.md#commands-and-tests) lists commands. Removal of the
 obsolete MetricCard's five tests leaves the active card suites unchanged.
 The October 20 test expansion passed 248 tests across 33 files; the October 23
-foundation adds 19 behavioral cases for 267 passing tests in the same 33 files.
+foundation passed 267 tests. The October 26 continuation passes 293 tests in
+35 files, adding hierarchy/projection/dialog/error cases. Existing cutoff tests
+use a fixed UTC clock with user approval, avoiding an after-22:00 wraparound
+failure without changing formatter behavior.
 New query tests
 exercise real React Query hooks and API wrappers with mocked HTTP transport,
 covering filter changes, request gating, errors and cached hierarchy/status.
@@ -277,8 +295,8 @@ Tests run offline, not against a live or production backend.
 application files, excluding tests, setup and type declarations. Text, HTML
 and JSON summaries are written under ignored `coverage/`. A global line threshold
 of **95.01%** is enforced. Other coverage metrics have no enforced threshold.
-The October 23 measured result is 97.62% lines, 96.63% statements,
-89.92% branches and 97.58% functions, versus 58.37% initial line coverage
+The October 26 measured result is 97.88% lines, 96.85% statements,
+90.34% branches and 97.73% functions, versus 58.37% initial line coverage
 with the same scope. CSS and Angular/browser parity remain outside this metric.
 
 Cleanup also removed unimported Vite starter styles/assets, unused barrel

@@ -68,6 +68,20 @@
   cursor: pointer;
 }
 
+.alertButton {
+  display: inline-flex;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #676d70;
+  cursor: pointer;
+}
+
+.alertButton span {
+  font-size: 14px;
+  line-height: 14px;
+}
+
 .spacerRow td {
   height: 2px !important;
   padding: 0 !important;

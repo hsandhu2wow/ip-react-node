@@ -5,8 +5,9 @@ The objective is **one-to-one functional and visual parity**, not a redesign:
 routes, permissions, data, interactions, analytics, responsive behavior and
 integrations must match the agreed Angular baseline.
 
-**Status as of October 23, 2026:** partial migration. Quick Facts summary/details
-and basic Weekly Facts/My Plan tables exist. Authentication is still a demo
+**Status as of October 26, 2026:** partial migration. Quick Facts summary/details
+and Weekly Facts/My Plan tables with desktop hierarchy/child-peer controls and
+information/alert dialogs exist. Authentication is still a demo
 stub, several actions are inert, and most other Angular applications are not
 migrated. Implemented components and passing unit tests, when available, do not
 by themselves establish Angular parity.
@@ -89,7 +90,7 @@ start the backend.
 | `npm test -- --run src/utils/periods.test.ts src/utils/breakdown.test.ts` | Focused period/axis tests |
 | `npm run lint` | Declared, but no ESLint configuration is tracked at the reviewed commit |
 
-There are **33 test files** in this worktree, using Vitest, jsdom and
+There are **35 test files** in this worktree, using Vitest, jsdom and
 React Testing Library. They cover components, hooks, context, API wrappers and
 pure utilities. No configured browser E2E or Angular-versus-React screenshot
 suite is present. The obsolete MetricCard renderer and its five tests were
@@ -100,10 +101,10 @@ tooltips. A second pass adds chart data/label/tooltip callbacks, nested tables,
 scroll shadows, tab switching and hierarchy/URL state persistence.
 The fixture-driven application tests now cover routing, provider/query
 integration, period/breakdown selection, location/date changes and query errors.
-The October 23 run passed all **267 tests** (248 at the October 20 baseline).
+The October 26 run passed all **293 tests** (267 at the October 23 baseline).
 Using the same source scope as the initial measurement, line coverage increased
-from **58.37% to 97.62%**; statements are 96.63%, branches 89.92% and
-functions 97.58%. Coverage includes all application
+from **58.37% to 97.88%**; statements are 96.85%, branches 90.34% and
+functions 97.73%. Coverage includes all application
 TS/TSX files, excluding tests, setup and type declarations. It does not measure
 CSS, browser rendering or Angular parity. Generated reports are ignored by Git.
 Chart tests mock the canvas renderer and verify the data/options passed to it,
@@ -127,15 +128,16 @@ running API, credentials or network access; these are not production snapshots.
 | `/quick-facts` | Redirects to summary |
 | `/quick-facts/summary` | Summary cards |
 | `/quick-facts/details/:type` | Details, sorting, sidebar and child drill-down |
-| `/quick-facts/weekly` | Initial history/default/grouping fixes; hierarchy/mobile/layout/integrations incomplete |
-| `/quick-facts/myplan` | Initial history/default/grouping fixes; card-level Half Year/mobile/integrations incomplete |
+| `/quick-facts/weekly` | History/hierarchy, child-peer tables, info/alerts and structured errors; mobile/layout/integrations incomplete |
+| `/quick-facts/myplan` | Shared history/hierarchy, table and dialog behavior; card-level Half Year/mobile/integrations incomplete |
 | `/weekly`, `/trend`, `/dashboards` | Coming Soon |
 | `/pricing-simulator`, `/availability-navigator` | Coming Soon; these names do not replace Angular's routes |
 | Other paths | Redirect to Quick Facts; not source-equivalent application coverage |
 
 `ProtectedRoute` receives an always-authenticated demo user. Logout reloads the
 page. Feedback/download are disabled, recognition simulates loading, and Weekly
-Metrics Info/subscription labels have no action flow. Consult the
+subscriptions have no preferences flow. Metrics Info and header/cell alerts now
+open a Weekly-specific dialog. Consult the
 [gap matrix](docs/migration-status.md#feature-parity-matrix) before declaring a
 feature complete.
 
@@ -143,9 +145,12 @@ The October 23 initial Weekly/MyPlan migration slice adds response-defined
 history keys (including observed `monthNo`/`halfNo`), server variance/KPI
 expansion defaults, selection resets on new responses, source grouping/column
 membership fixes and typed subscription transport. The subscription UI is
-still not implemented, and existing inert labels are not working actions.
-Remaining gaps include card-level Half Year, hierarchy
-selection, mobile column projection, WFM/goal/sticky layouts and working
+still not implemented. The October 26 continuation adds source-style desktop
+history/hierarchy selection, child/peer projection, original-column header
+association, Weekly information/alert dialogs and structured error details.
+Mobile projection is tested at the utility boundary, not wired to a complete
+mobile experience. Remaining gaps include card-level Half Year, source
+initializer characterization, mobile selection/layout, WFM/goal/sticky layouts and working
 subscriptions/AI/export. The new plan covers source-specific behavior and
 qualification for every enabled BU. Only one local SI profile was probed;
 cross-BU browser parity is **not verified**, and the saved API fixture remains

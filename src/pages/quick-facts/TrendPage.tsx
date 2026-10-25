@@ -1,7 +1,11 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
+import { isAxiosError } from 'axios';
 import { useTrendData } from '../../hooks/useTrendData';
 import { TrendTable } from '../../components/trend/TrendTable';
-import type { WfCardContents, WfCardData, WfMetric } from '../../types/wf.types';
+import type { WfAlert, WfError, WfMetric } from '../../types/wf.types';
+import { createTrendSelection, updateTrendSelection } from '../../utils/trendSelection';
+import { useAuth } from '../../context/AuthContext';
+import { TrendInfoDialog } from '../../components/trend/TrendInfoDialog';
 import styles from './TrendPage.module.css';
 
 const METRIC_DISPLAY_NAMES: Record<WfMetric, string> = {
@@ -23,41 +27,31 @@ function formatLastUpdated(refreshTime: string): string {
   }).format(date);
 }
 
-function getSelectedTab(activeCard: WfCardData | undefined, selectedDateFilter: string): WfCardContents | undefined {
-  if (!activeCard) return undefined;
-  if (Array.isArray(activeCard.cardContents)) {
-    const dateFilterKey = activeCard.dateFilterKey || 'weekNo';
-    const filterValue = selectedDateFilter || activeCard.dateFilterValues?.[0] || '';
-    return activeCard.cardContents.find((c) => c[dateFilterKey] === filterValue);
-  }
-  if (activeCard.cardContents) {
-    return activeCard.cardContents;
-  }
-  return undefined;
-}
-
 export function TrendPage({ metric }: TrendPageProps) {
-  const { data: wfData, isLoading, isError } = useTrendData(metric);
+  const { user } = useAuth();
+  const { data: wfData, isLoading, isError, error } = useTrendData(metric);
   const [previousData, setPreviousData] = useState(wfData);
   const [previousMetric, setPreviousMetric] = useState(metric);
-  const [selectedTabKey, setSelectedTabKey] = useState<string>('');
-  const [selectedDateFilter, setSelectedDateFilter] = useState<string>('');
+  const [selection, setSelection] = useState(() => createTrendSelection(wfData));
   const [showVariance, setShowVariance] = useState(wfData?.varianceFlag?.value ?? false);
+  const [showChildLevel, setShowChildLevel] = useState(false);
+  const [popup, setPopup] = useState<WfAlert | null>(null);
+  const closePopup = useCallback(() => setPopup(null), []);
 
   if (previousData !== wfData || previousMetric !== metric) {
     setPreviousData(wfData);
     setPreviousMetric(metric);
-    setSelectedTabKey('');
-    setSelectedDateFilter('');
+    setSelection(createTrendSelection(wfData));
     setShowVariance(wfData?.varianceFlag?.value ?? false);
+    setPopup(null);
   }
 
   const tabs = useMemo(() => wfData?.cards ?? [], [wfData]);
   const activeCard = useMemo(
-    () => tabs.find((c) => c.key === (selectedTabKey || tabs[0]?.key)),
-    [tabs, selectedTabKey]
+    () => tabs.find((c) => c.key === selection.cardKey),
+    [tabs, selection.cardKey]
   );
-  const selectedTab = useMemo(() => getSelectedTab(activeCard, selectedDateFilter), [activeCard, selectedDateFilter]);
+  const selectedTab = selection.contents;
   const tableData = selectedTab?.tableData;
   const defaultExpanded = tableData?.kpiFilterEnabled
     ? tableData.defaultExpanded ?? false
@@ -78,9 +72,17 @@ export function TrendPage({ metric }: TrendPageProps) {
   }
 
   if (isError || !wfData) {
+    const details = isAxiosError<WfError>(error) ? error.response?.data : undefined;
     return (
-      <div className={styles.errorBanner} data-testid="trend-page-error">
-        Unable to load data. Please try again later.
+      <div className={styles.errorBanner} data-testid="trend-page-error" role="alert">
+        {details?.errorTitle && <div className={styles.errorTitle}>{details.errorTitle}</div>}
+        <div>{details?.errorMsg || 'Unable to load data. Please try again later.'}</div>
+        {(details?.subErrorMsg || details?.email) && (
+          <p>
+            {details.subErrorMsg}{' '}
+            {details.email && <a href={`mailto:${details.email}`}>{details.email}</a>}
+          </p>
+        )}
       </div>
     );
   }
@@ -90,6 +92,8 @@ export function TrendPage({ metric }: TrendPageProps) {
   const showVarianceToggleEnabled = !!wfData.varianceFlag;
   const showVarianceLabel = wfData.varianceFlag?.text || 'Show variance';
   const kpiFilterEnabled = tableData?.kpiFilterEnabled === true;
+  const hierarchyDropdown = wfData.hierarchyDropdown;
+  const showHierarchy = hierarchyDropdown?.allowedViews?.includes(selection.cardKey) === true;
 
   return (
     <div className={styles.wrapperContent}>
@@ -101,8 +105,7 @@ export function TrendPage({ metric }: TrendPageProps) {
               aria-label="Select tab"
               value={activeCard?.key}
               onChange={(e) => {
-                setSelectedTabKey(e.target.value);
-                setSelectedDateFilter('');
+                setSelection(updateTrendSelection(wfData, selection, { type: 'view', value: e.target.value }));
               }}
             >
               {tabs.map((tab) => (
@@ -118,13 +121,28 @@ export function TrendPage({ metric }: TrendPageProps) {
               <select
                 className={styles.select}
                 aria-label="Select date"
-                value={selectedDateFilter || activeCard.dateFilterValues?.[0] || ''}
-                onChange={(e) => setSelectedDateFilter(e.target.value)}
+                value={selection.date}
+                onChange={(e) => setSelection(updateTrendSelection(wfData, selection, { type: 'date', value: e.target.value }))}
               >
                 {activeCard.dateFilterValues?.map((value) => (
                   <option key={value} value={value}>
                     {value}
                   </option>
+                ))}
+              </select>
+            </label>
+          )}
+          {showHierarchy && hierarchyDropdown && (
+            <label className={styles.selectLabel}>
+              {hierarchyDropdown.label || 'View'}:
+              <select
+                className={styles.select}
+                aria-label={hierarchyDropdown.label || 'View'}
+                value={selection.hierarchy}
+                onChange={(e) => setSelection(updateTrendSelection(wfData, selection, { type: 'hierarchy', value: e.target.value }))}
+              >
+                {hierarchyDropdown.filterDropdown.map(option => (
+                  <option key={option.filterKey} value={option.filterKey}>{option.displayValue}</option>
                 ))}
               </select>
             </label>
@@ -145,6 +163,23 @@ export function TrendPage({ metric }: TrendPageProps) {
                 <span className={styles.toggleThumb} />
               </span>
               {showVarianceLabel}
+            </label>
+          )}
+          {activeCard?.toggleChildLevelKey && (
+            <label className={styles.toggleLabel}>
+              <span className={[styles.toggleSwitch, showChildLevel ? styles.toggleSwitchOn : ''].filter(Boolean).join(' ')}>
+                <input
+                  type="checkbox"
+                  className={styles.toggleInput}
+                  checked={showChildLevel}
+                  onChange={(event) => {
+                    setShowChildLevel(event.target.checked);
+                    setIsExpanded(defaultExpanded);
+                  }}
+                />
+                <span className={styles.toggleThumb} />
+              </span>
+              {activeCard.toggleChildLevelKey}
             </label>
           )}
           {kpiFilterEnabled && (
@@ -177,7 +212,16 @@ export function TrendPage({ metric }: TrendPageProps) {
             </span>
             <span>
               {wfData.metricsInfo && (
-                <span className={styles.metricsInfo}>{wfData.metricsInfo.label || 'Metrics Info'}</span>
+                <button
+                  type="button"
+                  className={styles.metricsInfo}
+                  onClick={() => setPopup({
+                    type: 'info', title: wfData.metricsInfo?.title,
+                    text: wfData.metricsInfo?.body || '',
+                  })}
+                >
+                  {wfData.metricsInfo.label || 'Metrics Info'}
+                </button>
               )}
               {' '}
               {wfData.refreshFiscalPeriod
@@ -191,8 +235,25 @@ export function TrendPage({ metric }: TrendPageProps) {
           )}
         </div>
 
-        {tableData && <TrendTable tableData={tableData} isExpanded={isExpanded} showVariance={showVariance} />}
+        {tableData && (
+          <TrendTable
+            tableData={tableData}
+            isExpanded={isExpanded}
+            showVariance={showVariance}
+            onAlert={setPopup}
+            displayContext={{
+              parentCode: wfData.parentCode,
+              childCode: wfData.childCode,
+              hierarchyNode: selection.hierarchy,
+              selectedDateFilter: selection.date,
+              toggleChildLevelKey: activeCard?.toggleChildLevelKey,
+              showChildLevel,
+              isWfmPortal: user.portal === '360FM',
+            }}
+          />
+        )}
       </div>
+      {popup && <TrendInfoDialog alert={popup} onClose={closePopup} />}
     </div>
   );
 }

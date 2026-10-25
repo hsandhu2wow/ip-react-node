@@ -110,4 +110,40 @@ describe('TrendTable', () => {
     expect(tags[0].getAttribute('data-tag')).toBe('KPI');
     expect(tags[1].getAttribute('data-tag')).toBe('NEW');
   });
+
+  it('forwards displayContext to column filtering', () => {
+    const contextData: WfTableData = {
+      headers: [
+        { text: 'Group', val: 'g', colType: '' },
+        { text: 'Metric', val: 'm', colType: '' },
+        { text: 'Peer col', val: 'R', colType: 'peerNode' },
+        { text: 'Child col', val: 'C', colType: 'childNode' },
+      ],
+      data: [[cell(0, { rowSpan: 1 }), cell(1), cell(2), cell(3)]],
+    };
+    render(
+      <TrendTable
+        tableData={contextData}
+        isExpanded={true}
+        showVariance={false}
+        displayContext={{ toggleChildLevelKey: 'store', showChildLevel: true }}
+      />,
+    );
+    expect(screen.getByText('Child col')).toBeInTheDocument();
+    expect(screen.queryByText('Peer col')).not.toBeInTheDocument();
+  });
+
+  it('associates sparse cells with their original header by columnid', () => {
+    const sparseData: WfTableData = {
+      headers: [
+        { text: 'Group', val: '0' },
+        { text: 'Metric', val: '1' },
+        { text: 'Plain', val: '2' },
+        { text: 'Goal', val: '3', cssClass: 'goal-col' },
+      ],
+      data: [[cell(0, { rowSpan: 1 }), cell(1), cell(3, { displayValue: 'goal-value' })]],
+    };
+    render(<TrendTable tableData={sparseData} isExpanded={true} showVariance={false} />);
+    expect(screen.getByText('goal-value').closest('td')?.className).toContain('goal-col');
+  });
 });

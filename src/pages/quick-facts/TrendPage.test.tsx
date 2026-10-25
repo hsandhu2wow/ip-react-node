@@ -54,6 +54,34 @@ describe('TrendPage', () => {
     expect(screen.getByTestId('trend-page-error')).toBeInTheDocument();
   });
 
+  it.each([404, 500])('shows the Weekly/MyPlan %s error payload and removes stale content', (status) => {
+    const query = useTrendDataModule.useTrendData as ReturnType<typeof vi.fn>;
+    query.mockReturnValue({ data: baseWfData, isLoading: false, isError: false });
+    const { rerender } = render(<TrendPage metric="weekly" />);
+    query.mockReturnValue({
+      data: baseWfData, isLoading: false, isError: true,
+      error: {
+        isAxiosError: true,
+        response: {
+          status,
+          data: {
+            errorTitle: 'Refresh failed',
+            errorMsg: 'Fixture data is not available',
+            subErrorMsg: 'Please contact support',
+            email: 'fixture-support@example.invalid',
+          },
+        },
+      },
+    });
+    rerender(<TrendPage metric="weekly" />);
+    expect(screen.getByRole('alert')).toHaveTextContent('Refresh failed');
+    expect(screen.getByText('Fixture data is not available')).toBeInTheDocument();
+    expect(screen.getByText(/Please contact support/)).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'fixture-support@example.invalid' }))
+      .toHaveAttribute('href', 'mailto:fixture-support@example.invalid');
+    expect(screen.queryByText('Weekly Facts - Sales')).not.toBeInTheDocument();
+  });
+
   it('renders the title as "Weekly Facts - <card displayName>" for the weekly metric', () => {
     (useTrendDataModule.useTrendData as ReturnType<typeof vi.fn>).mockReturnValue({
       data: baseWfData,
@@ -315,5 +343,108 @@ describe('TrendPage', () => {
     expect(screen.getByRole('checkbox', { name: 'Show variance' })).not.toBeChecked();
     fireEvent.change(screen.getByLabelText('Select tab'), { target: { value: 'expanded' } });
     expect(screen.getByText('Detail measure')).toBeInTheDocument();
+  });
+
+  it.each<WfMetric>(['weekly', 'myPlan'])('renders and changes permitted hierarchy data for %s', (metric) => {
+    const data: WfPageData = {
+      ...baseWfData,
+      hierarchyDropdown: {
+        label: 'Breakdown view', allowedViews: ['trend'],
+        filterDropdown: [
+          { displayValue: 'Stores', filterKey: 'stores' },
+          { displayValue: 'Groups', filterKey: 'groups' },
+        ],
+      },
+      cards: [{
+        key: 'trend', displayName: 'Trend',
+        cardContents: ['stores', 'groups'].map(filterKey => ({
+          filterKey, timePeriod: `${filterKey} period`,
+          tableData: { headers: [], data: [] },
+        })),
+      }, baseWfData.cards[0]],
+    };
+    (useTrendDataModule.useTrendData as ReturnType<typeof vi.fn>).mockReturnValue({
+      data, isLoading: false, isError: false,
+    });
+    const { rerender } = render(<TrendPage metric={metric} />);
+    expect(screen.getByLabelText('Breakdown view')).toHaveValue('stores');
+    expect(screen.getByText('Time period: stores period')).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText('Breakdown view'), { target: { value: 'groups' } });
+    expect(screen.getByText('Time period: groups period')).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText('Select tab'), { target: { value: 'sales' } });
+    expect(screen.queryByLabelText('Breakdown view')).not.toBeInTheDocument();
+    (useTrendDataModule.useTrendData as ReturnType<typeof vi.fn>).mockReturnValue({
+      data: { ...data }, isLoading: false, isError: false,
+    });
+    rerender(<TrendPage metric={metric} />);
+    expect(screen.getByLabelText('Breakdown view')).toHaveValue('stores');
+  });
+
+  it('switches desktop peer/child columns only when the active card offers the switch', () => {
+    const page: WfPageData = {
+      ...baseWfData,
+      cards: [{
+        key: 'trend', displayName: 'Trend', toggleChildLevelKey: 'Show stores',
+        cardContents: {
+          tableData: {
+            headers: [
+              { text: 'Group', val: 'group' }, { text: 'Metric', val: 'metric' },
+              { text: 'Peer column', val: 'peer', colType: 'peerNode' },
+              { text: 'Child column', val: 'child', colType: 'childNode' },
+            ],
+            data: [[
+              { columnid: 0, displayValue: 'Group A', value: '', rowSpan: 1 },
+              { columnid: 1, displayValue: 'Sales', value: '' },
+              { columnid: 2, displayValue: 'Peer value', value: '' },
+              { columnid: 3, displayValue: 'Child value', value: '' },
+            ]],
+          },
+        },
+      }, { ...baseWfData.cards[0] }],
+    };
+    (useTrendDataModule.useTrendData as ReturnType<typeof vi.fn>).mockReturnValue({
+      data: page, isLoading: false, isError: false,
+    });
+    render(<TrendPage metric="weekly" />);
+    expect(screen.getByText('Peer value')).toBeInTheDocument();
+    expect(screen.queryByText('Child value')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Show stores' }));
+    expect(screen.getByText('Child value')).toBeInTheDocument();
+    expect(screen.queryByText('Peer value')).not.toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText('Select tab'), { target: { value: 'sales' } });
+    expect(screen.queryByRole('checkbox', { name: 'Show stores' })).not.toBeInTheDocument();
+  });
+
+  it('opens Weekly metrics and cell/header alerts in the source-specific popup', () => {
+    const data: WfPageData = {
+      ...baseWfData,
+      metricsInfo: { title: 'Metrics explanation', body: '<strong>Fixture explanation</strong>' },
+      cards: [{
+        key: 'alert-view', displayName: 'Alert view',
+        cardContents: {
+          tableData: {
+            headers: [{ text: 'Value', val: 'value', alert: { type: 'warning', title: 'Header notice', text: 'Header body' } }],
+            data: [[{
+              columnid: 0, rowSpan: 1, value: 1, displayValue: 'One',
+              alert: { type: 'error', title: 'Cell notice', text: 'Cell body' },
+            }]],
+          },
+        },
+      }],
+    };
+    const query = useTrendDataModule.useTrendData as ReturnType<typeof vi.fn>;
+    query.mockReturnValue({ data, isLoading: false, isError: false });
+    const { rerender } = render(<TrendPage metric="weekly" />);
+    fireEvent.click(screen.getByRole('button', { name: 'Metrics Info' }));
+    expect(screen.getByRole('dialog', { name: 'Metrics explanation' })).toHaveTextContent('Fixture explanation');
+    fireEvent.click(screen.getByRole('button', { name: 'Close' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Header notice' }));
+    expect(screen.getByRole('dialog', { name: 'Header notice' })).toHaveTextContent('Header body');
+    fireEvent.keyDown(document, { key: 'Escape' });
+    fireEvent.click(screen.getByRole('button', { name: 'Cell notice' }));
+    expect(screen.getByRole('dialog', { name: 'Cell notice' })).toHaveTextContent('Cell body');
+    query.mockReturnValue({ data: { ...data }, isLoading: false, isError: false });
+    rerender(<TrendPage metric="weekly" />);
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 });

@@ -5,6 +5,23 @@ Broad review: **October 14, 2026**; focused Weekly Facts/My Plan review:
 including user-visible behavior, permissions, integrations and responsive UI.
 This is a source/history assessment, **not runtime or production certification**.
 
+## Implementation update: October 26
+
+The next feature-branch slice adds desktop hierarchy/history selection and
+child/peer projection for Weekly/MyPlan, original-column header association,
+Weekly-specific Metrics Info/header/cell alert dialogs and structured error
+details. Mobile projection is tested as a utility but is not yet connected to
+the mobile menu/page lifecycle. The feature remains separate from `dev-branch`;
+wireframes remain excluded.
+
+The suite passes **293 tests in 35 files**, with **97.88% line coverage** under
+the unchanged all-source policy and 95.01% gate. User-approved fixed UTC clocks
+remove an existing after-22:00 cutoff-test failure without changing application
+code. Source-derived unit/integration behavior is not all-BU visual acceptance:
+identity, Half Year, full mobile/table layouts, subscriptions/actions and browser
+qualification remain open. See the
+[latest focused progress entry](weekly-facts-myplan-parity.md#implementation-progress-october-26).
+
 ## Implementation update: October 23
 
 The documentation/cleanup/test baseline is pushed on `document-migration-plan`
@@ -16,7 +33,7 @@ Wireframes were excluded and the other checkout was not changed.
 This slice fixes dynamic history keys, server variance/KPI expansion defaults,
 response/table selection resets, source columnid membership, empty KPI groups,
 KPI substring matching and singleton spacers. It also corrects wire types and
-adds subscription transport (not preferences UI). There are 267 passing tests
+adds subscription transport (not preferences UI). That slice passed 267 tests
 in 33 files with 97.62% line coverage; this remains unit/integration evidence,
 not all-BU/browser acceptance. The assessment/gap ledger below retain their
 review dates; the [focused progress entry](weekly-facts-myplan-parity.md#implementation-progress-october-23)

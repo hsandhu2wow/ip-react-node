@@ -12,6 +12,16 @@
 
 ## Scope, authority and execution rules
 
+**Execution update, October 26:** The next feature slice adds typed desktop
+selection/hierarchy state, child/peer column controls, source mobile projection
+at the utility boundary, original-column header association, Weekly information/
+alert dialogs and structured error details. The suite passes 293 tests in 35
+files with 97.88% line coverage. This advances Tasks 4/5/8; none is fully closed:
+mobile state wiring, Half Year/initializer characterization, table geometry,
+error illustrations and paired-browser evidence remain outstanding alongside
+the identity/BU/action prerequisites. See the
+[current progress register](../../weekly-facts-myplan-parity.md#implementation-progress-october-26).
+
 **Execution update, October 23:** The baseline is merged into `dev-branch`
 (`e657079`); migration starts on `feat/weekly-facts-myplan-parity`.
 The initial slice implements Task 2's response types and subscription
@@ -325,6 +335,12 @@ resolved identity/portal scope or clear relevant caches on a scope change.
 
 ## Task 4: Implement desktop selection, defaults and lifecycle
 
+**October 26 status:** `createTrendSelection` / `updateTrendSelection` now
+encapsulate desktop history/hierarchy selection, including asymmetric source
+fallbacks and no-match table retention. Page controls and response resets are
+wired and tested for both metrics. Keep the remaining full lifecycle/Half Year
+and authorized integration requirements below open.
+
 **Create:** `src/utils/trendSelection.ts`, `src/utils/trendSelection.test.ts`.
 **Modify:** `TrendPage.tsx`, `TrendPage.test.tsx` in
 `src/pages/quick-facts/`.
@@ -396,6 +412,11 @@ background refresh before changing visible loading/reset behavior.
   state, never stale-location content or blank unhandled history.
 
 ## Task 5: Match column projection and KPI grouping
+
+**October 26 status:** Desktop child/peer and mobile projection rules now have
+typed context and focused tests, preserving original IDs and wire order.
+TrendPage forwards desktop state through TrendTable; actual mobile state
+forwarding is deferred to Task 7, not a completed mobile implementation.
 
 **Modify:** `src/utils/tableTransform.{ts,test.ts}`.
 
@@ -559,6 +580,12 @@ approves an exception to source behavior.
   build; expected GREEN covers menu state and selected table, not jsdom layout.
 
 ## Task 8: Implement Weekly info/alert dialogs and error presentation
+
+**October 26 status:** Weekly Metrics Info, header/cell alerts and structured
+404/500 details are wired with focused dialog/page tests. The popup supports
+source sizing/icon/HTML and dismissal/focus behavior; keep mobile composition,
+error illustrations, real-provider rejection cases and visual qualification
+open.
 
 **Create:** `src/components/trend/TrendInfoDialog.{tsx,module.css,test.tsx}`.
 **Modify:** TrendPage/TrendTable and their tests.

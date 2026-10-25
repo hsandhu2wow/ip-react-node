@@ -1,13 +1,17 @@
 import { Fragment } from 'react';
 import { filterTableData, getCellBorderStyle, getHeaderTooltip } from '../../utils/tableTransform';
+import type { WfTableDisplayContext } from '../../utils/tableTransform';
 import { isHtmlTooltip, showHtmlTooltip, hideHtmlTooltip } from '../../utils/htmlTooltip';
-import type { WfTableData } from '../../types/wf.types';
+import type { WfAlert, WfTableData } from '../../types/wf.types';
+import { TREND_ALERT_ICONS } from './TrendInfoDialog';
 import styles from './TrendTable.module.css';
 
 interface TrendTableProps {
   tableData: WfTableData;
   isExpanded: boolean;
   showVariance: boolean;
+  displayContext?: WfTableDisplayContext;
+  onAlert?: (alert: WfAlert) => void;
 }
 
 function getTags(tags: string | undefined): string[] {
@@ -26,8 +30,8 @@ function htmlTooltipHandlers(html: string | null | undefined) {
   };
 }
 
-export function TrendTable({ tableData, isExpanded, showVariance }: TrendTableProps) {
-  const { headers, rows } = filterTableData(tableData, isExpanded);
+export function TrendTable({ tableData, isExpanded, showVariance, displayContext, onAlert }: TrendTableProps) {
+  const { headers, columnIds, rows } = filterTableData(tableData, isExpanded, displayContext);
   const tableClassName = [styles.table, 'wf-table', showVariance ? 'wf-table--show-variance' : '']
     .filter(Boolean)
     .join(' ');
@@ -57,6 +61,16 @@ export function TrendTable({ tableData, isExpanded, showVariance }: TrendTablePr
                   {...htmlTooltipHandlers(htmlTooltip)}
                 >
                   <div className={[styles.thDiv, headerIdx === 1 ? 'metric-name' : ''].filter(Boolean).join(' ')}>
+                    {header.alert && onAlert && (
+                      <button
+                        type="button"
+                        className={styles.alertButton}
+                        aria-label={header.alert.title || 'Header alert'}
+                        onClick={event => { event.stopPropagation(); if (header.alert) onAlert(header.alert); }}
+                      >
+                        <span className="material-icons" aria-hidden="true">{TREND_ALERT_ICONS[header.alert.type]}</span>
+                      </button>
+                    )}
                     <span dangerouslySetInnerHTML={{ __html: header.text }} />
                   </div>
                 </th>
@@ -69,7 +83,7 @@ export function TrendTable({ tableData, isExpanded, showVariance }: TrendTablePr
             <Fragment key={`row-${rowIdx}`}>
               <tr className={styles.rowLarge}>
                 {row.map((cell, cellIdx) => {
-                  const header = headers[cellIdx];
+                  const header = headers[columnIds.indexOf(cell.columnid)];
                   if (cell.rowSpan === 0) {
                     return null;
                   }
@@ -93,6 +107,16 @@ export function TrendTable({ tableData, isExpanded, showVariance }: TrendTablePr
                       title={cell.infoMessage || htmlTooltip ? undefined : cell.tooltip}
                       {...htmlTooltipHandlers(htmlTooltip)}
                     >
+                      {cell.alert && onAlert && (
+                        <button
+                          type="button"
+                          className={styles.alertButton}
+                          aria-label={cell.alert.title || 'Cell alert'}
+                          onClick={event => { event.stopPropagation(); if (cell.alert) onAlert(cell.alert); }}
+                        >
+                          <span className="material-icons" aria-hidden="true">{TREND_ALERT_ICONS[cell.alert.type]}</span>
+                        </button>
+                      )}
                       <div
                         className={[
                           styles.tdDiv,

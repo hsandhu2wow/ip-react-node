@@ -1,5 +1,5 @@
 // src/utils/formatters.test.ts
-import { describe, it, expect } from 'vitest'
+import { afterEach, beforeEach, describe, it, expect, vi } from 'vitest'
 import {
   colorVal,
   beautify,
@@ -91,15 +91,20 @@ describe('REPORTING_PERIODS', () => {
 })
 
 describe('isCutOffTimePast', () => {
+  beforeEach(() => {
+    vi.useFakeTimers({ toFake: ['Date'] })
+    vi.setSystemTime(new Date('2026-10-26T12:00:00Z'))
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
   it('returns true when cut-off time is in the past', () => {
-    // 00:00:00 UTC is always in the past by the time any test runs
     expect(isCutOffTimePast('00:00:00')).toBe(true)
   })
 
   it('returns false when cut-off time is far in the future', () => {
-    const now = new Date()
-    const futureHour = (now.getUTCHours() + 2) % 24
-    const futureStr = String(futureHour).padStart(2, '0') + ':59:59'
-    expect(isCutOffTimePast(futureStr)).toBe(false)
+    expect(isCutOffTimePast('14:59:59')).toBe(false)
   })
 })

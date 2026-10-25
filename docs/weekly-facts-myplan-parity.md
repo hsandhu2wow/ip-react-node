@@ -13,6 +13,42 @@ existing React code, not missing Angular functionality or browser pixels.
 
 ## Baseline and evidence
 
+### Implementation progress: October 26
+
+The next slice on **`feat/weekly-facts-myplan-parity`** adds a pure selection
+boundary and desktop hierarchy control to both pages. Initial/view selection
+prefers history then hierarchy; hierarchy changes combine history where
+configured, date changes preserve Angular's date-first fallback, and unmatched
+filters retain the previously displayed table. A new response resets the first
+view/date/hierarchy selection. The child/peer switch is available only for
+cards offering it, and its selection persists across responses as in Angular.
+
+Table projection supports desktop child/peer modes and the source mobile
+parent/child/date/hierarchy/WFM rules. Cell/header association now uses original
+`columnid`, including rows with missing cells. **Mobile projection is not yet
+wired to mobile page/menu state** and is not mobile acceptance evidence.
+
+Metrics Info and header/cell alerts now open the distinct Weekly HTML popup,
+with source type/icon mapping, maximum 530px by 648px sizing, no initial
+autofocus, keyboard/backdrop dismissal and focus restoration. Structured error
+responses display title/message/support details rather than stale tables.
+The separate feature-alert acknowledgment and SQF popup remain out of scope.
+
+All **293 tests in 35 files** pass; full-source coverage is **97.88% lines**,
+96.85% statements, 97.73% functions and 90.34% branches with the existing
+95.01% line gate unchanged. The build passes with the existing large-chunk
+warning. With user approval, the existing cutoff tests now use a fixed UTC
+clock: their previous relative-hour calculation failed after 22:00 UTC.
+No formatter application behavior changed.
+
+This advances parts of Tasks 4/5/8, not complete tasks or an enabled BU.
+Still open: real identity/permission gates and authorized BU profiles,
+card-level Half Year and dual-initializer characterization, complete mobile
+selection/layout, header KPI controls and table geometry/themes, subscriptions
+UI, AI/banner/links/analytics, feedback/export and paired-browser qualification.
+No new live API capture, subscription write, deployment or dev merge occurred
+in this continuation.
+
 ### Implementation progress: October 23
 
 The documented baseline was committed/pushed on `document-migration-plan`
@@ -26,15 +62,15 @@ handles response-defined history keys; applies server variance and table KPI
 expansion defaults; resets stale view/date on changed responses; and matches
 source columnid filtering, empty-group handling, KPI substring matching and
 singleton spacers. Subscription transport does not mean its UI is complete.
-The suite now has 267 passing tests and 97.62% line coverage under the same
+That slice passed 267 tests with 97.62% line coverage under the same
 source-inclusion policy.
 
 This is partial work across plan Task 2 and the source-independent parts of
 Tasks 4/5, not completion of the entire tasks. Identity prerequisites,
 hierarchy/mobile/Half Year selection, source initializer quirks, table display
 contexts/layout, dialogs/actions and all-BU browser evidence remain open.
-The gap ledger below records the **October 21 assessment**; use this progress
-entry for which foundation issues have since changed.
+The gap ledger below records the **October 21 assessment**; use the dated
+progress entries for which foundation issues have since changed.
 
 | Evidence | Reviewed baseline / limit |
 |---|---|

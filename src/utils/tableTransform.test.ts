@@ -1,6 +1,6 @@
 // src/utils/tableTransform.test.ts
 import { describe, it, expect } from 'vitest';
-import { filterTableData } from './tableTransform';
+import { filterTableData, type WfTableDisplayContext } from './tableTransform';
 import type { WfTableData, WfTableHeader, WfTableCell } from '../types/wf.types';
 
 function cell(columnid: number, overrides: Partial<WfTableCell> = {}): WfTableCell {
@@ -200,5 +200,122 @@ describe('filterTableData', () => {
     expect(result.rows[1].isGroupEnd).toBe(true);
     expect(result.rows[2][0].rowSpan).toBe(1);
     expect(result.rows[2][0].displayValue).toBe('Group B');
+  });
+
+  describe('display context column modes', () => {
+    const nodeHeaders: WfTableHeader[] = [
+      { text: 'Group', val: 'g', colType: '' },
+      { text: 'Metric', val: 'm', colType: '' },
+      { text: 'Parent', val: 'P', colType: 'parentNode' },
+      { text: 'Selected', val: 'S', colType: 'selectedNode' },
+      { text: 'Peer', val: 'R', colType: 'peerNode' },
+      { text: 'Child', val: 'C', colType: 'childNode' },
+      { text: 'Other', val: 'O', colType: 'otherNode' },
+    ];
+    const nodeData = (): WfTableData => ({
+      headers: nodeHeaders,
+      data: [[cell(0, { rowSpan: 1 }), cell(1), cell(2), cell(3), cell(4), cell(5), cell(6)]],
+    });
+    const ids = (result: ReturnType<typeof filterTableData>) => result.rows[0].map(item => item.columnid);
+    const texts = (result: ReturnType<typeof filterTableData>) => result.headers.map(h => h.text);
+
+    it('keeps every allowed desktop colType when no toggle key is set', () => {
+      const result = filterTableData(nodeData(), true, { showChildLevel: true, toggleChildLevelKey: '' });
+      expect(ids(result)).toEqual([0, 1, 2, 3, 4, 5]);
+    });
+
+    it('shows child columns and hides peers when the desktop child toggle is on', () => {
+      const context: WfTableDisplayContext = { toggleChildLevelKey: 'store', showChildLevel: true };
+      const result = filterTableData(nodeData(), true, context);
+      expect(texts(result)).toEqual(['Group', 'Metric', 'Parent', 'Selected', 'Child']);
+      expect(ids(result)).toEqual([0, 1, 2, 3, 5]);
+    });
+
+    it('shows peer columns and hides children when the desktop child toggle is off or unset', () => {
+      expect(ids(filterTableData(nodeData(), true, { toggleChildLevelKey: 'store', showChildLevel: false }))).toEqual([0, 1, 2, 3, 4]);
+      expect(ids(filterTableData(nodeData(), true, { toggleChildLevelKey: 'store' }))).toEqual([0, 1, 2, 3, 4]);
+    });
+
+    const mobileHeaders: WfTableHeader[] = [
+      { text: 'Group', val: 'g' },
+      { text: 'Metric', val: 'm' },
+      { text: 'Parent', val: 'P' },
+      { text: 'Child', val: 'C' },
+      { text: 'Week', val: 'wk' },
+      { text: 'Date by val', val: 'D' },
+      { text: 'Hierarchy', val: 'H' },
+      { text: 'Excluded', val: 'X' },
+      { text: 'Blank', val: '' },
+    ];
+    const mobileData = (): WfTableData => ({
+      headers: mobileHeaders,
+      data: [mobileHeaders.map((_, idx) => cell(idx, idx === 0 ? { rowSpan: 1 } : {}))],
+    });
+
+    it('keeps mobile parent, date by text, and date by val, plus child when it is the hierarchy', () => {
+      const result = filterTableData(mobileData(), true, {
+        isMobile: true,
+        parentCode: 'P',
+        childCode: 'C',
+        selectedDateFilter: 'Week',
+      });
+      expect(texts(result)).toEqual(['Group', 'Metric', 'Parent', 'Child', 'Week']);
+      expect(ids(filterTableData(mobileData(), true, {
+        isMobile: true,
+        childCode: 'C',
+        selectedDateFilter: 'D',
+      }))).toEqual([0, 1, 3, 5]);
+    });
+
+    it('keeps the mobile hierarchy node instead of the child when they differ', () => {
+      const result = filterTableData(mobileData(), true, {
+        isMobile: true,
+        parentCode: 'P',
+        childCode: 'C',
+        hierarchyNode: 'H',
+      });
+      expect(texts(result)).toEqual(['Group', 'Metric', 'Parent', 'Hierarchy']);
+    });
+
+    it('uses the child code as mobile hierarchy in the WFM portal', () => {
+      const result = filterTableData(mobileData(), true, {
+        isMobile: true,
+        childCode: 'C',
+        hierarchyNode: 'H',
+        isWfmPortal: true,
+      });
+      expect(texts(result)).toEqual(['Group', 'Metric', 'Child']);
+    });
+
+    it('does not select mobile columns through absent context values', () => {
+      const headersWithoutVal = [
+        { text: 'Group', val: 'g' },
+        { text: 'Metric', val: 'm' },
+        { text: 'No val' } as WfTableHeader,
+      ];
+      const data: WfTableData = { headers: headersWithoutVal, data: [[cell(0, { rowSpan: 1 }), cell(1), cell(2)]] };
+      expect(ids(filterTableData(data, true, { isMobile: true }))).toEqual([0, 1]);
+    });
+
+    it('matches mobile string headers by value only, never by normalized text', () => {
+      const data: WfTableData = {
+        headers: ['Group', 'Metric', 'Week', 'P', 'Other'],
+        data: [[cell(0, { rowSpan: 1 }), cell(1), cell(2), cell(3), cell(4)]],
+      };
+      expect(ids(filterTableData(data, true, { isMobile: true, parentCode: 'P' }))).toEqual([0, 1, 3]);
+      expect(ids(filterTableData(data, true, { isMobile: true, selectedDateFilter: 'Week' }))).toEqual([0, 1, 2]);
+    });
+
+    it('keeps mobile cells in wire order without mutating the input', () => {
+      const data: WfTableData = {
+        headers: mobileHeaders.slice(0, 4),
+        data: [[cell(3), cell(0, { rowSpan: 1 }), cell(2), cell(1)]],
+      };
+      const original = structuredClone(data);
+      const result = filterTableData(data, true, { isMobile: true, parentCode: 'P' });
+      expect(ids(result)).toEqual([0, 2, 1]);
+      expect(result.columnIds).toEqual([0, 1, 2]);
+      expect(data).toEqual(original);
+    });
   });
 });
