@@ -19,6 +19,7 @@ do not override the current full-parity requirement.
 | [Migration design](docs/superpowers/specs/2026-10-10-angular-react-migration-design.md) | Approved baseline, architecture and acceptance criteria |
 | [Migration plan](docs/superpowers/plans/2026-10-10-angular-react-migration.md) | Ordered feature slices, dependencies and verification gates |
 | [React tutorial for Angular developers](docs/react-tutorial-for-angular-devs.md) | Educational guide to the existing React code |
+| [OLD/NEW architecture and WIQ business case](docs/architecture/README.md) | Presentation, PDF and editable diagrams: Angular/Flask/App Engine versus the React/FastAPI/Cloud Run target; IaC tool undecided |
 
 Date-stamped earlier documents under `docs/superpowers/` record previous scope
 and decisions. They are historical references, not current completion reports.
@@ -81,6 +82,12 @@ variables: Vite embeds them in the browser bundle. Restart Vite after changing
 environment variables.
 
 ### Per-BU logo, favicon and theme
+
+**Temporary build workaround:** KMS decryption in `cloudbuild.yaml` is commented
+out because the build service account lacks key-decryption permission. Fresh
+cloud builds use bundled branding/default portal values without Google Slides
+credentials. Once key access is granted, restore the commented `decrypt-config`
+step and add `"decrypt-config"` back to the build step's `waitFor` list.
 
 Same setup as the Angular app. Cloud Build decrypts
 `configs/env-config-$PROJECT_ID.json.enc` with KMS (keyring `$PROJECT_ID`, key
