@@ -2,3 +2,8 @@ node_modules
 dist
 dist/
 coverage/
+/wireframes/
+
+# Per-BU config decrypted at build time (contains secrets) and generated Vite env
+env-config.json
+.env.production.local

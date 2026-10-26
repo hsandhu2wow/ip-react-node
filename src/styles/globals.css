@@ -39,8 +39,24 @@
   --chrome-height: 56px;
 }
 
+/* Angular app.scss custom scrollbar — global, so scrollbars stay visible
+   instead of macOS overlay scrollbars that appear only while scrolling */
+*::-webkit-scrollbar-track {
+  border-radius: 10px;
+  background-color: rgba(250, 250, 250, 0.5);
+}
+*::-webkit-scrollbar {
+  height: 8px;
+  width: 8px;
+  background-color: rgba(250, 250, 250, 0.5);
+}
+*::-webkit-scrollbar-thumb {
+  border-radius: 10px;
+  background-color: rgba(140, 140, 140, 0.6);
+}
+
 /* Mobile overrides */
-@media (max-width: 767px) {
+@media (max-width: 768px) {
   :root {
     --sidenav-width: 0px;
     --mob-appbar-height: 56px;
@@ -61,24 +77,58 @@ body {
   overflow-x: hidden;
 }
 
-/* ── Card grid — used by SummaryPage and DetailsPage ── */
+/* ── Summary card grid — mirrors Angular .qf-home__cards + per-breakpoint rules in
+   core-qf/styles/qf-styles.scss (mobile-sm ≤360, mobile-lg 361–767, tablet-sm 768–1023,
+   tablet-lg 1024–1439, desktop-sm 1440–1727, desktop-md 1728–1919, desktop-lg ≥1920). ── */
 .card-grid {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: row;
   justify-content: center;
-  gap: 24px;
+  flex-wrap: wrap;
   margin-bottom: 32px;
+  gap: 24px;
+  overflow: hidden;
 }
-
-/* Card widths at each breakpoint (from wireframe) */
 .metric-card-slot {
   width: 100%;
   max-width: 503px;
 }
-@media (min-width: 768px)  { .metric-card-slot { max-width: 332px; } }
-@media (min-width: 1024px) { .metric-card-slot { max-width: 440px; } }
-@media (min-width: 1440px) { .metric-card-slot { max-width: 410px; } }
-@media (min-width: 1920px) { .metric-card-slot { max-width: 392px; } }
+@media (max-width: 360px) {
+  .card-grid { padding: 0 12px; max-width: 100vw; }
+  .metric-card-slot { width: 336px; max-width: none; }
+}
+@media (min-width: 361px) and (max-width: 767px) {
+  .card-grid { padding: 12px; max-width: 100vw; }
+}
+@media (min-width: 768px) and (max-width: 1023px) {
+  .card-grid { width: 714px; align-self: center; }
+  .metric-card-slot { width: 332px; }
+}
+@media (min-width: 1024px) and (max-width: 1439px) {
+  .card-grid { width: 904px; align-self: center; }
+  .metric-card-slot { width: 440px; }
+}
+@media (min-width: 1440px) and (max-width: 1727px) {
+  .card-grid { width: 1280px; }
+  .metric-card-slot { width: 410px; }
+}
+@media (min-width: 1728px) and (max-width: 1919px) {
+  .card-grid { width: 1420px; }
+  .metric-card-slot { width: 457px; }
+}
+@media (min-width: 1920px) {
+  .card-grid { width: 1640px; }
+  .metric-card-slot { width: 392px; }
+}
+/* mobile-landscape (max-width 1023px + landscape): single column */
+@media (min-width: 768px) and (max-width: 1023px) and (orientation: landscape) {
+  .card-grid { flex-direction: column; }
+  .metric-card-slot { width: 100%; max-width: 714px; }
+}
+@media (min-width: 361px) and (max-width: 767px) and (orientation: landscape) {
+  .card-grid { flex-direction: column; }
+  .metric-card-slot { width: 600px; max-width: 600px; }
+}
 
 /* Skeleton animation */
 @keyframes skeleton-pulse {

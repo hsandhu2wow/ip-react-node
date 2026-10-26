@@ -163,10 +163,12 @@ describe('MetricCardChart', () => {
   })
 
   it.each(['pie', 'doughnut', 'gauge'] as const)('renders %s using the appropriate circular chart', chartType => {
-    render(<MetricCardChart chartData={fixture({ chartType })} />)
+    const circularData = fixture({ chartType });
+    circularData.datasets = { Bar_1: circularData.datasets.actual };
+    render(<MetricCardChart chartData={circularData} />)
     expect(screen.getByLabelText(chartType === 'pie' ? 'Pie chart' : 'Doughnut chart')).toBeInTheDocument()
     const props = (chartType === 'pie' ? charts.Pie : charts.Doughnut).mock.calls[0][0]
-    expect(props.options.plugins.datalabels.display).toBe(false)
+    expect(props.options.plugins.datalabels.display).toBe(chartType !== 'gauge')
     expect(charts.Bar).not.toHaveBeenCalled()
   })
 
@@ -185,10 +187,10 @@ describe('MetricCardChart', () => {
     ]} />)
     expect(screen.getByLabelText('Bar chart')).toBeInTheDocument()
     expect(screen.queryByRole('table')).not.toBeInTheDocument()
-    fireEvent.click(screen.getByRole('button', { name: 'Table' }))
+    fireEvent.click(screen.getByRole('tab', { name: 'Table' }))
     expect(screen.queryByLabelText('Bar chart')).not.toBeInTheDocument()
     expect(screen.getByRole('cell', { name: '20K sales' })).toBeInTheDocument()
-    fireEvent.click(screen.getByRole('button', { name: 'Graph' }))
+    fireEvent.click(screen.getByRole('tab', { name: 'Graph' }))
     expect(screen.getByLabelText('Bar chart')).toBeInTheDocument()
     expect(screen.queryByRole('table')).not.toBeInTheDocument()
   })

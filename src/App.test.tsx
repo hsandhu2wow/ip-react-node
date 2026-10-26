@@ -5,6 +5,7 @@ import { MemoryRouter } from 'react-router-dom'
 import client from './api/client'
 import App from './App'
 import fixture from './test/fixtures/sqf-api.sanitized.json'
+import { SnackbarProvider } from './components/shared/Snackbar/Snackbar'
 
 vi.mock('./api/client', () => ({ default: { get: vi.fn() } }))
 
@@ -13,10 +14,18 @@ describe('application routes with sanitized API responses', () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
+    vi.stubGlobal('ResizeObserver', class {
+      observe() {}
+      unobserve() {}
+      disconnect() {}
+    })
     queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
     vi.mocked(client.get).mockImplementation(async path => {
       if (path === '/sqf/getUniversalFilterGeneric') return { data: structuredClone(fixture.hierarchy) }
       if (path === '/sqf/getSQFMetricCardsStatus') return { data: structuredClone(fixture.status) }
+      if (path === '/sqf/getDataLoadETA') return { data: [] }
+      if (path === '/supportEmail/SQF') return { data: 'fixture-support@example.invalid' }
+      if (path === '/sqf/getCFCChildCodes') return { data: { cfc_codes: [] } }
       if (path.startsWith('/sqf/summaryCards/')) return { data: structuredClone(fixture.summary) }
       if (path.startsWith('/sqf/detailCard/fixture_metric/')) return { data: structuredClone(fixture.details) }
       throw new Error(`Unexpected test request: ${path}`)
@@ -26,6 +35,7 @@ describe('application routes with sanitized API responses', () => {
   afterEach(() => {
     queryClient.clear()
     vi.restoreAllMocks()
+    vi.unstubAllGlobals()
     vi.useRealTimers()
   })
 
@@ -33,7 +43,7 @@ describe('application routes with sanitized API responses', () => {
     return render(
       <QueryClientProvider client={queryClient}>
         <MemoryRouter initialEntries={[path]}>
-          <App />
+          <SnackbarProvider><App /></SnackbarProvider>
         </MemoryRouter>
       </QueryClientProvider>
     )
@@ -44,19 +54,21 @@ describe('application routes with sanitized API responses', () => {
     expect(await screen.findByText('Fixture Sales')).toBeInTheDocument()
     expect(screen.getByText('Fixture KPI 1')).toBeInTheDocument()
     expect(client.get).toHaveBeenCalledWith('/sqf/summaryCards/0/2026-10-19')
-    const requestsBeforePeriodChange = vi.mocked(client.get).mock.calls.length
+    const summaryRequestCount = () => vi.mocked(client.get).mock.calls
+      .filter(([path]) => path.startsWith('/sqf/summaryCards/')).length
+    const requestsBeforePeriodChange = summaryRequestCount()
     fireEvent.click(screen.getByLabelText('Reporting period'))
     fireEvent.click(screen.getByRole('option', { name: 'Day' }))
     expect(screen.getByText('Yesterday')).toBeInTheDocument()
     fireEvent.click(screen.getByLabelText('Breakdown'))
     fireEvent.click(screen.getByRole('option', { name: 'Departments' }))
     expect(screen.getByText('Fixture KPI 1')).toBeInTheDocument()
-    expect(client.get).toHaveBeenCalledTimes(requestsBeforePeriodChange)
+    expect(summaryRequestCount()).toBe(requestsBeforePeriodChange)
     fireEvent.click(screen.getByRole('link', { name: 'Go to details' }))
     await waitFor(() => expect(client.get).toHaveBeenCalledWith(expect.stringMatching(/^\/sqf\/detailCard\/fixture_metric\/0\//)))
-    expect(await screen.findByRole('link', { name: '← Back to all cards' })).toBeInTheDocument()
+    expect(await screen.findByRole('link', { name: /Back to all cards/ })).toBeInTheDocument()
     await waitFor(() => expect(screen.getAllByText('Fixture KPI 1')).toHaveLength(2))
-    expect(screen.getByText('Store Insights · Powered by Quick Facts')).toBeInTheDocument()
+    expect(screen.getByText(/Woolworths Ltd - Confidential information/)).toBeInTheDocument()
   })
 
   it.each(['/quick-facts', '/unknown-route'])('redirects %s into the functional summary route', async path => {
@@ -94,13 +106,13 @@ describe('application routes with sanitized API responses', () => {
     await screen.findByText('Fixture Sales')
     fireEvent.click(screen.getByRole('button', { name: /19 Oct/ }))
     expect(screen.getByRole('dialog', { name: 'Choose date' })).toBeInTheDocument()
-    fireEvent.click(screen.getByRole('button', { name: '18' }))
+    fireEvent.click(screen.getByRole('button', { name: '18 OCT 2026' }))
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
     await waitFor(() => expect(client.get).toHaveBeenCalledWith('/sqf/summaryCards/0/2026-10-18'))
     expect(screen.getByRole('button', { name: /18 Oct/ })).toBeInTheDocument()
   })
 
-  it('dismisses location and date overlays on outside clicks and invokes print', async () => {
+  it('dismisses location and date overlays on outside clicks and opens the print preview', async () => {
     show('/quick-facts/summary?date=2026-10-19')
     await screen.findByText('Fixture Sales')
     fireEvent.click(screen.getByRole('button', { name: /Fixture National/ }))
@@ -109,8 +121,10 @@ describe('application routes with sanitized API responses', () => {
     fireEvent.click(screen.getByRole('button', { name: /19 Oct/ }))
     fireEvent.mouseDown(document.body)
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
-    const print = vi.spyOn(window, 'print').mockImplementation(() => {})
     fireEvent.click(screen.getByRole('button', { name: 'Print' }))
-    expect(print).toHaveBeenCalledOnce()
+    expect(screen.getByRole('dialog', { name: 'Quick Facts preview' })).toBeInTheDocument()
+    expect(screen.getByText('Generating...')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Close' }))
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 })

@@ -5,6 +5,20 @@ The objective is **one-to-one functional and visual parity**, not a redesign:
 routes, permissions, data, interactions, analytics, responsive behavior and
 integrations must match the agreed Angular baseline.
 
+**Branch integration, October 26:** `feat/quick-facts-feature-parity` is
+integrated into `dev-branch`, then dev into `feat/weekly-facts-myplan-parity`.
+The Quick Facts branch brings seasonal/profile cards, chart/table/filter
+refinements, recognition/feedback/NPS, preview/export, subscription/AI action
+plumbing and per-BU build/theme configuration. The dated assessments below
+describe their reviewed baselines, not certification of this combined work.
+The merge retains the later cleanup and regression suites; wireframes are
+excluded from its changes. Full Angular/all-BU acceptance remains outstanding.
+The reconciled dev suite passes 452 tests in 63 files and builds successfully.
+Combined full-source line coverage is 85.57%, below the retained 95.01% gate:
+the incoming export/capture and other new code needs additional tests. The user
+approved publishing these merges with that gap recorded, without weakening
+the gate. Earlier coverage figures below describe their smaller dated baseline.
+
 **Status as of October 21, 2026:** partial migration. Quick Facts summary/details
 and basic Weekly Facts/My Plan tables exist. Authentication is still a demo
 stub, several actions are inert, and most other Angular applications are not

@@ -54,6 +54,25 @@ describe('processFilterResponse', () => {
     expect(tree.children).toHaveLength(2)
     expect(tree.children![0].code).toBe('w_retail')
   })
+
+  it('materializes store leaf departments with composite codes and Angular API depth', () => {
+    const tree = processFilterResponse([{
+      name: 'Store', code: '1234', level: 3, level_desc: 'Store',
+      leafChildren: [
+        { name: 'Produce', code: '10', level: 4, level_desc: 'Department' },
+        { name: 'Bakery', code: '1234-20', level: 4, level_desc: 'Department', nonClickable: true },
+      ],
+    }])!
+    addParents(tree)
+    const flat = flattenTree(tree)
+    const department = findNodeByCode(flat, '1234-10')
+    expect(department).toMatchObject({
+      name: 'Produce', code: '1234-10', level: 'department', level_desc: 'Department',
+      apiDepth: 5, depth: 1, expandable: false,
+    })
+    expect(department?.parent).toBe(tree)
+    expect(findNodeByCode(flat, '1234-20')?.nonClickable).toBe(true)
+  })
 })
 
 describe('flattenTree', () => {

@@ -3,6 +3,9 @@ import { useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
 import { useFilter } from '../../../context/FilterContext'
 import type { IQFTree } from '../../../types/sqf.types'
+import { getNearbyStores } from '../../../api/sqf'
+import { setupNearbyStores, flattenTree } from '../../../utils/tree'
+import { useSnackbar } from '../../shared/Snackbar/Snackbar'
 import styles from './LocationTree.module.css'
 
 interface Props {
@@ -27,8 +30,13 @@ function pathToNode(node: IQFTree | null | undefined): Set<string> {
  * siblings) with search-driven filtering.
  */
 export function LocationTree({ onSelect }: Props) {
-  const { treeNodes, selectedNode } = useFilter()
-  const root = treeNodes[0] ?? null
+  const { treeNodes: fullTreeNodes, selectedNode } = useFilter()
+  const showSnack = useSnackbar()
+  const [nearbyRoot, setNearbyRoot] = useState<IQFTree | null>(null)
+  const [fetchingNearby, setFetchingNearby] = useState(false)
+  const showingNearby = nearbyRoot !== null
+  const treeNodes = useMemo(() => (nearbyRoot ? flattenTree(nearbyRoot) : fullTreeNodes), [nearbyRoot, fullTreeNodes])
+  const root = nearbyRoot ?? fullTreeNodes[0] ?? null
 
   const [searchText, setSearchText] = useState('')
   const [expandedCodes, setExpandedCodes] = useState<Set<string>>(() => pathToNode(selectedNode))
@@ -47,6 +55,42 @@ export function LocationTree({ onSelect }: Props) {
     return visible
   }, [searchActive, trimmedSearch, treeNodes])
 
+  // Angular SqfStoreLocatorService.getPosition
+  function getPosition(): Promise<{ lat: number; lng: number } | null> {
+    return new Promise(resolve => {
+      navigator.geolocation.getCurrentPosition(
+        resp => resolve({ lat: resp.coords.latitude, lng: resp.coords.longitude }),
+        () => {
+          showSnack("Location access blocked by user, please enable in browser's settings.", 'error')
+          resolve(null)
+        },
+      )
+    })
+  }
+
+  // Angular universal-filter showNearbyStore: toggles between the nearby-store tree and the full tree
+  async function showNearbyStore() {
+    if (showingNearby) {
+      setNearbyRoot(null)
+      return
+    }
+    setFetchingNearby(true)
+    try {
+      const location = await getPosition()
+      if (!location) return
+      let stores
+      try {
+        stores = await getNearbyStores(location.lat, location.lng)
+      } catch {
+        showSnack('Error occurred in locating stores, please try again later.', 'error')
+        return
+      }
+      if (stores) setNearbyRoot(setupNearbyStores(stores))
+    } finally {
+      setFetchingNearby(false)
+    }
+  }
+
   function toggleNode(node: IQFTree) {
     setExpandedCodes(prev => {
       const next = new Set(prev)
@@ -64,10 +108,15 @@ export function LocationTree({ onSelect }: Props) {
   }
 
   function renderNode(node: IQFTree): ReactNode {
+    // Hidden multi-node root: mat-tree expands it, so only its children show
+    if (node === root && (node.hidden || node.alwaysHidden)) {
+      return <div key="root">{(node.children ?? []).map(child => renderNode(child))}</div>
+    }
     if (node.hidden || node.alwaysHidden) return null
     if (visibleCodes && !visibleCodes.has(node.code)) return null
 
-    const paddingLeft = node.depth * 20
+    // Angular .qf-tree__node-depth-N: 8px per level
+    const paddingLeft = node.depth ? node.depth * 8 : undefined
 
     if (node.nonClickable) {
       return (
@@ -148,12 +197,19 @@ export function LocationTree({ onSelect }: Props) {
         )}
       </div>
 
-      {/* Nearby-store lookup is not yet available in this app — shown as an
-          inert row to match the Angular layout. */}
-      <div className={styles.locationRow} aria-disabled="true" title="Not available yet">
-        <span className={`material-icons ${styles.locationRowIcon}`}>location_off</span>
-        <span>YOUR LOCATION</span>
+      <div className={`${styles.locationRow} ${showingNearby ? styles.locationRowSelected : ''}`}>
+        <button type="button" className={styles.locationBtn} onClick={showNearbyStore}>
+          <span className={`material-icons ${styles.locationRowIcon}`} aria-hidden="true">
+            {showingNearby ? 'location_on' : 'location_off'}
+          </span>
+          YOUR LOCATION
+        </button>
+        {fetchingNearby && <span className={styles.locationSpinner} role="progressbar" aria-label="Locating stores" />}
       </div>
+
+      {showingNearby && !root?.children?.length && (
+        <div className={styles.noStore}>You do not have access to any nearby stores!</div>
+      )}
 
       {searchActive && visibleCodes?.size === 0 && (
         <div className={styles.noResults}>No matching locations</div>

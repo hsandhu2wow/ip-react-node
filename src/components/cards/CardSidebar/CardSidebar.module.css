@@ -1,33 +1,25 @@
 /* src/components/cards/CardSidebar/CardSidebar.module.css */
+/* Mirrors Angular .qf-details-home__summary: a 392px column of full-size summary
+   cards (.qf-summary-card--small is reset to transform:none; margin:8px 0 on desktop).
+   Hidden below desktop-sm (hide-md ≤1200px, tablet-lg display:none). */
 .sidebar {
-  /* Wider than the visual card size — the extra width is scaled away below,
-     matching Angular's `qf-summary-card--small` treatment. */
-  width: 380px;
+  width: 392px;
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
-  padding-top: 4px;
 }
 
-/* Mirrors Angular's `.qf-summary-card--small`: shrink the full-size summary
-   card and pull the freed-up space back in with negative margins so cards
-   stack tightly instead of leaving large empty gaps. */
 .item {
-  transform: scale(0.8);
-  transform-origin: top left;
-  margin-bottom: -60px;
-  margin-right: -76px;
-  transition: opacity 0.15s;
+  width: 100%;
+  margin: 8px 0;
 }
 
-/* Non-selected cards are dimmed — matches Angular's `.qf-summary-card_grayed`
-   (opacity: 0.5). The selected card renders at full opacity. */
+/* .qf-summary-card_grayed */
 .itemGrayed {
   opacity: 0.5;
 }
 
-/* Hide sidebar below 960px to match Angular's hide-md breakpoint */
-@media (max-width: 959px) {
+@media (max-width: 1439px) {
   .sidebar {
     display: none;
   }

@@ -83,8 +83,18 @@ export interface WfCardData {
   half_year?: string;
 }
 
+export interface WfPageConfig {
+  ai_insights_enabled?: boolean;
+}
+
+export interface WfAiInsights {
+  header?: string;
+  insights?: string;
+  button_text?: string;
+}
+
 export interface WfPageData {
-  config?: { ai_insights_enabled?: boolean };
+  config?: WfPageConfig;
   cards: WfCardData[];
   label?: string;
   level?: string;
@@ -104,7 +114,18 @@ export interface WfPageData {
   available_views?: string[];
   metricsInfo?: WfMetricsInfo;
   varianceFlag?: WfVarianceFlag;
+  ai_insights?: WfAiInsights;
 }
+
+/** Response of GET /{wf|myplan}/userSubscriptions */
+export interface WfUserSubscription {
+  subscribed_locations: string[];
+  subscribed_views: string[];
+  is_store_user?: boolean;
+}
+
+/** Subscription endpoints key: Angular WeeklyFactsService uses 'wf' for weekly, 'myplan' for My Plan */
+export type WfSubscriptionKey = 'wf' | 'myplan';
 
 export interface WfError {
   errorTitle?: string;

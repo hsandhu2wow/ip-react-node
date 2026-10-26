@@ -33,6 +33,7 @@ describe('SQF queries and API contracts', () => {
     filter = {
       selectedNode, selectedDate: '2026-10-19', isLoaded: true, initTree,
       treeNodes: [selectedNode], selectedPeriod: 'WTD', selectedBreakdownAxis: 'childLevel',
+      breakdownAxisChangeCount: 0,
       setSelectedNode: vi.fn(), setSelectedDate: vi.fn(),
       setSelectedPeriod: vi.fn(), setSelectedBreakdownAxis: vi.fn(),
     }
@@ -46,7 +47,9 @@ describe('SQF queries and API contracts', () => {
     vi.mocked(client.get).mockResolvedValue({ data: { WTD: cards } })
     const { result, rerender } = renderHook(() => useSummaryCards(), { wrapper })
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
-    expect(result.current.data).toEqual({ WTD: cards })
+    expect(result.current.data).toEqual({ WTD: [{
+      ...cards[0], apiType: 'generic', jsId: 'js-sales-summary-card-0', tableOnly: false,
+    }] })
     expect(client.get).toHaveBeenLastCalledWith('/sqf/summaryCards/3/2026-10-19/1234')
 
     filter = { ...filter, selectedDate: '2026-10-18' }
@@ -83,7 +86,10 @@ describe('SQF queries and API contracts', () => {
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
     filter = { ...filter, selectedPeriod: 'YDAY', selectedBreakdownAxis: 'department' }
     rerender()
-    expect(result.current.data).toEqual(data)
+    expect(result.current.data).toEqual({
+      WTD: [{ ...data.WTD[0], apiType: 'generic', jsId: 'js-sales-summary-card-0', tableOnly: false }],
+      YDAY: [{ ...data.YDAY[0], apiType: 'generic', jsId: 'js-sales-summary-card-0', tableOnly: false }],
+    })
     expect(result.current.fetchStatus).toBe('idle')
     expect(client.get).toHaveBeenCalledTimes(1)
   })
@@ -109,7 +115,9 @@ describe('SQF queries and API contracts', () => {
       wrapper, initialProps: { metric: 'sales' },
     })
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
-    expect(result.current.data).toEqual(response)
+    expect(result.current.data).toEqual({ YDAY: [{
+      ...response.YDAY[0], apiType: 'generic', jsId: 'js-sales-details-card-0', tableOnly: false,
+    }] })
     expect(client.get).toHaveBeenLastCalledWith('/sqf/detailCard/sales/3/2026-10-19/1234')
     rerender({ metric: 'wages' })
     await waitFor(() => expect(client.get).toHaveBeenLastCalledWith('/sqf/detailCard/wages/3/2026-10-19/1234'))
