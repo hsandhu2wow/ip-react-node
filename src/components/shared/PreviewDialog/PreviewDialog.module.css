@@ -1,0 +1,54 @@
+/* styles.scss .mat-mdc-dialog-surface { padding: 24px } */
+.surface {
+  padding: 24px;
+  box-sizing: border-box;
+  color: #333;
+  font-size: 16px;
+}
+
+/* qf-preview.component.scss */
+.header {
+  display: flex;
+  justify-content: space-between;
+}
+
+.close {
+  cursor: pointer;
+  font-size: 24px;
+  width: 24px;
+  height: 24px;
+  color: #333;
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.card {
+  width: 48%;
+  margin: 8px;
+}
+
+.cardImg {
+  width: 96%;
+  vertical-align: middle;
+}
+
+.uploading {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+}
+
+.uploadingText {
+  /* Angular $body-text-color; global p is 13px with a 16px bottom margin */
+  color: #178841;
+  font-size: 13px;
+  margin: 0 0 16px;
+}
+
+.uploadingGif {
+  width: 200px;
+}

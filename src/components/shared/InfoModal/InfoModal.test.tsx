@@ -9,6 +9,12 @@ describe('InfoModal', () => {
     expect(document.querySelector('[data-testid="info-modal-body"]')).not.toBeNull()
   })
 
+  it('renders the Angular qf-popup info_outlined title icon and close mat-icon', () => {
+    render(<InfoModal title="My Title" body="B" onClose={() => {}} />)
+    expect(screen.getByText('info_outlined').className).toContain('material-icons')
+    expect(screen.getByTestId('info-modal-close').textContent).toBe('close')
+  })
+
   it('calls onClose when close button is clicked', () => {
     const onClose = vi.fn()
     render(<InfoModal title="T" body="B" onClose={onClose} />)

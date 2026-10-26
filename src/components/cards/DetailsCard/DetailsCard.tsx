@@ -1,20 +1,24 @@
-import { useState, useEffect, Fragment } from 'react'
+import { useState, useEffect, useId, useRef, Fragment } from 'react'
+import { createPortal } from 'react-dom'
 import type { ISQFMetricCard, ISQFInfoNumber, IQFTree, BreakdownAxis } from '../../../types/sqf.types'
 import { useAxisCard } from '../../../hooks/useAxisCard'
+import { isLegacyBreakdownCard } from '../../../utils/breakdown'
 import { MetricCardSkeleton } from '../MetricCard/MetricCardSkeleton'
 import { MetricCardChart } from '../MetricCard/MetricCardChart'
 import { MetricCardTable } from '../MetricCard/MetricCardTable'
 import { MetricCardTabs } from '../MetricCard/MetricCardTabs'
 import { InfoModal } from '../../shared/InfoModal/InfoModal'
-import { REPORTING_PERIODS, isCutOffTimePast } from '../../../utils/formatters'
+import { useCardsPreview } from '../../shared/PreviewDialog/cardsPreviewContext'
+import { useOptionalFilter } from '../../../context/FilterContext'
+import { sendQFDataToAnalytics } from '../../../utils/analytics'
+import { REPORTING_PERIODS, isCutOffTimePast, formatUpdatedTime } from '../../../utils/formatters'
 import styles from './DetailsCard.module.css'
 
 const RED = '#eb5757'
 const NEUTRAL = '#ebecec'
 
 function shouldShowRecognize(cardHeader?: string): boolean {
-  if (!cardHeader) return false
-  const h = cardHeader.toLowerCase()
+  const h = cardHeader?.toLowerCase()
   return h !== RED && h !== NEUTRAL
 }
 
@@ -53,7 +57,7 @@ function computeDrillDown(
 ): { nextLevel: string | null; isStore: boolean; childCode: string | undefined } {
   // Matches Angular's SqfCardsService.selectCard(): generic cards drill down via
   // childCode, other card types via cardCode.
-  const childCode = card.isGenericCardApi ? card.childCode : card.cardCode
+  const childCode = card.apiType === 'generic' ? card.childCode : card.cardCode
 
   if (!card.canDrillDown || !selectedNode?.children?.length) {
     return { nextLevel: null, isStore: false, childCode }
@@ -72,13 +76,32 @@ function computeDrillDown(
     child.children?.length
       ? child.children[0].level_desc
       : child.leafChildren?.length
-      ? (child.leafChildren[0] as any).level_desc
+      ? child.leafChildren[0].level_desc
       : 'Category'
   return { nextLevel: `${desc} details`, isStore, childCode }
 }
 
 // ── KPI block (stacked layout for details) ─────────────────────────────────
 function KpiBlock({ kpi }: { kpi: ISQFInfoNumber }) {
+  const infoRef = useRef<HTMLSpanElement>(null)
+  const infoId = useId()
+  const [infoPosition, setInfoPosition] = useState<{ left: number; top: number } | null>(null)
+  const infoOpen = infoPosition !== null
+  useEffect(() => {
+    if (!infoOpen) return
+    const closeInfo = () => setInfoPosition(null)
+    window.addEventListener('scroll', closeInfo, true)
+    window.addEventListener('resize', closeInfo)
+    return () => {
+      window.removeEventListener('scroll', closeInfo, true)
+      window.removeEventListener('resize', closeInfo)
+    }
+  }, [infoOpen])
+  const openInfo = () => {
+    const rect = infoRef.current?.getBoundingClientRect()
+    if (rect) setInfoPosition({ left: Math.max(8, Math.min(window.innerWidth - 248, rect.left)), top: rect.top - 8 })
+  }
+  const toggleInfo = () => infoPosition ? setInfoPosition(null) : openInfo()
   return (
     <div className={styles.kpiBlock}>
       <div className={styles.kpiValue} style={{ color: kpi.color || 'inherit' }}>
@@ -88,12 +111,30 @@ function KpiBlock({ kpi }: { kpi: ISQFInfoNumber }) {
         {kpi.text}
         {kpi.infoMessage && (
           <span
-            className={styles.infoIcon}
-            title={kpi.infoMessage}
+            ref={infoRef}
+            className={`material-icons ${styles.infoIcon}`}
+            role="button"
+            tabIndex={0}
             aria-label="More info"
+            aria-expanded={infoOpen}
+            aria-describedby={infoPosition ? infoId : undefined}
+            onClick={toggleInfo}
+            onKeyDown={event => {
+              if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault()
+                toggleInfo()
+              } else if (event.key === 'Escape') setInfoPosition(null)
+            }}
+            onMouseEnter={openInfo}
+            onMouseLeave={() => setInfoPosition(null)}
+            onBlur={() => setInfoPosition(null)}
           >
-            ℹ
+            info_outline
           </span>
+        )}
+        {infoPosition && kpi.infoMessage && createPortal(
+          <span id={infoId} role="tooltip" className={styles.kpiTooltip} style={infoPosition}>{kpi.infoMessage}</span>,
+          document.body,
         )}
       </div>
     </div>
@@ -114,6 +155,8 @@ interface Props {
   onDrillDown?: (code?: string) => void
   /** Global breakdown axis; when set, axis-driven cards ignore their own dropdowns */
   axis?: BreakdownAxis
+  /** SQF support email shown in the filter-error state */
+  supportEmail?: string
 }
 
 export function DetailsCard({
@@ -123,11 +166,13 @@ export function DetailsCard({
   detailsLastLevel = 99,
   onDrillDown,
   axis,
+  supportEmail,
 }: Props) {
   const { axisDriven, axisCard } = useAxisCard(card, axis)
   const [selectedFilters, setSelectedFilters] = useState<Record<string, string>>({})
   const [infoModalOpen, setInfoModalOpen] = useState(false)
   const [recognizeLoading, setRecognizeLoading] = useState(false)
+  const { preview } = useCardsPreview()
   const [selectedDept, setSelectedDept] = useState('')
 
   const filterConfigKey = card?.filterKeys ? Object.keys(card.filterKeys).join(',') : ''
@@ -135,7 +180,21 @@ export function DetailsCard({
 
   useEffect(() => {
     if (card?.cards) setSelectedFilters(buildInitialFilters(card))
-  }, [card?.cardName, filterConfigKey, dropdownKeys])
+  }, [card?.cardName, card?.cards, card?.dropdowns, filterConfigKey, dropdownKeys])
+
+  useEffect(() => setSelectedDept(''), [card?.childCode, card?.children])
+
+  const filter = useOptionalFilter()
+  const locationCode = filter?.selectedNode?.code
+  const breakdownAxisChangeCount = filter?.breakdownAxisChangeCount ?? 0
+  const axisResolved = !!card?.cards && !isLegacyBreakdownCard(card) && !!axisCard
+  // Angular onBreakdownAxisChanged: analytics only when the new axis resolves a child card
+  useEffect(() => {
+    if (breakdownAxisChangeCount > 0 && axisResolved) {
+      sendQFDataToAnalytics('breakdownAxisChangeQFDetailsCard', card?.cardName, locationCode)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [breakdownAxisChangeCount])
 
   if (isLoading) return <MetricCardSkeleton />
   if (!card || card.hidden) return null
@@ -148,13 +207,14 @@ export function DetailsCard({
   const hasFilterError = card.cards != null && contentCard == null
 
   // ── Derived values ──────────────────────────────────────────────────────
-  const borderColor = card.cardHeader || 'var(--color-neutral)'
+  const borderColor = contentCard?.cardHeader || 'var(--color-neutral)'
   const reportingPeriodKey = contentCard?.reportingPeriod ?? card.reportingPeriod
   const reportingPeriod = reportingPeriodKey
     ? REPORTING_PERIODS[reportingPeriodKey] ?? reportingPeriodKey
     : undefined
   const showRecognize = shouldShowRecognize(card.cardHeader)
-  const cutOffPast = card.error?.cutOffTime ? isCutOffTimePast(card.error.cutOffTime) : false
+  const cutOffPast = isCutOffTimePast(card.error)
+  const isLegacy = !!card.cards && isLegacyBreakdownCard(card)
   const { nextLevel, isStore, childCode } = computeDrillDown(card, selectedNode ?? null, detailsLastLevel)
 
   const { infoNumbers, chartData, tabs, tableData } = contentCard ?? ({} as ISQFMetricCard)
@@ -163,21 +223,24 @@ export function DetailsCard({
 
   function handleFilterChange(dropdownKey: string, value: string) {
     setSelectedFilters(prev => ({ ...prev, [dropdownKey]: value }))
+    sendQFDataToAnalytics('dropdownChangeDetailsCard', card?.cardName, locationCode)
   }
 
   function handleRecognize() {
     setRecognizeLoading(true)
-    setTimeout(() => setRecognizeLoading(false), 1500)
+    sendQFDataToAnalytics('recognizeQFDetailsCard', card?.cardName, locationCode)
+    // Angular onRecognizePreview: spinner until the preview dialog has opened
+    preview('recognize', [card as ISQFMetricCard]).finally(() => setRecognizeLoading(false))
   }
 
   // ── Error state ─────────────────────────────────────────────────────────
   if (card.error) {
     const isPending = card.error.cutOffTime && !cutOffPast
     return (
-      <div className={styles.card} data-testid="details-card-error">
+      <div className={styles.card} id={card.jsId} data-testid="details-card-error">
         <div className={styles.header} style={{ borderTopColor: borderColor }}>
           <div className={styles.headerLeft}>
-            <div className={styles.cardTitle}>{card.cardTitle}</div>
+            <div className={styles.cardTitle} title={card.canDrillDown ? undefined : 'No further drill down available'}>{card.cardTitle}</div>
           </div>
         </div>
         <div className={styles.errorContent}>
@@ -214,19 +277,34 @@ export function DetailsCard({
 
   return (
     <>
-      <div className={styles.card}>
+      <div className={`${styles.card} ${(tabs?.length ?? 0) > 1 ? styles.cardHasTabs : ''}`} id={card.jsId}>
         {/* ── Header ── */}
         <div className={styles.header} style={{ borderTopColor: borderColor }}>
           <div className={styles.headerLeft}>
-            <div className={styles.cardTitle}>{card.cardTitle}</div>
+            <div className={styles.cardTitle} title={card.canDrillDown ? undefined : 'No further drill down available'}>{card.cardTitle}</div>
             <div className={styles.subTitle}>
               {reportingPeriod && (
                 <span className={styles.subTitleItem}>
-                  <span className={`material-icons-outlined ${styles.subTitleIcon}`}>calendar_today</span>
-                  {reportingPeriod}
+                  <span className={`material-icons ${styles.subTitleIcon}`}>calendar_today</span>
+                  <span className={styles.subTitleText}>{reportingPeriod}</span>
                 </span>
               )}
-              {!axisDriven && card.dropdowns?.map(dd => (
+              {isLegacy && card.dropdowns?.map(dd => (
+                <div key={dd.key} className={styles.seg} role="group" aria-label={dd.key}>
+                  {dd.data.map(opt => (
+                    <button
+                      key={opt.key}
+                      type="button"
+                      className={`${styles.segBtn} ${selectedFilters[dd.key] === opt.key ? styles.segBtnActive : ''}`}
+                      aria-pressed={selectedFilters[dd.key] === opt.key}
+                      onClick={() => handleFilterChange(dd.key, opt.key)}
+                    >
+                      {opt.text}
+                    </button>
+                  ))}
+                </div>
+              ))}
+              {!axisDriven && !isLegacy && card.dropdowns?.map(dd => (
                 <span key={dd.key} className={styles.subTitleItem}>
                   <select
                     className={styles.dropdownSelect}
@@ -263,7 +341,14 @@ export function DetailsCard({
         {hasFilterError && (
           <div className={styles.errorContent}>
             <p className={styles.errorHeading}>Data temporarily unavailable</p>
-            <p className={styles.errorSubtext}>Our team is investigating.</p>
+            <p className={styles.errorSubtext}>
+              Our team is investigating. <br />For update or assistance, contact:{' '}
+              {supportEmail && (
+                <a className={styles.errorLink} href={`mailto:${supportEmail}`} target="_top">
+                  {supportEmail}
+                </a>
+              )}
+            </p>
           </div>
         )}
 
@@ -284,8 +369,17 @@ export function DetailsCard({
                   </div>
                 )}
                 {chartData && (
-                  <div className={styles.graphArea}>
-                    <MetricCardChart chartData={chartData} height={156} />
+                  <div
+                    className={`${styles.graphArea} ${
+                      chartData.chartType === 'bar' || chartData.chartType === 'horizontalBar'
+                        ? ''
+                        : styles.graphAreaPie
+                    }`}
+                  >
+                    <MetricCardChart
+                      chartData={chartData}
+                      height={chartData.chartType === 'bar' || chartData.chartType === 'horizontalBar' ? 156 : 180}
+                    />
                   </div>
                 )}
               </div>
@@ -293,11 +387,19 @@ export function DetailsCard({
 
             {/* Right: tabs / table / drill-down */}
             <div className={rightColFull ? styles.rightColFull : styles.rightCol}>
-              {tabs && <MetricCardTabs tabs={tabs} />}
-              {tableData && <MetricCardTable tableData={tableData} />}
+              {tabs && (
+                <div className={styles.tabContent}>
+                  <MetricCardTabs tabs={tabs} cardName={card.cardName} />
+                </div>
+              )}
+              {tableData && (
+                <div className={styles.table}>
+                  <MetricCardTable tableData={tableData} />
+                </div>
+              )}
 
               {/* Drill-down link — standard */}
-              {nextLevel && !isStore && (
+              {nextLevel && (card.cardName !== 'C1Availability' || !isStore) && (
                 <span
                   className={styles.drillDownLink}
                   onClick={() => onDrillDown?.(childCode)}
@@ -314,6 +416,7 @@ export function DetailsCard({
                 <div className={styles.deptSelect}>
                   <span className={styles.deptSelectLabel}>View Department details</span>
                   <select
+                    aria-label="Select Department"
                     className={styles.deptSelectInput}
                     value={selectedDept}
                     onChange={e => {
@@ -322,6 +425,9 @@ export function DetailsCard({
                     }}
                   >
                     <option value="" disabled>Select Department</option>
+                    {card.children?.map(child => (
+                      <option key={child.code} value={child.code}>{child.label}</option>
+                    ))}
                   </select>
                 </div>
               )}
@@ -332,16 +438,8 @@ export function DetailsCard({
         {/* ── Footer ── */}
         {!hasFilterError && !card.error && (
           <div className={styles.footer}>
-            <span data-testid="details-updated-time">
-              Updated at{' '}
-              {card.updatedTime
-                ? new Date(card.updatedTime).toLocaleString('en-AU', {
-                    month: 'short',
-                    day: 'numeric',
-                    hour: 'numeric',
-                    minute: '2-digit',
-                  })
-                : '—'}
+            <span className={styles.footerText} data-testid="details-updated-time">
+              Updated at {card.updatedTime ? formatUpdatedTime(card.updatedTime) : ''}
             </span>
             {card.dataInfo && (
               <button
@@ -349,7 +447,8 @@ export function DetailsCard({
                 onClick={() => setInfoModalOpen(true)}
                 data-testid="details-metrics-info-btn"
               >
-                Metrics Info ℹ
+                <span>Metrics Info</span>
+                <span className={`material-icons ${styles.dataInfoIcon}`}>info_outlined</span>
               </button>
             )}
           </div>

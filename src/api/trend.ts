@@ -1,5 +1,5 @@
 import client from './client'
-import type { WfMetric, WfPageData, WfUserSubscriptions } from '../types/wf.types'
+import type { WfMetric, WfPageData, WfSubscriptionKey, WfUserSubscription } from '../types/wf.types'
 
 /** Returns Weekly Facts page data for the given location code */
 export async function getWeeklyFacts(code: string): Promise<WfPageData> {
@@ -13,23 +13,31 @@ export async function getMyPlan(code: string): Promise<WfPageData> {
   return res.data
 }
 
-function subscriptionKey(metric: WfMetric): 'wf' | 'myplan' {
-  return metric === 'weekly' ? 'wf' : 'myplan'
-}
-
-export async function getTrendSubscriptions(metric: WfMetric): Promise<WfUserSubscriptions> {
-  const res = await client.get<WfUserSubscriptions>(`/${subscriptionKey(metric)}/userSubscriptions`)
+/** Returns the user's saved email subscription preferences (Angular WeeklyFactsService.getUserSubscription) */
+export async function getUserSubscriptions(key: WfSubscriptionKey): Promise<WfUserSubscription> {
+  const res = await client.get<WfUserSubscription>(`/${key}/userSubscriptions`)
   return res.data
 }
 
-export async function updateTrendSubscriptions(
-  metric: WfMetric,
+/** Saves email subscription preferences as multipart form data (Angular WeeklyFactsService.updateUserSubscription) */
+export async function updateUserSubscriptions(
+  key: WfSubscriptionKey,
   locations: string[],
-  views: string[],
+  selectedViews: string[]
 ): Promise<unknown> {
-  const form = new FormData()
-  form.append('locations', JSON.stringify(locations))
-  form.append('selected_views', JSON.stringify(views))
-  const res = await client.post<unknown>(`/${subscriptionKey(metric)}/updateUserSubscriptions`, form)
+  const formData = new FormData()
+  formData.append('locations', JSON.stringify(locations))
+  formData.append('selected_views', JSON.stringify(selectedViews))
+  const res = await client.post(`/${key}/updateUserSubscriptions`, formData)
   return res.data
+}
+
+export function getTrendSubscriptions(metric: WfMetric): Promise<WfUserSubscription> {
+  return getUserSubscriptions(metric === 'weekly' ? 'wf' : 'myplan')
+}
+
+export function updateTrendSubscriptions(
+  metric: WfMetric, locations: string[], views: string[],
+): Promise<unknown> {
+  return updateUserSubscriptions(metric === 'weekly' ? 'wf' : 'myplan', locations, views)
 }

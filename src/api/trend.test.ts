@@ -14,12 +14,30 @@ import {
   getMyPlan,
   getTrendSubscriptions,
   updateTrendSubscriptions,
+  getUserSubscriptions,
+  updateUserSubscriptions,
 } from './trend'
 import type { WfMetric, WfPageData, WfUserSubscriptions } from '../types/wf.types'
 
 const mockClient = vi.mocked(client)
 
 describe('trend API', () => {
+  it('reads preferences through the subscription dialog key contract', async () => {
+    const data = { subscribed_locations: ['1001'], subscribed_views: ['week_overview'] }
+    mockClient.get.mockResolvedValue({ data })
+    await expect(getUserSubscriptions('myplan')).resolves.toEqual(data)
+    expect(mockClient.get).toHaveBeenCalledWith('/myplan/userSubscriptions')
+  })
+
+  it('saves preferences through the subscription dialog key contract', async () => {
+    mockClient.post.mockResolvedValue({ data: [] })
+    await updateUserSubscriptions('wf', ['National', 'w_retail'], ['week_overview', 'monthly_trend'])
+    const [url, body] = mockClient.post.mock.calls[0]
+    expect(url).toBe('/wf/updateUserSubscriptions')
+    if (!(body instanceof FormData)) throw new Error('Expected a FormData payload')
+    expect(body.get('locations')).toBe('["National","w_retail"]')
+    expect(body.get('selected_views')).toBe('["week_overview","monthly_trend"]')
+  })
   beforeEach(() => {
     vi.clearAllMocks()
   })

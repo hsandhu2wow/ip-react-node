@@ -7,6 +7,14 @@ This is a source/history assessment, **not runtime or production certification**
 
 ## Implementation update: October 26
 
+**Integration follow-up:** Quick Facts parity is merged into dev at `e8817e8`;
+the Weekly feature branch now incorporates that dev baseline while retaining
+its selection/projection/popup work. The combined branch builds and passes
+500 tests in 65 files. Imported code lowers full-source line coverage to
+86.19%, below the unchanged 95.01% gate. The user approved publishing these
+merges with the gap recorded; raising coverage remains outstanding. The
+smaller-scope measurements below are historical, not current combined coverage.
+
 The next feature-branch slice adds desktop hierarchy/history selection and
 child/peer projection for Weekly/MyPlan, original-column header association,
 Weekly-specific Metrics Info/header/cell alert dialogs and structured error

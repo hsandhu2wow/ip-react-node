@@ -85,13 +85,20 @@ export function getYesterdayDate(): Date {
 }
 
 /**
- * Returns true when the given UTC cut-off time string (HH:MM:SS) is in the past.
- * Used to decide whether to show "data will be ready by X" or a generic error.
+ * Mirrors Angular SqfCardsService.isCutOffTimePast: true when the card's data-load
+ * ETA (stamped as error.cutOffAt) has already passed.
  */
-export function isCutOffTimePast(cutOffTime: string): boolean {
-  const now = new Date()
-  const [hh, mm, ss = 0] = cutOffTime.split(':').map(Number)
-  const cutOff = new Date()
-  cutOff.setUTCHours(hh, mm, ss, 0)
-  return now >= cutOff
+export function isCutOffTimePast(error?: { cutOffTime?: string | null; cutOffAt?: number }): boolean {
+  if (!error?.cutOffTime || error.cutOffAt == null) return false
+  return error.cutOffAt < Date.now()
+}
+
+/** Formats a date like Angular's DatePipe 'MMM d, h:mm a', e.g. "Oct 10, 4:55 AM" */
+export function formatUpdatedTime(value: string | Date): string {
+  const d = value instanceof Date ? value : new Date(value)
+  if (isNaN(d.getTime())) return String(value)
+  const month = d.toLocaleString('en-US', { month: 'short' })
+  const h = d.getHours() % 12 || 12
+  const mm = String(d.getMinutes()).padStart(2, '0')
+  return `${month} ${d.getDate()}, ${h}:${mm} ${d.getHours() < 12 ? 'AM' : 'PM'}`
 }

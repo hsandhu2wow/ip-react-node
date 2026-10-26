@@ -3,10 +3,40 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { TrendPage } from './TrendPage';
 import * as useTrendDataModule from '../../hooks/useTrendData';
 import type { WfCardData, WfMetric, WfPageData } from '../../types/wf.types';
+import { TrendActionsProvider, useTrendActions } from '../../context/TrendActionsContext';
+import { CardsPreviewContext, type CardsPreviewContextValue } from '../../components/shared/PreviewDialog/cardsPreviewContext';
 
 vi.mock('../../hooks/useTrendData');
+vi.mock('../../api/trend', () => ({
+  getUserSubscriptions: vi.fn(() => new Promise(() => {})),
+  updateUserSubscriptions: vi.fn(),
+}));
 
-const baseWfData = {
+/** Stand-in for the FilterBar header buttons that consume the trend actions. */
+function HeaderActions() {
+  const actions = useTrendActions();
+  return (
+    <div>
+      {actions.subscriptionEnabled && <button onClick={actions.openSubscription}>Subscription preferences</button>}
+      {actions.aiInsightsEnabled && (
+        <button aria-pressed={actions.aiInsightsOpen} onClick={actions.toggleAiInsights}>
+          {actions.aiButtonText}
+        </button>
+      )}
+    </div>
+  );
+}
+
+function renderWithActions(metric: 'weekly' | 'myPlan' = 'weekly') {
+  return render(
+    <TrendActionsProvider>
+      <HeaderActions />
+      <TrendPage metric={metric} />
+    </TrendActionsProvider>
+  );
+}
+
+const baseWfData: WfPageData = {
   refreshTime: '2026-08-04T10:00:00Z',
   is_web_subscription_enabled: false,
   cards: [
@@ -122,24 +152,111 @@ describe('TrendPage', () => {
     expect(screen.getByText(/Last updated:/)).toBeInTheDocument();
   });
 
-  it('does not render subscription link when is_web_subscription_enabled is false', () => {
+  it('does not expose subscription when is_web_subscription_enabled is false', () => {
     (useTrendDataModule.useTrendData as ReturnType<typeof vi.fn>).mockReturnValue({
       data: baseWfData,
       isLoading: false,
       isError: false,
     });
-    render(<TrendPage metric="weekly" />);
+    renderWithActions();
     expect(screen.queryByText(/Subscription preferences/)).not.toBeInTheDocument();
   });
 
-  it('renders subscription link when is_web_subscription_enabled is true', () => {
+  it('opens the subscription dialog through the trend actions when enabled', () => {
     (useTrendDataModule.useTrendData as ReturnType<typeof vi.fn>).mockReturnValue({
       data: { ...baseWfData, is_web_subscription_enabled: true },
       isLoading: false,
       isError: false,
     });
-    render(<TrendPage metric="weekly" />);
-    expect(screen.getByText(/Subscription preferences/)).toBeInTheDocument();
+    renderWithActions('myPlan');
+    expect(screen.queryByText('My Plan subscription preferences')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Subscription preferences' }));
+    expect(screen.getByText('My Plan subscription preferences')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+    expect(screen.queryByText('My Plan subscription preferences')).not.toBeInTheDocument();
+  });
+
+  it('toggles the AI Insights panel with ai_insights content when enabled', () => {
+    (useTrendDataModule.useTrendData as ReturnType<typeof vi.fn>).mockReturnValue({
+      data: {
+        ...baseWfData,
+        config: { ai_insights_enabled: true },
+        ai_insights: { button_text: 'Smart Insights', insights: '<p>Sales are up</p>' },
+      },
+      isLoading: false,
+      isError: false,
+    });
+    renderWithActions();
+    const button = screen.getByRole('button', { name: 'Smart Insights' });
+    expect(screen.queryByTestId('ai-insights-sidenav')).not.toBeInTheDocument();
+
+    fireEvent.click(button);
+    expect(button).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByTestId('ai-insights-sidenav')).toHaveTextContent('AI Insights');
+    expect(screen.getByText('Sales are up')).toBeInTheDocument();
+
+    fireEvent.click(button);
+    expect(screen.queryByTestId('ai-insights-sidenav')).not.toBeInTheDocument();
+  });
+
+  it('does not expose AI Insights when config.ai_insights_enabled is off', () => {
+    (useTrendDataModule.useTrendData as ReturnType<typeof vi.fn>).mockReturnValue({
+      data: { ...baseWfData, ai_insights: { insights: '<p>x</p>' } },
+      isLoading: false,
+      isError: false,
+    });
+    renderWithActions();
+    expect(screen.queryByRole('button', { name: 'AI Insights' })).not.toBeInTheDocument();
+  });
+
+  it.each<WfMetric>(['weekly', 'myPlan'])('registers the selected %s view for whole-page preview', (metric) => {
+    vi.mocked(useTrendDataModule.useTrendData).mockReturnValue({
+      data: {
+        ...baseWfData,
+        cards: [
+          baseWfData.cards[0],
+          { ...baseWfData.cards[0], key: 'inventory', displayName: 'Inventory' },
+        ],
+      },
+      isLoading: false, isError: false,
+    } as ReturnType<typeof useTrendDataModule.useTrendData>);
+    const registerPageCards = vi.fn<CardsPreviewContextValue['registerPageCards']>(() => () => {});
+    const { container } = render(
+      <CardsPreviewContext.Provider value={{ preview: () => Promise.resolve(), registerPageCards }}>
+        <TrendPage metric={metric} />
+      </CardsPreviewContext.Provider>,
+    );
+    expect(registerPageCards).toHaveBeenCalledWith(expect.any(Function), { pageData: true });
+    const getCards = registerPageCards.mock.calls[0][0];
+    expect(getCards()).toEqual([{ title: 'WeeklyFacts', cardType: 'Sales', jsId: `js-${metric}-card` }]);
+    expect(container.querySelector(`#js-${metric}-card`)).toHaveTextContent(`${metric === 'weekly' ? 'Weekly Facts' : 'My Plan'} - Sales`);
+    fireEvent.change(screen.getByLabelText('Select tab'), { target: { value: 'inventory' } });
+    expect(getCards()).toEqual([{ title: 'WeeklyFacts', cardType: 'Inventory', jsId: `js-${metric}-card` }]);
+    expect(container.querySelector(`#js-${metric}-card`)).toHaveTextContent('Inventory');
+  });
+
+  it('removes stale header actions and closes AI Insights when a response fails', () => {
+    const query = vi.mocked(useTrendDataModule.useTrendData);
+    const data = {
+      ...baseWfData, is_web_subscription_enabled: true,
+      config: { ai_insights_enabled: true },
+      ai_insights: { button_text: 'Smart Insights', insights: '<p>Sales are up</p>' },
+    };
+    query.mockReturnValue({ data, isLoading: false, isError: false } as ReturnType<typeof query>);
+    const { rerender } = renderWithActions();
+    fireEvent.click(screen.getByRole('button', { name: 'Smart Insights' }));
+    expect(screen.getByTestId('ai-insights-sidenav')).toBeInTheDocument();
+    query.mockReturnValue({ data, isLoading: false, isError: true } as ReturnType<typeof query>);
+    rerender(
+      <TrendActionsProvider>
+        <HeaderActions />
+        <TrendPage metric="weekly" />
+      </TrendActionsProvider>,
+    );
+    expect(screen.getByTestId('trend-page-error')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Subscription preferences' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Smart Insights' })).not.toBeInTheDocument();
+    expect(screen.queryByTestId('ai-insights-sidenav')).not.toBeInTheDocument();
   });
 
   it('switches tabs when a different tab is selected', () => {

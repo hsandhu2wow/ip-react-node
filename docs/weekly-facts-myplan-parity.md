@@ -15,6 +15,21 @@ existing React code, not missing Angular functionality or browser pixels.
 
 ### Implementation progress: October 26
 
+**Branch synchronization:** Quick Facts parity (`6035014`) is merged into dev
+at `e8817e8`, and that dev baseline is incorporated here. Its subscription/AI
+header actions, preferences dialog and page-preview plumbing are retained
+alongside this branch's history/hierarchy, column modes and Weekly popup.
+Metric-based subscription wrappers delegate to the dialog's key-based transport,
+so both callers share the same endpoint/FormData implementation. Page-response
+or metric changes close overlays; errors disable registered page actions.
+These imported implementations still require source/browser qualification;
+earlier descriptions of missing UI below are dated pre-integration gaps.
+The user approved publishing with the imported code's coverage gap documented,
+without lowering the 95.01% gate.
+Final combined validation: 500 tests in 65 files pass and the build succeeds;
+line coverage is 86.19%, so the coverage command fails its retained gate.
+This supersedes the pre-integration 293-test/97.88% figures below.
+
 The next slice on **`feat/weekly-facts-myplan-parity`** adds a pure selection
 boundary and desktop hierarchy control to both pages. Initial/view selection
 prefers history then hierarchy; hierarchy changes combine history where

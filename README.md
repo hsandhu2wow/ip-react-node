@@ -5,6 +5,20 @@ The objective is **one-to-one functional and visual parity**, not a redesign:
 routes, permissions, data, interactions, analytics, responsive behavior and
 integrations must match the agreed Angular baseline.
 
+**Branch integration, October 26:** Quick Facts parity (`6035014`) is merged
+into dev (`e8817e8`), and that dev baseline is incorporated in this Weekly/MyPlan
+branch. Seasonal/profile cards, chart/table/filter refinements, recognition,
+feedback/NPS, preview/export, subscription/AI action plumbing and per-BU
+build/theme configuration are retained alongside the Weekly hierarchy/dialog
+work. Both regression suites are preserved; wireframes are unchanged.
+The dev merge passes 452 tests and builds, but its 85.57% full-source line
+coverage is below the unchanged 95.01% gate. The user approved publishing
+with this gap recorded. Earlier coverage and capability descriptions below
+refer to their dated smaller baseline, not the combined branch.
+The combined Weekly branch builds and passes **500 tests in 65 files**.
+Its line coverage is **86.19%**; the coverage command still fails the unchanged
+95.01% gate, as explicitly accepted for this branch synchronization.
+
 **Status as of October 26, 2026:** partial migration. Quick Facts summary/details
 and Weekly Facts/My Plan tables with desktop hierarchy/child-peer controls and
 information/alert dialogs exist. Authentication is still a demo

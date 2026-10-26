@@ -3,11 +3,14 @@ import { act, render, screen, fireEvent } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { SummaryCard } from './SummaryCard'
 import type { ISQFMetricCard } from '../../../types/sqf.types'
+import { CardsPreviewContext, type CardsPreviewContextValue } from '../../shared/PreviewDialog/cardsPreviewContext'
 
-function renderCard(props: Parameters<typeof SummaryCard>[0]) {
+function renderCard(props: Parameters<typeof SummaryCard>[0], preview: CardsPreviewContextValue['preview'] = () => Promise.resolve()) {
   return render(
     <MemoryRouter>
-      <SummaryCard {...props} />
+      <CardsPreviewContext.Provider value={{ preview, registerPageCards: () => () => {} }}>
+        <SummaryCard {...props} />
+      </CardsPreviewContext.Provider>
     </MemoryRouter>
   )
 }
@@ -56,6 +59,32 @@ describe('SummaryCard', () => {
   it('hides recognize button when cardHeader is neutral (#ebecec)', () => {
     renderCard({ card: { ...baseCard, cardHeader: '#ebecec' } })
     expect(document.querySelector('[data-testid="recognize-btn"]')).toBeNull()
+  })
+
+  it('keeps recognition available when no header colour is set', () => {
+    renderCard({ card: { ...baseCard, cardHeader: undefined } })
+    expect(document.querySelector('[data-testid="recognize-btn"]')).not.toBeNull()
+  })
+
+  describe('breakdown cards use the resolved child header (Angular setComponentValues)', () => {
+    const breakdownCard = (parentHeader: string | undefined, childHeader: string): ISQFMetricCard => ({
+      ...baseCard,
+      cardHeader: parentHeader,
+      filterKeys: { breakdown: 'breakdown' },
+      dropdowns: [{ key: 'breakdown', data: [{ key: 'department', text: 'Departments' }] }],
+      cards: [{ ...baseCard, cardHeader: childHeader, keys: { breakdown: 'department' } }],
+    })
+
+    it('shows recognition and the child colour when only the child header is green', () => {
+      renderCard({ card: breakdownCard(undefined, '#219653'), axis: 'department' })
+      expect(document.querySelector('[data-testid="recognize-btn"]')).not.toBeNull()
+      expect((screen.getByText('Sales').closest('[style]') as HTMLElement).style.borderTopColor).toBe('rgb(33, 150, 83)')
+    })
+
+    it('hides recognition when the resolved child header is red', () => {
+      renderCard({ card: breakdownCard('#219653', '#EB5757'), axis: 'department' })
+      expect(document.querySelector('[data-testid="recognize-btn"]')).toBeNull()
+    })
   })
 
   it('renders "Go to details" link when isDetailsPageAvailable', () => {
@@ -110,7 +139,7 @@ describe('SummaryCard', () => {
     expect(screen.getByText('My Info')).toBeDefined()
   })
 
-  it('updates content when dropdown filter is changed', async () => {
+  it('updates content when a legacy segmented filter is clicked', async () => {
     const cardWithFilters: ISQFMetricCard = {
       ...baseCard,
       cards: [
@@ -124,9 +153,8 @@ describe('SummaryCard', () => {
     // Initially shows first subcard (wtd)
     expect(screen.getByText('$1M')).toBeDefined()
 
-    // Change dropdown to mtd
-    const select = document.querySelector('select') as HTMLSelectElement
-    fireEvent.change(select, { target: { value: 'mtd' } })
+    // Legacy (non-axis) dropdowns render as a segmented toggle, like Angular
+    fireEvent.click(screen.getByRole('button', { name: 'MTD' }))
     expect(screen.getByText('$5M')).toBeDefined()
   })
 
@@ -158,13 +186,15 @@ describe('SummaryCard', () => {
     expect(screen.queryByText('Visible explanation')).not.toBeInTheDocument()
   })
 
-  it('disables recognition until its existing loading simulation completes', () => {
-    vi.useFakeTimers()
-    renderCard({ card: baseCard })
+  it('disables recognition until the preview has opened', async () => {
+    let openPreview!: () => void
+    const preview = vi.fn(() => new Promise<void>(resolve => { openPreview = resolve }))
+    renderCard({ card: baseCard }, preview)
     const button = screen.getByTestId('recognize-btn')
     fireEvent.click(button)
     expect(button).toBeDisabled()
-    act(() => vi.advanceTimersByTime(1500))
+    expect(preview).toHaveBeenCalledExactlyOnceWith('recognize', [baseCard])
+    await act(async () => openPreview())
     expect(button).toBeEnabled()
   })
 
@@ -177,7 +207,7 @@ describe('SummaryCard', () => {
     expect(screen.getByText('Custom KPI').tagName).toBe('STRONG')
     expect(screen.getByText('Report explanation')).toBeInTheDocument()
     expect(screen.getByText('Metric notes')).toBeInTheDocument()
-    const tableWrapper = screen.getByRole('table').parentElement!.parentElement!
+    const tableWrapper = screen.getByRole('table').closest('[class*="collapsible"]')!
     const collapsedClass = tableWrapper.className
     fireEvent.click(screen.getByTestId('expand-toggle'))
     expect(screen.getByTestId('expand-toggle')).toHaveTextContent('Collapse')
@@ -189,12 +219,12 @@ describe('SummaryCard', () => {
   it('distinguishes pending refresh from an expired cutoff and preserves support links', () => {
     vi.useFakeTimers()
     vi.setSystemTime(new Date('2026-10-19T09:00:00Z'))
-    const pending = renderCard({ card: { ...baseCard, error: { cutOffTime: '10:00:00', supportEmail: 'help@example.com' } } })
+    const pending = renderCard({ card: { ...baseCard, error: { cutOffTime: '10:00:00', cutOffAt: Date.now() + 3_600_000, supportEmail: 'help@example.com' } } })
     expect(screen.getByText(/expected to complete by 10:00:00/)).toBeInTheDocument()
     expect(screen.getByRole('img')).toHaveAttribute('src', '/assets/images/Data_refresh_empty_state.svg')
     expect(screen.getByRole('link', { name: 'help@example.com' })).toHaveAttribute('href', 'mailto:help@example.com')
     pending.unmount()
-    renderCard({ card: { ...baseCard, error: { cutOffTime: '08:00:00', message: 'Refresh delayed' } } })
+    renderCard({ card: { ...baseCard, error: { cutOffTime: '08:00:00', cutOffAt: Date.now() - 3_600_000, message: 'Refresh delayed' } } })
     expect(screen.getByText('Refresh delayed')).toBeInTheDocument()
     expect(screen.getByRole('img')).toHaveAttribute('src', '/assets/images/Data_refresh_failed_empty_state.svg')
   })
@@ -206,5 +236,51 @@ describe('SummaryCard', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Close' }))
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
     expect(screen.getByText('Sales')).toBeInTheDocument()
+  })
+})
+
+describe('SummaryCard Angular parity', () => {
+  const tableCard: ISQFMetricCard = {
+    ...baseCard,
+    isDetailsPageAvailable: true,
+    tableData: { type: 'basic', headers: ['Name'], data: [] },
+  }
+
+  it('auto-expands autoExpandForMobile cards only on mobile browsers (Angular UTIL.browser.mobile)', () => {
+    const ua = vi.spyOn(window.navigator, 'userAgent', 'get')
+    ua.mockReturnValue('Mozilla/5.0 (Macintosh) Chrome/120 Safari/537.36')
+    const { unmount } = renderCard({ card: { ...tableCard, autoExpandForMobile: true } })
+    expect(screen.getByTestId('expand-toggle')).toHaveAttribute('aria-expanded', 'false')
+    unmount()
+    ua.mockReturnValue('Mozilla/5.0 (iPhone) Mobile/15E148 Safari/604.1')
+    renderCard({ card: { ...tableCard, autoExpandForMobile: true } })
+    expect(screen.getByTestId('expand-toggle')).toHaveAttribute('aria-expanded', 'true')
+    ua.mockRestore()
+  })
+
+  it('renders the breakdown label and Expand toggle above the table, not in the footer', () => {
+    renderCard({ card: tableCard, axis: 'department' })
+    const toggle = screen.getByTestId('expand-toggle')
+    expect(toggle.closest('[class*="breakdownRow"]')?.textContent).toContain('Departments')
+    expect(toggle.closest('[class*="footer"]')).toBeNull()
+    fireEvent.click(toggle)
+    expect(toggle.textContent).toContain('Collapse')
+  })
+
+  it("formats Updated at like Angular's 'MMM d, h:mm a'", () => {
+    renderCard({ card: { ...baseCard, updatedTime: new Date(2026, 9, 10, 4, 55).toISOString() } })
+    expect(screen.getByText('Updated at Oct 10, 4:55 AM')).toBeDefined()
+  })
+
+  it('shows the pending ETA message until the cut-off passes, then the error message', () => {
+    const errorCard = (cutOffAt: number): ISQFMetricCard => ({
+      ...baseCard,
+      error: { message: 'Data refresh failed', cutOffTime: '7:30 AM', cutOffAt },
+    })
+    const { unmount } = renderCard({ card: errorCard(Date.now() + 60_000) })
+    expect(screen.getByText('Data refresh is expected to complete by 7:30 AM')).toBeDefined()
+    unmount()
+    renderCard({ card: errorCard(Date.now() - 60_000) })
+    expect(screen.getByText('Data refresh failed')).toBeDefined()
   })
 })

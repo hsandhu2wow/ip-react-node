@@ -103,8 +103,18 @@ export interface WfCardData {
   half_year?: string;
 }
 
+export interface WfPageConfig {
+  ai_insights_enabled?: boolean;
+}
+
+export interface WfAiInsights {
+  header?: string;
+  insights?: string;
+  button_text?: string;
+}
+
 export interface WfPageData {
-  config?: { ai_insights_enabled?: boolean };
+  config?: WfPageConfig;
   cards: WfCardData[];
   label?: string;
   level?: string;
@@ -121,16 +131,22 @@ export interface WfPageData {
   toolkit_link?: WfLink;
   usage_dashboard_link?: WfLink;
   hierarchyDropdown?: WfHierarchyDropdown;
-  ai_insights?: {
-    header?: string;
-    insights?: string;
-    button_text?: string;
-  };
   is_web_subscription_enabled?: boolean;
   available_views?: string[];
   metricsInfo?: WfMetricsInfo;
   varianceFlag?: WfVarianceFlag;
+  ai_insights?: WfAiInsights;
 }
+
+/** Response of GET /{wf|myplan}/userSubscriptions */
+export interface WfUserSubscription {
+  subscribed_locations: string[];
+  subscribed_views: string[];
+  is_store_user?: boolean;
+}
+
+/** Subscription endpoints key: Angular WeeklyFactsService uses 'wf' for weekly, 'myplan' for My Plan */
+export type WfSubscriptionKey = 'wf' | 'myplan';
 
 export interface WfError {
   errorTitle?: string;
@@ -141,8 +157,4 @@ export interface WfError {
 
 export type WfMetric = 'weekly' | 'myPlan';
 
-export interface WfUserSubscriptions {
-  subscribed_locations: string[];
-  subscribed_views: string[];
-  is_store_user?: boolean;
-}
+export type WfUserSubscriptions = WfUserSubscription;

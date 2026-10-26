@@ -37,7 +37,8 @@ export function TrendTable({ tableData, isExpanded, showVariance, displayContext
     .join(' ');
 
   return (
-    <div className={styles.tableWrapper}>
+    // id/class swapped by QfCardsPreviewService.triggerPreview during print/download
+    <div className={`${styles.tableWrapper} qf-scroll-container`} id="qf-scroll-container">
       <table className={tableClassName}>
         <thead>
           <tr>

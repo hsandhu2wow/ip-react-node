@@ -1,5 +1,28 @@
 # Technical architecture and development
 
+## October 26 branch integration
+
+The Quick Facts parity branch introduces `SnackbarProvider` at the entry point
+and `CardsPreviewProvider` / `TrendActionsProvider` in `QuickFactsLayout`.
+Quick Facts cards now use generic-card export IDs and support seasonal/profile
+content, recognition, feedback, NPS and preview/PDF/slide actions. Weekly
+subscription and AI controls register through the shared trend-actions context.
+These additions supersede earlier statements below that those surfaces were
+absent; implementation is not evidence of Angular or all-BU acceptance.
+
+`npm run build` now runs `scripts/prebuild.mjs` first. Cloud Build decrypts the
+matching per-project configuration before the build; prebuild writes the
+frontend allowlist into ignored `.env.production.local`. `src/config/theme.ts`
+applies the configured title and theme assets. A local build without the
+decrypted file uses defaults, not an authenticated BU deployment.
+
+Integration retains dev's full-source coverage scope and threshold, restores
+the now-used ETA/seasonal hooks removed by the earlier unused-code cleanup,
+and keeps the obsolete generic `MetricCard` renderer deleted. Existing
+regressions are reconciled with changed chart payloads, accessible tab/date
+controls, generic API mapping and print-preview behavior rather than discarded.
+Wireframes are not changed by this integration.
+
 Reviewed October 14, 2026 against React `c97525f` and Angular `02a9cf698`;
 Weekly Facts/My Plan contracts reviewed again October 21 at the same HEADs;
 initial migration work started October 23 on `feat/weekly-facts-myplan-parity`,

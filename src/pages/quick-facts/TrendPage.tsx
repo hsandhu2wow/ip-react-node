@@ -6,6 +6,14 @@ import type { WfAlert, WfError, WfMetric } from '../../types/wf.types';
 import { createTrendSelection, updateTrendSelection } from '../../utils/trendSelection';
 import { useAuth } from '../../context/AuthContext';
 import { TrendInfoDialog } from '../../components/trend/TrendInfoDialog';
+import { SubscriptionDialog } from '../../components/trend/SubscriptionDialog';
+import { AiInsightsSidenav } from '../../components/trend/AiInsightsSidenav';
+import { FeedbackDialog } from '../../components/shared/FeedbackDialog/FeedbackDialog';
+import { PreviewPageCards } from '../../components/shared/PreviewDialog/cardsPreviewContext';
+import { buildAvailableViews, getSubscriptionDisplayName, getSubscriptionKey } from '../../components/trend/subscription';
+import { useRegisterTrendActions } from '../../context/TrendActionsContext';
+import { useOptionalFilter } from '../../context/FilterContext';
+import type { PreviewCard } from '../../components/shared/RecognizeDialog/recognize';
 import styles from './TrendPage.module.css';
 
 const METRIC_DISPLAY_NAMES: Record<WfMetric, string> = {
@@ -37,6 +45,9 @@ export function TrendPage({ metric }: TrendPageProps) {
   const [showChildLevel, setShowChildLevel] = useState(false);
   const [popup, setPopup] = useState<WfAlert | null>(null);
   const closePopup = useCallback(() => setPopup(null), []);
+  const [aiFeedbackOpen, setAiFeedbackOpen] = useState(false);
+  const [subscriptionOpen, setSubscriptionOpen] = useState(false);
+  const [aiInsightsOpen, setAiInsightsOpen] = useState(false);
 
   if (previousData !== wfData || previousMetric !== metric) {
     setPreviousData(wfData);
@@ -44,6 +55,9 @@ export function TrendPage({ metric }: TrendPageProps) {
     setSelection(createTrendSelection(wfData));
     setShowVariance(wfData?.varianceFlag?.value ?? false);
     setPopup(null);
+    setAiInsightsOpen(false);
+    setAiFeedbackOpen(false);
+    setSubscriptionOpen(false);
   }
 
   const tabs = useMemo(() => wfData?.cards ?? [], [wfData]);
@@ -62,6 +76,27 @@ export function TrendPage({ metric }: TrendPageProps) {
     setPreviousTable(tableData);
     setIsExpanded(defaultExpanded);
   }
+
+  const subscriptionEnabled = !isError && !!wfData?.is_web_subscription_enabled;
+  const aiInsightsEnabled = !isError && !!wfData?.config?.ai_insights_enabled;
+  const openSubscription = useCallback(() => setSubscriptionOpen(true), []);
+  const toggleAiInsights = useCallback(() => setAiInsightsOpen(open => !open), []);
+  const trendActions = useMemo(() => ({
+    subscriptionEnabled, openSubscription, aiInsightsEnabled,
+    aiButtonText: wfData?.ai_insights?.button_text || 'AI Insights',
+    aiInsightsOpen: aiInsightsEnabled && aiInsightsOpen, toggleAiInsights,
+  }), [subscriptionEnabled, openSubscription, aiInsightsEnabled, wfData?.ai_insights?.button_text, aiInsightsOpen, toggleAiInsights]);
+  useRegisterTrendActions(trendActions);
+  const [deepLinkHandled, setDeepLinkHandled] = useState(() => window.location.hash !== '#EmailSubscription');
+  const isSubscriptionDialogOpen = subscriptionOpen || (!deepLinkHandled && !!wfData);
+  const closeSubscription = useCallback(() => {
+    setSubscriptionOpen(false);
+    setDeepLinkHandled(true);
+  }, []);
+  const filter = useOptionalFilter();
+  const availableViews = useMemo(() => buildAvailableViews(wfData), [wfData]);
+  const addAdditionalHierarchyNode =
+    user.portal === 'SI' && filter?.treeNodes[0]?.code === 'National' && metric === 'weekly';
 
   if (isLoading) {
     return (
@@ -96,8 +131,22 @@ export function TrendPage({ metric }: TrendPageProps) {
   const showHierarchy = hierarchyDropdown?.allowedViews?.includes(selection.cardKey) === true;
 
   return (
+    <AiInsightsSidenav
+      open={trendActions.aiInsightsOpen}
+      onClose={() => setAiInsightsOpen(false)}
+      header={wfData.ai_insights?.header}
+      insightsHtml={wfData.ai_insights?.insights}
+      onHelpUsImprove={() => setAiFeedbackOpen(true)}
+    >
+      <FeedbackDialog open={aiFeedbackOpen} onClose={() => setAiFeedbackOpen(false)} header="WFAIPanel" />
+      <PreviewPageCards
+        pageData
+        getCards={() => [
+          { title: 'WeeklyFacts', cardType: activeCard?.displayName, jsId: `js-${metric}-card` } as PreviewCard,
+        ]}
+      />
     <div className={styles.wrapperContent}>
-      <div className={styles.wfHome}>
+      <div className={`${styles.wfHome} wf-home`} id={`js-${metric}-card`}>
         <div className={styles.toolbar}>
           {tabs.length > 1 && (
             <select
@@ -255,5 +304,16 @@ export function TrendPage({ metric }: TrendPageProps) {
       </div>
       {popup && <TrendInfoDialog alert={popup} onClose={closePopup} />}
     </div>
+      {subscriptionEnabled && (
+        <SubscriptionDialog
+          open={isSubscriptionDialogOpen}
+          onClose={closeSubscription}
+          subscriptionKey={getSubscriptionKey(metric)}
+          displayName={getSubscriptionDisplayName(metric)}
+          availableViews={availableViews}
+          addAdditionalHierarchyNode={addAdditionalHierarchyNode}
+        />
+      )}
+    </AiInsightsSidenav>
   );
 }

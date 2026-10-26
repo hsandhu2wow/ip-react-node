@@ -1,0 +1,83 @@
+/* MatDialog backdrop + surface (mdc dialog defaults) */
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.32);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.panel {
+  position: relative;
+  background: #fff;
+  border-radius: 4px;
+  box-shadow: 0 11px 15px -7px rgba(0, 0, 0, 0.2), 0 24px 38px 3px rgba(0, 0, 0, 0.14), 0 9px 46px 8px rgba(0, 0, 0, 0.12);
+  max-width: 80vw;
+  max-height: 90vh;
+  overflow: auto;
+  box-sizing: border-box;
+  font-family: var(--font-family);
+  color: #4a4a4a;
+}
+
+/* styles.scss .modal-size-60 */
+.size60 {
+  width: 60%;
+  min-width: 368px;
+  max-width: 700px;
+  min-height: 650px;
+  max-height: 90vh;
+}
+
+/* styles.scss .modal-size-90 (width 100% capped by MatDialog's default 80vw max-width) */
+.size90 {
+  width: 80vw;
+  height: 90vh;
+}
+
+/* styles.scss .modal-size-550 */
+.size550 {
+  width: 40%;
+  height: 550px;
+}
+@media (max-width: 768px) {
+  .size550 { width: auto; }
+}
+
+/* app.scss .help-feedback-popup */
+.helpFeedback {
+  overflow: auto;
+  width: 60%;
+  min-width: 368px;
+  max-width: 700px;
+  max-height: 90vh;
+}
+
+.confirm {
+  width: 400px;
+  max-width: 90vw;
+}
+
+.confirmBody { padding: 24px 24px 8px; }
+.confirmMessage { margin: 0 0 8px; font-size: 16px; line-height: 24px; }
+.confirmActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 8px 24px 24px;
+}
+
+.btnPrimary,
+.btnSecondary {
+  height: 36px;
+  padding: 0 16px;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+}
+.btnPrimary { background: #178841; color: #fff; border: none; }
+.btnSecondary { background: none; color: #178841; border: 1px solid #178841; }

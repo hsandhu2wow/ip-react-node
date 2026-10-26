@@ -93,3 +93,10 @@
   height: 2px;
   background-color: #c1c1c1;
 }
+
+/* app.scss "WF Print styles": while previewing, the scroll container's classes are replaced
+   by qf-summary-card__preview-wf (no max-height/overflow), so the full table is captured */
+:global(.qf-summary-card__preview-wf) :global(.wf-table) td:nth-child(2) div,
+:global(.qf-summary-card__preview-wf) :global(.wf-table) th div {
+  white-space: normal !important;
+}
