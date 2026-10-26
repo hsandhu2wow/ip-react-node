@@ -26,9 +26,11 @@ These imported implementations still require source/browser qualification;
 earlier descriptions of missing UI below are dated pre-integration gaps.
 The user approved publishing with the imported code's coverage gap documented,
 without lowering the 95.01% gate.
-Final combined validation: 500 tests in 65 files pass and the build succeeds;
-line coverage is 86.19%, so the coverage command fails its retained gate.
-This supersedes the pre-integration 293-test/97.88% figures below.
+Initial combined validation passed 500 tests in 65 files and the build;
+line coverage was 86.19%, below its retained gate. A test-only follow-up now
+passes 556 tests in 66 files with 97.01% line coverage, so the unchanged 95.01%
+gate passes again. External SDK/canvas/network boundaries remain mocked.
+These results supersede the pre-integration 293-test/97.88% figures below.
 
 The next slice on **`feat/weekly-facts-myplan-parity`** adds a pure selection
 boundary and desktop hierarchy control to both pages. Initial/view selection

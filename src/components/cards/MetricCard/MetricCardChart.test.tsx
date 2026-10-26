@@ -40,16 +40,57 @@ interface ChartProps {
   }
 }
 
+interface GaugeCanvas {
+  ctx: {
+    save: () => void; restore: () => void; fillText: (text: string, x: number, y: number) => void
+    translate: (x: number, y: number) => void; rotate: (angle: number) => void
+    beginPath: () => void; moveTo: (x: number, y: number) => void; lineTo: (x: number, y: number) => void
+    stroke: () => void; arc: (x: number, y: number, radius: number, start: number, end: number) => void
+    fill: () => void
+  }
+  chartArea: { left: number; top: number; width: number; height: number }
+  data: CircularProps['data']
+}
+
+interface CircularProps {
+  data: {
+    labels: string[]
+    datasets: {
+      data: number[]
+      needleData?: { value: number; color: string; dataLabel: string | string[] }
+      backgroundColor: string[] | ((context: {
+        chart: {
+          chartArea?: { left: number; right: number }
+          ctx: { createLinearGradient: (x: number, y: number, x2: number, y2: number) => { addColorStop: (offset: number, color: string) => void } }
+        }
+      }) => unknown)
+    }[]
+  }
+  options: {
+    circumference?: number; rotation?: number; cutout?: string
+    scales?: { x: { display: boolean } }
+    plugins: {
+      datalabels: { formatter: (value: number, context: LabelContext) => string | null | undefined; display: boolean }
+      tooltip: { callbacks: {
+        title: () => null
+        label: (context: { dataIndex: number }) => string | undefined
+        labelColor?: () => { backgroundColor: string; borderColor: string }
+      } }
+    }
+  }
+  plugins?: { afterDatasetsDraw: (chart: GaugeCanvas) => void }[]
+}
+
 const charts = vi.hoisted(() => ({
   Bar: vi.fn<(props: ChartProps) => void>(),
-  Pie: vi.fn<(props: ChartProps) => void>(),
-  Doughnut: vi.fn<(props: ChartProps) => void>(),
+  Pie: vi.fn<(props: CircularProps) => void>(),
+  Doughnut: vi.fn<(props: CircularProps) => void>(),
 }))
 
 vi.mock('react-chartjs-2', () => ({
   Bar: (props: ChartProps) => { charts.Bar(props); return <div aria-label="Bar chart" /> },
-  Pie: (props: ChartProps) => { charts.Pie(props); return <div aria-label="Pie chart" /> },
-  Doughnut: (props: ChartProps) => { charts.Doughnut(props); return <div aria-label="Doughnut chart" /> },
+  Pie: (props: CircularProps) => { charts.Pie(props); return <div aria-label="Pie chart" /> },
+  Doughnut: (props: CircularProps) => { charts.Doughnut(props); return <div aria-label="Doughnut chart" /> },
 }))
 
 function fixture(extra: Partial<ISQFChartData> = {}): ISQFChartData {
@@ -193,5 +234,73 @@ describe('MetricCardChart', () => {
     fireEvent.click(screen.getByRole('tab', { name: 'Graph' }))
     expect(screen.getByLabelText('Bar chart')).toBeInTheDocument()
     expect(screen.queryByRole('table')).not.toBeInTheDocument()
+  })
+
+  it('uses pie labels and configured custom tooltip colors without bar label rules', () => {
+    const options = { labels: ['Actual', 'Plan'], showCustomTooltip: true, showTooltipColorIndex: 1 }
+    const chart = fixture({ chartType: 'pie', chartOptions: options })
+    chart.datasets = { Bar_1: chart.datasets.actual }
+    const { rerender } = render(<MetricCardChart chartData={chart} />)
+    let props = charts.Pie.mock.calls.at(-1)![0]
+    const labelContext = (datasetCount = 1, dataIndex = 0): LabelContext => ({
+      datasetIndex: 0, dataIndex,
+      chart: { config: { data: { datasets: Array.from({ length: datasetCount }, () => barPropsDataset()) } } },
+    })
+    function barPropsDataset(): Dataset {
+      return { data: [], backgroundColor: [], hoverBackgroundColor: [], barThickness: 0, categoryPercentage: 1, barPercentage: 1 }
+    }
+    expect(props.data.datasets[0].data).toEqual([20, 10])
+    expect(props.options.plugins.datalabels.formatter(20, labelContext())).toBe('20K')
+    expect(props.options.plugins.datalabels.formatter(20, labelContext(1, 9))).toBeNull()
+    expect(props.options.plugins.datalabels.formatter(20, labelContext(2))).toBeUndefined()
+    expect(props.options.plugins.tooltip.callbacks.title()).toBeNull()
+    expect(props.options.plugins.tooltip.callbacks.label({ dataIndex: 0 })).toBe('Actual wages')
+    expect(props.options.plugins.tooltip.callbacks.labelColor?.()).toEqual({ backgroundColor: '#eb5757', borderColor: '#eb5757' })
+    for (const displayDataLabelIndex of [0, 1]) {
+      rerender(<MetricCardChart chartData={{
+        ...chart, chartOptions: { hasFixedDataLabel: true, displayDataLabelIndex },
+      }} />)
+      props = charts.Pie.mock.calls.at(-1)![0]
+      expect(props.options.plugins.datalabels.formatter(20, labelContext())).toBe(displayDataLabelIndex === 0 ? '20K' : undefined)
+      expect(props.options.plugins.tooltip.callbacks.label({ dataIndex: 0 })).toBe('Actual sales')
+    }
+  })
+
+  it.each(['Target', ['Target', '95%', 'Plan']])('draws a gauge needle and its %j label at the chart geometry', dataLabel => {
+    const chart = fixture({ chartType: 'gauge' })
+    const needle = { value: 1, color: '#123', dataLabel, data: [] }
+    chart.datasets = { Bar_1: chart.datasets.actual, needle }
+    const chartOptions = { ...chart.chartOptions, gradientColors: ['#111', '#222', '#333'], emptyGaugeColor: '#eee', hideScale: true }
+    chart.chartOptions = chartOptions
+    render(<MetricCardChart chartData={chart} />)
+    const props = charts.Doughnut.mock.calls.at(-1)![0]
+    expect(props.options).toMatchObject({ circumference: 180, rotation: 270, cutout: '60%' })
+    expect(props.options.scales).toBeUndefined()
+    const addColorStop = vi.fn()
+    const gradient = { addColorStop }
+    const createLinearGradient = vi.fn().mockReturnValue(gradient)
+    const fill = props.data.datasets[0].backgroundColor
+    if (typeof fill !== 'function') throw new Error('Missing gauge gradient callback')
+    expect(fill({ chart: { ctx: { createLinearGradient } } })).toBeUndefined()
+    expect(fill({ chart: { chartArea: { left: 10, right: 210 }, ctx: { createLinearGradient } } })).toEqual([gradient, '#eee'])
+    expect(createLinearGradient).toHaveBeenCalledWith(10, 0, 210, 0)
+    expect(addColorStop.mock.calls).toEqual([[0, '#111'], [0.5, '#222'], [1, '#333']])
+    const ctx = {
+      save: vi.fn(), restore: vi.fn(), fillText: vi.fn(), translate: vi.fn(), rotate: vi.fn(),
+      beginPath: vi.fn(), moveTo: vi.fn(), lineTo: vi.fn(), stroke: vi.fn(), arc: vi.fn(), fill: vi.fn(),
+    }
+    const draw = props.plugins?.[0].afterDatasetsDraw
+    if (!draw) throw new Error('Missing gauge needle plugin')
+    draw({ ctx, data: props.data, chartArea: { left: 10, top: 5, width: 200, height: 100 } })
+    expect(ctx.translate).toHaveBeenCalledWith(110, 105)
+    expect(ctx.rotate).toHaveBeenCalledWith(0)
+    expect(ctx.lineTo).toHaveBeenCalledWith(105, 0)
+    expect(ctx.arc).toHaveBeenCalledWith(110, 105, 5, 0, Math.PI * 2)
+    expect(ctx.fillText.mock.calls).toEqual(typeof dataLabel === 'string'
+      ? [[dataLabel, 110, 125]]
+      : [[dataLabel[0], 110, 125], [dataLabel[1], 110, 140], [dataLabel[2], 110, 145]])
+    ctx.save.mockClear()
+    draw({ ctx, data: { labels: [], datasets: [] }, chartArea: { left: 0, top: 0, width: 0, height: 0 } })
+    expect(ctx.save).not.toHaveBeenCalled()
   })
 })

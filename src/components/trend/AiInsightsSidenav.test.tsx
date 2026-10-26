@@ -37,4 +37,36 @@ describe('AiInsightsSidenav', () => {
     fireEvent.click(screen.getByLabelText('Close AI Insights'))
     expect(onClose).toHaveBeenCalledTimes(1)
   })
+
+  it('resizes within bounds, pushes content and stops dragging on mouseup', () => {
+    const improve = vi.fn()
+    const { unmount } = render(
+      <AiInsightsSidenav open onClose={vi.fn()} onHelpUsImprove={improve}>
+        <div>page</div>
+      </AiInsightsSidenav>
+    )
+    const panel = screen.getByRole('complementary')
+    const content = screen.getByText('page').parentElement
+    const handle = screen.getByTestId('ai-insights-resize-handle')
+    fireEvent.mouseMove(document, { clientX: 20 })
+    expect(panel).toHaveStyle({ width: '500px' })
+    fireEvent.mouseDown(handle, { clientX: 600 })
+    fireEvent.mouseMove(document, { clientX: 550 })
+    expect(panel).toHaveStyle({ width: '550px' })
+    expect(content).toHaveStyle({ marginRight: '550px' })
+    expect(document.body).toHaveClass('resizing')
+    fireEvent.mouseMove(document, { clientX: 0 })
+    expect(panel).toHaveStyle({ width: '800px' })
+    fireEvent.mouseMove(document, { clientX: 1000 })
+    expect(panel).toHaveStyle({ width: '410px' })
+    fireEvent.mouseUp(document)
+    expect(document.body).not.toHaveClass('resizing')
+    fireEvent.mouseMove(document, { clientX: 300 })
+    expect(panel).toHaveStyle({ width: '410px' })
+    fireEvent.click(screen.getByRole('button', { name: 'Help us improve' }))
+    expect(improve).toHaveBeenCalledOnce()
+    unmount()
+    fireEvent.mouseMove(document, { clientX: 0 })
+    expect(document.body).not.toHaveClass('resizing')
+  })
 })

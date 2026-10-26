@@ -7,12 +7,19 @@ This is a source/history assessment, **not runtime or production certification**
 
 ## Implementation update: October 26
 
+**Coverage follow-up:** The combined Weekly branch now passes 556 tests in
+66 files, with 97.01% lines (2,629/2,710), 95.41% statements, 94.52% functions
+and 88.26% branches. The unchanged 95.01% global line gate passes. Tests add
+export/capture/SDK/error-path coverage, gauge callbacks and user interactions;
+no production code, coverage exclusions or thresholds changed. This resolves
+the integration coverage gap below, not the all-BU/browser qualification gaps.
+
 **Integration follow-up:** Quick Facts parity is merged into dev at `e8817e8`;
 the Weekly feature branch now incorporates that dev baseline while retaining
 its selection/projection/popup work. The combined branch builds and passes
 500 tests in 65 files. Imported code lowers full-source line coverage to
 86.19%, below the unchanged 95.01% gate. The user approved publishing these
-merges with the gap recorded; raising coverage remains outstanding. The
+merges with the gap recorded; the follow-up above restores the line gate. The
 smaller-scope measurements below are historical, not current combined coverage.
 
 The next feature-branch slice adds desktop hierarchy/history selection and

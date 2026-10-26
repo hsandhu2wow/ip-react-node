@@ -11,13 +11,20 @@ branch. Seasonal/profile cards, chart/table/filter refinements, recognition,
 feedback/NPS, preview/export, subscription/AI action plumbing and per-BU
 build/theme configuration are retained alongside the Weekly hierarchy/dialog
 work. Both regression suites are preserved; wireframes are unchanged.
-The dev merge passes 452 tests and builds, but its 85.57% full-source line
+At integration, the dev merge passed 452 tests and built, but its 85.57% full-source line
 coverage is below the unchanged 95.01% gate. The user approved publishing
 with this gap recorded. Earlier coverage and capability descriptions below
 refer to their dated smaller baseline, not the combined branch.
-The combined Weekly branch builds and passes **500 tests in 65 files**.
-Its line coverage is **86.19%**; the coverage command still fails the unchanged
-95.01% gate, as explicitly accepted for this branch synchronization.
+The combined Weekly branch initially passed **500 tests in 65 files** with
+**86.19%** line coverage, below the gate accepted for branch synchronization.
+
+**Coverage follow-up, October 26:** The combined branch now passes **556 tests
+in 66 files**, with **97.01% line coverage** (2,629 of 2,710 lines). The unchanged
+**95.01%** gate passes again. New tests exercise export/capture success and
+failure handling, OAuth/SDK boundaries, gauge drawing callbacks, feedback and
+recognition keyboard/search flows, subscription hierarchy, preview lifecycle,
+AI resizing and footer scrolling. No application behavior or coverage scope
+changed; mocked external boundaries do not establish browser or all-BU parity.
 
 **Status as of October 26, 2026:** partial migration. Quick Facts summary/details
 and Weekly Facts/My Plan tables with desktop hierarchy/child-peer controls and
@@ -104,7 +111,7 @@ start the backend.
 | `npm test -- --run src/utils/periods.test.ts src/utils/breakdown.test.ts` | Focused period/axis tests |
 | `npm run lint` | Declared, but no ESLint configuration is tracked at the reviewed commit |
 
-There are **35 test files** in this worktree, using Vitest, jsdom and
+There are **66 test files** in this worktree, using Vitest, jsdom and
 React Testing Library. They cover components, hooks, context, API wrappers and
 pure utilities. No configured browser E2E or Angular-versus-React screenshot
 suite is present. The obsolete MetricCard renderer and its five tests were
@@ -115,14 +122,16 @@ tooltips. A second pass adds chart data/label/tooltip callbacks, nested tables,
 scroll shadows, tab switching and hierarchy/URL state persistence.
 The fixture-driven application tests now cover routing, provider/query
 integration, period/breakdown selection, location/date changes and query errors.
-The October 26 run passed all **293 tests** (267 at the October 23 baseline).
-Using the same source scope as the initial measurement, line coverage increased
-from **58.37% to 97.88%**; statements are 96.85%, branches 90.34% and
-functions 97.73%. Coverage includes all application
+The latest October 26 run passed all **556 tests** (500 after branch integration).
+Line coverage increased from the merged branch's **86.19% to 97.01%**;
+statements are 95.41%, branches 88.26% and functions 94.52%.
+The original smaller baseline's 58.37% and pre-merge 97.88% results are historical,
+not measurements of the combined code. Coverage includes all application
 TS/TSX files, excluding tests, setup and type declarations. It does not measure
 CSS, browser rendering or Angular parity. Generated reports are ignored by Git.
 Chart tests mock the canvas renderer and verify the data/options passed to it,
-not Chart.js drawing or source gauge parity.
+including the emitted gauge plugin drawing operations against a mocked canvas,
+not real browser pixels or source gauge parity.
 `npm run test:coverage` enforces **95.01% global line coverage**. Other metrics
 are reported, not gated; branch coverage is not yet above 95%.
 

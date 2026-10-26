@@ -2,6 +2,16 @@
 
 ## October 26 branch integration
 
+The coverage follow-up passes 556 tests across 66 files and restores the
+unchanged 95.01% line gate: 97.01% lines, 95.41% statements, 94.52% functions
+and 88.26% branches. This uses the same all-source policy as the merged 86.19%
+baseline. Added tests invoke real export/capture orchestration with mocked SDK,
+OAuth, HTTP and canvas boundaries; exercise gauge gradient/needle callbacks;
+and cover feedback/recognition keyboard and search behavior, subscription-tree
+expansion, preview cleanup, AI resizing and footer scrolling. No application
+behavior changed. These checks do not certify actual PDF/slide rendering,
+Chart.js pixels, authentication or paired Angular/React browser parity.
+
 The Quick Facts parity branch introduces `SnackbarProvider` at the entry point
 and `CardsPreviewProvider` / `TrendActionsProvider` in `QuickFactsLayout`.
 Quick Facts cards now use generic-card export IDs and support seasonal/profile
@@ -318,9 +328,10 @@ Tests run offline, not against a live or production backend.
 application files, excluding tests, setup and type declarations. Text, HTML
 and JSON summaries are written under ignored `coverage/`. A global line threshold
 of **95.01%** is enforced. Other coverage metrics have no enforced threshold.
-The October 26 measured result is 97.88% lines, 96.85% statements,
-90.34% branches and 97.73% functions, versus 58.37% initial line coverage
-with the same scope. CSS and Angular/browser parity remain outside this metric.
+The pre-integration October 26 result was 97.88% lines, 96.85% statements,
+90.34% branches and 97.73% functions. The combined code initially measured
+86.19% lines; the follow-up now measures 97.01% lines under unchanged inclusion
+rules. CSS and Angular/browser parity remain outside this metric.
 
 Cleanup also removed unimported Vite starter styles/assets, unused barrel
 exports, the unreferenced color-variable map, unused local card selectors and
