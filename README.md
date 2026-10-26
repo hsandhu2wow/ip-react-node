@@ -35,6 +35,7 @@ by themselves establish Angular parity.
 | [Weekly Facts/My Plan assessment](docs/weekly-facts-myplan-parity.md) | Thorough source review, recent changes, real SI response shapes, BU differences and parity gaps |
 | [Weekly Facts/My Plan implementation plan](docs/superpowers/plans/2026-10-21-weekly-facts-myplan-parity.md) | Detailed replacement for roadmap Stage 4, task dependencies and per-BU acceptance |
 | [React guide for Angular developers](docs/react-tutorial-for-angular-devs.md) | Educational walkthrough of existing React patterns |
+| [OLD/NEW architecture and WIQ business case](docs/architecture/README.md) | Presentation, PDF and editable diagrams: Angular/Flask/App Engine versus the React/FastAPI/Cloud Run target; IaC tool undecided |
 
 Earlier date-stamped specs/plans under `docs/superpowers/` retain historical
 scope and intent. They are not completion reports, and earlier feature
@@ -79,6 +80,12 @@ Keep this local file uncommitted; the current `.gitignore` does not ignore
 environment files.
 The current demo portal is hardcoded to `WW` in `AuthContext`; no
 `VITE_PORTAL` setting is implemented in this checkout.
+
+**Temporary build workaround:** KMS decryption in `cloudbuild.yaml` is commented
+out because the build service account lacks key-decryption permission. Fresh
+cloud builds use bundled branding/default portal values without Google Slides
+credentials. Once key access is granted, restore the commented `decrypt-config`
+step and add `"decrypt-config"` back to the build step's `waitFor` list.
 
 Start the existing Python backend separately, using its own setup instructions
 and an authorized development identity/session. Then run:
