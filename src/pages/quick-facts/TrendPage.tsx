@@ -1,9 +1,10 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { isAxiosError } from 'axios';
 import { useTrendData } from '../../hooks/useTrendData';
 import { TrendTable } from '../../components/trend/TrendTable';
-import type { WfAlert, WfError, WfMetric } from '../../types/wf.types';
-import { createTrendSelection, updateTrendSelection } from '../../utils/trendSelection';
+import type { WfAlert, WfError, WfMetric, WfPageData } from '../../types/wf.types';
+import { createTrendSelection, updateTrendSelection, updateMobileTrendSelection } from '../../utils/trendSelection';
+import { TrendMobileFilters } from '../../components/trend/TrendMobileFilters';
 import { useAuth } from '../../context/AuthContext';
 import { TrendInfoDialog } from '../../components/trend/TrendInfoDialog';
 import { SubscriptionDialog } from '../../components/trend/SubscriptionDialog';
@@ -14,6 +15,7 @@ import { buildAvailableViews, getSubscriptionDisplayName, getSubscriptionKey } f
 import { useRegisterTrendActions } from '../../context/TrendActionsContext';
 import { useOptionalFilter } from '../../context/FilterContext';
 import type { PreviewCard } from '../../components/shared/RecognizeDialog/recognize';
+import { sendQFDataToAnalytics } from '../../utils/analytics';
 import styles from './TrendPage.module.css';
 
 const METRIC_DISPLAY_NAMES: Record<WfMetric, string> = {
@@ -38,9 +40,19 @@ function formatLastUpdated(refreshTime: string): string {
 export function TrendPage({ metric }: TrendPageProps) {
   const { user } = useAuth();
   const { data: wfData, isLoading, isError, error } = useTrendData(metric);
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth <= 767);
+  useEffect(() => {
+    const resize = () => setIsMobile(window.innerWidth <= 767);
+    window.addEventListener('resize', resize);
+    return () => window.removeEventListener('resize', resize);
+  }, []);
   const [previousData, setPreviousData] = useState(wfData);
   const [previousMetric, setPreviousMetric] = useState(metric);
-  const [selection, setSelection] = useState(() => createTrendSelection(wfData));
+  const [pageVersion, setPageVersion] = useState(0);
+  const [desktopSelection, setDesktopSelection] = useState(() => createTrendSelection(wfData));
+  const [mobileSelection, setMobileSelection] = useState(() => createTrendSelection(wfData, true));
+  const selection = isMobile ? mobileSelection : desktopSelection;
+  const setSelection = isMobile ? setMobileSelection : setDesktopSelection;
   const [showVariance, setShowVariance] = useState(wfData?.varianceFlag?.value ?? false);
   const [showChildLevel, setShowChildLevel] = useState(false);
   const [popup, setPopup] = useState<WfAlert | null>(null);
@@ -48,16 +60,21 @@ export function TrendPage({ metric }: TrendPageProps) {
   const [aiFeedbackOpen, setAiFeedbackOpen] = useState(false);
   const [subscriptionOpen, setSubscriptionOpen] = useState(false);
   const [aiInsightsOpen, setAiInsightsOpen] = useState(false);
+  const [bannerDismissed, setBannerDismissed] = useState(false);
+  const dismissBanner = useCallback(() => setBannerDismissed(true), []);
 
   if (previousData !== wfData || previousMetric !== metric) {
     setPreviousData(wfData);
     setPreviousMetric(metric);
-    setSelection(createTrendSelection(wfData));
+    setPageVersion(version => version + 1);
+    setDesktopSelection(createTrendSelection(wfData));
+    setMobileSelection(createTrendSelection(wfData, true));
     setShowVariance(wfData?.varianceFlag?.value ?? false);
     setPopup(null);
     setAiInsightsOpen(false);
     setAiFeedbackOpen(false);
     setSubscriptionOpen(false);
+    setBannerDismissed(false);
   }
 
   const tabs = useMemo(() => wfData?.cards ?? [], [wfData]);
@@ -82,10 +99,13 @@ export function TrendPage({ metric }: TrendPageProps) {
   const openSubscription = useCallback(() => setSubscriptionOpen(true), []);
   const toggleAiInsights = useCallback(() => setAiInsightsOpen(open => !open), []);
   const trendActions = useMemo(() => ({
+    banner: !isLoading && !isError && !bannerDismissed ? wfData?.banner : undefined,
+    dismissBanner,
     subscriptionEnabled, openSubscription, aiInsightsEnabled,
     aiButtonText: wfData?.ai_insights?.button_text || 'AI Insights',
     aiInsightsOpen: aiInsightsEnabled && aiInsightsOpen, toggleAiInsights,
-  }), [subscriptionEnabled, openSubscription, aiInsightsEnabled, wfData?.ai_insights?.button_text, aiInsightsOpen, toggleAiInsights]);
+  }), [isLoading, isError, bannerDismissed, wfData?.banner, dismissBanner, subscriptionEnabled,
+    openSubscription, aiInsightsEnabled, wfData?.ai_insights?.button_text, aiInsightsOpen, toggleAiInsights]);
   useRegisterTrendActions(trendActions);
   const [deepLinkHandled, setDeepLinkHandled] = useState(() => window.location.hash !== '#EmailSubscription');
   const isSubscriptionDialogOpen = subscriptionOpen || (!deepLinkHandled && !!wfData);
@@ -94,6 +114,22 @@ export function TrendPage({ metric }: TrendPageProps) {
     setDeepLinkHandled(true);
   }, []);
   const filter = useOptionalFilter();
+  const locationCode = filter?.selectedNode?.code;
+  const track = useCallback((event: string, cardName: string | undefined) => {
+    if (!locationCode) return;
+    void sendQFDataToAnalytics(`${metric}${event}`, cardName, locationCode)
+      .catch(error => console.error('Unable to send Weekly Facts/My Plan analytics', error));
+  }, [metric, locationCode]);
+  const initialEvent = useRef<{ data: WfPageData; metric: WfMetric; location: string } | null>(null);
+  useEffect(() => {
+    if (isLoading || isError || !wfData || !filter?.isLoaded || !locationCode) return;
+    if (initialEvent.current?.data === wfData && initialEvent.current.metric === metric &&
+      initialEvent.current.location === locationCode) return;
+    initialEvent.current = { data: wfData, metric, location: locationCode };
+    // Angular's desktop initializer emits tabChanged before its mobile initializer runs.
+    const first = createTrendSelection(wfData);
+    if (first.contents) track('TabChanged', wfData.cards[0]?.displayName);
+  }, [wfData, metric, isLoading, isError, filter?.isLoaded, locationCode, track]);
   const availableViews = useMemo(() => buildAvailableViews(wfData), [wfData]);
   const addAdditionalHierarchyNode =
     user.portal === 'SI' && filter?.treeNodes[0]?.code === 'National' && metric === 'weekly';
@@ -128,7 +164,27 @@ export function TrendPage({ metric }: TrendPageProps) {
   const showVarianceLabel = wfData.varianceFlag?.text || 'Show variance';
   const kpiFilterEnabled = tableData?.kpiFilterEnabled === true;
   const hierarchyDropdown = wfData.hierarchyDropdown;
-  const showHierarchy = hierarchyDropdown?.allowedViews?.includes(selection.cardKey) === true;
+  const showHierarchy = hierarchyDropdown?.allowedViews?.includes(isMobile ? 'mobile' : selection.cardKey) === true;
+  const hierarchyControl = showHierarchy && hierarchyDropdown ? (
+    <label className={styles.selectLabel}>
+      {!isMobile && `${hierarchyDropdown.label || 'View'}:`}
+      <select
+        className={styles.select}
+        aria-label={hierarchyDropdown.label || 'View'}
+        value={selection.hierarchy}
+        onChange={event => {
+          const value = event.target.value;
+          const next = updateTrendSelection(wfData, selection, { type: 'hierarchy', value });
+          setSelection(next);
+          if (next.contents?.filterKey === value) track('HierarchyDropdownChanged', activeCard?.displayName);
+        }}
+      >
+        {hierarchyDropdown.filterDropdown.map(option => (
+          <option key={option.filterKey} value={option.filterKey}>{option.displayValue}</option>
+        ))}
+      </select>
+    </label>
+  ) : undefined;
 
   return (
     <AiInsightsSidenav
@@ -147,14 +203,16 @@ export function TrendPage({ metric }: TrendPageProps) {
       />
     <div className={styles.wrapperContent}>
       <div className={`${styles.wfHome} wf-home`} id={`js-${metric}-card`}>
-        <div className={styles.toolbar}>
+        {!isMobile && <div className={styles.toolbar}>
           {tabs.length > 1 && (
             <select
               className={styles.select}
               aria-label="Select tab"
               value={activeCard?.key}
               onChange={(e) => {
-                setSelection(updateTrendSelection(wfData, selection, { type: 'view', value: e.target.value }));
+                const next = updateTrendSelection(wfData, selection, { type: 'view', value: e.target.value });
+                setSelection(next);
+                if (next.contents) track('TabChanged', tabs.find(card => card.key === next.cardKey)?.displayName);
               }}
             >
               {tabs.map((tab) => (
@@ -171,7 +229,10 @@ export function TrendPage({ metric }: TrendPageProps) {
                 className={styles.select}
                 aria-label="Select date"
                 value={selection.date}
-                onChange={(e) => setSelection(updateTrendSelection(wfData, selection, { type: 'date', value: e.target.value }))}
+                onChange={(e) => {
+                  setSelection(updateTrendSelection(wfData, selection, { type: 'date', value: e.target.value }));
+                  track('DateFilterChanged', `${activeCard.displayName} - ${e.target.value}`);
+                }}
               >
                 {activeCard.dateFilterValues?.map((value) => (
                   <option key={value} value={value}>
@@ -181,21 +242,7 @@ export function TrendPage({ metric }: TrendPageProps) {
               </select>
             </label>
           )}
-          {showHierarchy && hierarchyDropdown && (
-            <label className={styles.selectLabel}>
-              {hierarchyDropdown.label || 'View'}:
-              <select
-                className={styles.select}
-                aria-label={hierarchyDropdown.label || 'View'}
-                value={selection.hierarchy}
-                onChange={(e) => setSelection(updateTrendSelection(wfData, selection, { type: 'hierarchy', value: e.target.value }))}
-              >
-                {hierarchyDropdown.filterDropdown.map(option => (
-                  <option key={option.filterKey} value={option.filterKey}>{option.displayValue}</option>
-                ))}
-              </select>
-            </label>
-          )}
+          {hierarchyControl}
           {showVarianceToggleEnabled && (
             <label className={styles.toggleLabel}>
               <span
@@ -249,9 +296,57 @@ export function TrendPage({ metric }: TrendPageProps) {
               Show all rows
             </label>
           )}
-        </div>
+          {(wfData.toolkit_link || wfData.usage_dashboard_link) && (
+            <div className={styles.resourceLinks}>
+              {[wfData.toolkit_link, wfData.usage_dashboard_link].map((link, index) => link && (
+                <a key={index} href={link.link} target="_blank" rel="noopener noreferrer">
+                  {link.displayText}<span className="material-icons" aria-hidden="true">open_in_new</span>
+                </a>
+              ))}
+            </div>
+          )}
+        </div>}
 
-        <div className={styles.headerBlock}>
+        {isMobile ? (
+          <>
+            {activeCard && (
+              <TrendMobileFilters
+                key={pageVersion}
+                tabs={tabs.filter(card => card.hasMobileView).map(card => ({
+                  key: card.key, name: card.mobileDateFilterTabName || '', dates: card.dateFilterValues || [],
+                }))}
+                tab={activeCard.mobileDateFilterTabName || ''}
+                date={selection.date}
+                onChange={(tab, date) => {
+                  setSelection(updateMobileTrendSelection(wfData, selection, metric, tab, date));
+                  track('MobileFilterChanged', tab);
+                }}
+                hierarchy={hierarchyControl}
+              />
+            )}
+            {showVarianceToggleEnabled && (
+              <button type="button" className={styles.mobileVariance}
+                aria-label={`${showVarianceLabel} ${showVariance ? 'On' : 'Off'}`} aria-pressed={showVariance}
+                onClick={() => setShowVariance(value => !value)}>
+                <span><span className="material-icons" aria-hidden="true">trending_up</span>{showVarianceLabel}</span>
+                <span>{showVariance ? 'On' : 'Off'}</span>
+                <span aria-hidden="true" className={`${styles.toggleSwitch} ${showVariance ? styles.toggleSwitchOn : ''}`}>
+                  <span className={styles.toggleThumb} />
+                </span>
+              </button>
+            )}
+            <div className={styles.mobileHeader}>
+              <strong>{activeCard ? activeCard.mobileDisplayName ?? activeCard.displayName : 'No Mobile details available'}</strong>
+              {activeCard?.mobileInfo && (
+                <button type="button" className={styles.metricsInfo} aria-label="Mobile metrics info" onClick={() => setPopup({
+                  type: 'info', title: 'Info',
+                  text: `${activeCard.mobileInfo}<div><strong>Last updated:</strong> ${formatLastUpdated(wfData.refreshTime)}</div><hr />${wfData.metricsInfo?.body || ''}`,
+                })}><span className="material-icons" aria-hidden="true">info_outlined</span></button>
+              )}
+              <span className={styles.mobileTime}>{selectedTab?.timePeriod}</span>
+            </div>
+          </>
+        ) : <div className={styles.headerBlock}>
           <div className={styles.title}>
             {metricDisplayName} - {activeCard?.displayName}
           </div>
@@ -282,7 +377,7 @@ export function TrendPage({ metric }: TrendPageProps) {
           {wfData.is_web_subscription_enabled && (
             <div className={styles.subscriptionLink}>Subscription preferences</div>
           )}
-        </div>
+        </div>}
 
         {tableData && (
           <TrendTable
@@ -291,6 +386,7 @@ export function TrendPage({ metric }: TrendPageProps) {
             showVariance={showVariance}
             onAlert={setPopup}
             displayContext={{
+              isMobile,
               parentCode: wfData.parentCode,
               childCode: wfData.childCode,
               hierarchyNode: selection.hierarchy,

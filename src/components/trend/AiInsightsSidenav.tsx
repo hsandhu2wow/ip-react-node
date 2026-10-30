@@ -40,13 +40,15 @@ export function AiInsightsSidenav({ open, onClose, header, insightsHtml, onHelpU
   }, [])
 
   useEffect(() => {
+    if (!open) return
     document.addEventListener('mousemove', onMouseMove)
     document.addEventListener('mouseup', onMouseUp)
     return () => {
       document.removeEventListener('mousemove', onMouseMove)
       document.removeEventListener('mouseup', onMouseUp)
+      onMouseUp()
     }
-  }, [onMouseMove, onMouseUp])
+  }, [open, onMouseMove, onMouseUp])
 
   return (
     <div className={styles.container}>

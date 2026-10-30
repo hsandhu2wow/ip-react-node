@@ -6,8 +6,11 @@
 // aiInsightsEnabled, isSidenavOpen, toggleSidenav).
 import { createContext, useContext, useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
+import type { WfBanner } from '../types/wf.types'
 
 export interface TrendActions {
+  banner?: WfBanner
+  dismissBanner?: () => void
   subscriptionEnabled: boolean
   openSubscription: () => void
   aiInsightsEnabled: boolean

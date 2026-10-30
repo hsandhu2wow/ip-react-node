@@ -1,4 +1,4 @@
-import type { WfCardData, WfCardContents, WfPageData } from '../types/wf.types';
+import type { WfCardData, WfCardContents, WfMetric, WfPageData } from '../types/wf.types';
 
 export interface TrendSelection {
   cardKey: string;
@@ -19,16 +19,28 @@ function initialContents(card: WfCardData | undefined, date: string, hierarchy: 
     : undefined);
 }
 
-export function createTrendSelection(page: WfPageData | undefined): TrendSelection {
-  const card = page?.cards[0];
+export function createTrendSelection(page: WfPageData | undefined, isMobile = false): TrendSelection {
+  const card = isMobile ? page?.cards.find(item => item.hasMobileView) : page?.cards[0];
   const hierarchy = page?.hierarchyDropdown?.filterDropdown[0]?.filterKey || '';
   const date = card?.dateFilterValues?.[0] || '';
   return {
     cardKey: card?.key || '',
     hierarchy,
     date,
-    contents: initialContents(card, date, hierarchy),
+    contents: isMobile && Array.isArray(card?.cardContents)
+      ? card.cardContents[0]
+      : initialContents(card, date, hierarchy),
   };
+}
+
+export function updateMobileTrendSelection(
+  page: WfPageData, selection: TrendSelection, metric: WfMetric, tab: string, date: string,
+): TrendSelection {
+  const card = page.cards.find(item => metric === 'myPlan' && tab === 'Half Year'
+    ? item.dateFilterKey === 'half_year' && item.half_year === date
+    : item.hasMobileView && (item.mobileDateFilterTabName || '') === tab);
+  if (!card) return selection;
+  return updateTrendSelection(page, { ...selection, cardKey: card.key }, { type: 'date', value: date });
 }
 
 export function updateTrendSelection(

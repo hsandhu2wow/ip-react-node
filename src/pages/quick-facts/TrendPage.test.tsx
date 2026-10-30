@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { TrendPage } from './TrendPage';
 import * as useTrendDataModule from '../../hooks/useTrendData';
@@ -58,6 +58,142 @@ const baseWfData: WfPageData = {
     },
   ],
 };
+
+describe('TrendPage mobile selection', () => {
+  const mobileData: WfPageData = {
+    refreshTime: '2026-10-21T12:00:00',
+    parentCode: 'parent',
+    childCode: 'child',
+    varianceFlag: { text: 'Show variance', value: true },
+    cards: [
+      { key: 'desktop', displayName: 'Desktop only', cardContents: { timePeriod: 'Desktop period', tableData: { headers: [], data: [] } } },
+      {
+        key: 'week', displayName: 'Weekly Overview', mobileDisplayName: 'Week', mobileInfo: 'Mobile explanation',
+        hasMobileView: true, hasHistoryData: true, mobileDateFilterTabName: 'Week',
+        dateFilterKey: 'weekNo', dateFilterValues: ['W2', 'W1'],
+        cardContents: ['W2', 'W1'].map(weekNo => ({
+          weekNo, timePeriod: `Period ${weekNo}`,
+          tableData: {
+            headers: [
+              { text: 'Group', val: 'group' }, { text: 'Measure', val: 'measure' },
+              { text: 'Parent result', val: 'parent' }, { text: 'Child result', val: 'child' },
+              { text: 'Unrelated result', val: 'unrelated' },
+            ],
+            data: [[{ columnid: 1, value: weekNo, displayValue: `Result ${weekNo}` }]],
+          },
+        })),
+      },
+    ],
+  };
+  beforeEach(() => {
+    vi.stubGlobal('innerWidth', 767);
+    vi.mocked(useTrendDataModule.useTrendData).mockReturnValue({
+      data: mobileData, isLoading: false, isError: false,
+    } as ReturnType<typeof useTrendDataModule.useTrendData>);
+  });
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it('starts on a permitted mobile card and projects only relevant columns', () => {
+    render(<TrendPage metric="weekly" />);
+    expect(screen.getByText('Week', { selector: 'strong' })).toBeInTheDocument();
+    expect(screen.getByText('Result W2')).toBeInTheDocument();
+    expect(screen.queryByRole('combobox', { name: 'Select tab' })).not.toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: 'Child result' })).toBeInTheDocument();
+    expect(screen.queryByRole('columnheader', { name: 'Unrelated result' })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Older period' }));
+    expect(screen.getByText('Result W1')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Older period' })).toBeDisabled();
+    fireEvent.click(screen.getByRole('button', { name: 'Newer period' }));
+    expect(screen.getByText('Result W2')).toBeInTheDocument();
+  });
+
+  it('opens mobile info with refresh metadata and toggles variance from the full row', () => {
+    render(<TrendPage metric="myPlan" />);
+    const variance = screen.getByRole('button', { name: 'Show variance On' });
+    fireEvent.click(variance);
+    expect(screen.getByRole('button', { name: 'Show variance Off' })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Mobile metrics info' }));
+    expect(screen.getByRole('dialog')).toHaveTextContent('Mobile explanation');
+    expect(screen.getByRole('dialog')).toHaveTextContent('Last updated:');
+  });
+
+  it('changes between mobile and desktop at the Angular 767/768 boundary', () => {
+    vi.stubGlobal('innerWidth', 768);
+    render(<TrendPage metric="weekly" />);
+    expect(screen.getByRole('combobox', { name: 'Select tab' })).toBeInTheDocument();
+    vi.stubGlobal('innerWidth', 767);
+    fireEvent(window, new Event('resize'));
+    expect(screen.getByRole('button', { name: 'Select mobile date' })).toBeInTheDocument();
+    vi.stubGlobal('innerWidth', 769);
+    fireEvent(window, new Event('resize'));
+    expect(screen.getByRole('combobox', { name: 'Select tab' })).toBeInTheDocument();
+  });
+
+  it('does not display a desktop-only table when no mobile cards are available', () => {
+    vi.mocked(useTrendDataModule.useTrendData).mockReturnValue({
+      data: { ...mobileData, cards: [mobileData.cards[0]] }, isLoading: false, isError: false,
+    } as ReturnType<typeof useTrendDataModule.useTrendData>);
+    render(<TrendPage metric="weekly" />);
+    expect(screen.getByText('No Mobile details available')).toBeInTheDocument();
+    expect(screen.queryByRole('table')).not.toBeInTheDocument();
+  });
+
+  it('commits My Plan Half Year cards and resets mobile history on a new response', () => {
+    const plans: WfPageData = {
+      ...mobileData,
+      cards: [
+        mobileData.cards[1],
+        ...['H2', 'H1'].map(half => ({
+          key: half, displayName: `Plan ${half}`, hasMobileView: true,
+          mobileDateFilterTabName: 'Half Year', dateFilterKey: 'half_year',
+          half_year: half, dateFilterValues: ['H2', 'H1'],
+          cardContents: { timePeriod: `Fiscal ${half}`, tableData: { headers: [], data: [] } },
+        })),
+      ],
+    };
+    const query = vi.mocked(useTrendDataModule.useTrendData);
+    query.mockReturnValue({ data: plans, isLoading: false, isError: false } as ReturnType<typeof useTrendDataModule.useTrendData>);
+    const { rerender } = render(<TrendPage metric="myPlan" />);
+    fireEvent.click(screen.getByRole('button', { name: 'Select mobile date' }));
+    fireEvent.click(screen.getAllByRole('tab', { name: 'Half Year' })[0]);
+    fireEvent.click(screen.getByRole('option', { name: 'H1' }));
+    expect(screen.getByText('Fiscal H1')).toBeInTheDocument();
+    expect(screen.getByText('Plan H1', { selector: 'strong' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Select mobile date' })).toHaveFocus();
+    fireEvent.click(screen.getByRole('button', { name: 'Select mobile date' }));
+    query.mockReturnValue({ data: { ...plans }, isLoading: false, isError: false } as ReturnType<typeof useTrendDataModule.useTrendData>);
+    rerender(<TrendPage metric="myPlan" />);
+    expect(screen.getByText('Result W2')).toBeInTheDocument();
+    expect(screen.queryByRole('dialog', { name: 'Choose period' })).not.toBeInTheDocument();
+  });
+
+  it('uses the mobile hierarchy flag and combines its selection with the current date', () => {
+    const week = mobileData.cards[1];
+    const contents = Array.isArray(week.cardContents) ? week.cardContents : [];
+    const query = vi.mocked(useTrendDataModule.useTrendData);
+    query.mockReturnValue({
+      data: {
+        ...mobileData,
+        hierarchyDropdown: {
+          allowedViews: ['mobile', 'week'], label: 'View',
+          filterDropdown: [{ displayValue: 'Stores', filterKey: 'stores' }, { displayValue: 'Groups', filterKey: 'groups' }],
+        },
+        cards: [{
+          ...week,
+          cardContents: contents.flatMap(content => ['stores', 'groups'].map(filterKey => ({
+            ...content, filterKey, timePeriod: `${content.weekNo} ${filterKey}`,
+          }))),
+        }],
+      }, isLoading: false, isError: false,
+    } as ReturnType<typeof useTrendDataModule.useTrendData>);
+    render(<TrendPage metric="weekly" />);
+    expect(screen.queryByRole('button', { name: 'Older period' })).not.toBeInTheDocument();
+    fireEvent.change(screen.getByRole('combobox', { name: 'View' }), { target: { value: 'groups' } });
+    expect(screen.getByText('W2 groups')).toBeInTheDocument();
+  });
+});
 
 describe('TrendPage', () => {
   beforeEach(() => {
@@ -207,6 +343,28 @@ describe('TrendPage', () => {
     });
     renderWithActions();
     expect(screen.queryByRole('button', { name: 'AI Insights' })).not.toBeInTheDocument();
+  });
+
+  it('keeps the enabled AI drawer available without content and resets on response/metric transitions', () => {
+    const query = vi.mocked(useTrendDataModule.useTrendData);
+    const data: WfPageData = { ...baseWfData, config: { ai_insights_enabled: true } };
+    query.mockReturnValue({ data, isLoading: false, isError: false } as ReturnType<typeof query>);
+    const { rerender } = renderWithActions();
+    fireEvent.click(screen.getByRole('button', { name: 'AI Insights' }));
+    expect(screen.getByTestId('ai-insights-sidenav')).toHaveTextContent('Beta');
+    fireEvent.click(screen.getByRole('button', { name: 'Close AI Insights' }));
+    expect(screen.getByRole('button', { name: 'AI Insights' })).toHaveAttribute('aria-pressed', 'false');
+    fireEvent.click(screen.getByRole('button', { name: 'AI Insights' }));
+    query.mockReturnValue({ data: { ...data }, isLoading: false, isError: false } as ReturnType<typeof query>);
+    const page = (metric: WfMetric) => (
+      <TrendActionsProvider><HeaderActions /><TrendPage metric={metric} /></TrendActionsProvider>
+    );
+    rerender(page('weekly'));
+    expect(screen.queryByTestId('ai-insights-sidenav')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'AI Insights' }));
+    rerender(page('myPlan'));
+    expect(screen.queryByTestId('ai-insights-sidenav')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'AI Insights' })).toHaveAttribute('aria-pressed', 'false');
   });
 
   it.each<WfMetric>(['weekly', 'myPlan'])('registers the selected %s view for whole-page preview', (metric) => {

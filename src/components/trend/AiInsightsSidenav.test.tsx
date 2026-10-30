@@ -69,4 +69,24 @@ describe('AiInsightsSidenav', () => {
     fireEvent.mouseMove(document, { clientX: 0 })
     expect(document.body).not.toHaveClass('resizing')
   })
+
+  it('cancels an active drag when the drawer closes or the page unmounts', () => {
+    const { rerender, unmount } = render(
+      <AiInsightsSidenav open onClose={vi.fn()}><div>page</div></AiInsightsSidenav>
+    )
+    fireEvent.mouseDown(screen.getByTestId('ai-insights-resize-handle'), { clientX: 600 })
+    fireEvent.mouseMove(document, { clientX: 550 })
+    expect(document.body).toHaveClass('resizing')
+    rerender(<AiInsightsSidenav open={false} onClose={vi.fn()}><div>page</div></AiInsightsSidenav>)
+    expect(document.body).not.toHaveClass('resizing')
+    fireEvent.mouseMove(document, { clientX: 400 })
+    expect(document.body).not.toHaveClass('resizing')
+    rerender(<AiInsightsSidenav open onClose={vi.fn()}><div>page</div></AiInsightsSidenav>)
+    expect(screen.getByRole('complementary')).toHaveStyle({ width: '550px' })
+    fireEvent.mouseDown(screen.getByTestId('ai-insights-resize-handle'), { clientX: 600 })
+    fireEvent.mouseMove(document, { clientX: 500 })
+    expect(document.body).toHaveClass('resizing')
+    unmount()
+    expect(document.body).not.toHaveClass('resizing')
+  })
 })

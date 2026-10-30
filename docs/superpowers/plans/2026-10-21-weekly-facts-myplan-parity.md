@@ -533,6 +533,17 @@ switch, and test clicking it does not trigger an alert/row action.
 
 ## Task 7: Reproduce mobile selection and responsive controls
 
+**October 27 partial implementation:** Mobile menu preview/cancel/commit,
+bounded history arrows, mobile hierarchy context, page column projection,
+header/info/variance and My Plan card-level Half Year selection are wired and
+covered by regressions. `TrendMobileFilters` owns the menu; the existing
+selection utility owns card/date resolution. The Half Year rule is implemented
+inside `updateMobileTrendSelection` rather than introducing a second helper
+used only once. Desktop/mobile selection state is kept separately on resize.
+Live source initializer/breakpoint characterization and pixel comparison remain
+open: user-details GET returns 403 and Chrome crashes during the synthetic
+browser probe. Do not mark the task or any BU qualified from unit tests.
+
 **Modify:** `src/utils/trendSelection.{ts,test.ts}`,
 `src/pages/quick-facts/TrendPage.{tsx,module.css,test.tsx}`,
 `src/components/trend/TrendTable.tsx`.
@@ -678,14 +689,28 @@ all locations.
 
 ## Task 10: Wire banners, AI, links and analytics
 
-**Create:** `src/components/trend/TrendInsightsPanel.{tsx,module.css,test.tsx}`.
+**Create:** `src/components/trend/TrendBanner.{tsx,module.css}`.
+**Reuse:** the existing `AiInsightsSidenav`; do not create a duplicate AI panel.
 **Modify:** TrendPage, shared filter/layout/actions, global CSS, integration tests.
 
-- [ ] Write gated-action tests for AI enabled/disabled, drawer close/reset
+**Continuation evidence:** shared-layout banners, configured links and exact
+analytics envelope are wired. Local integration tests cover response/metric
+reset, enabled AI with absent content, safe banner HTML, mobile cancellation
+and initialization deduplication. Fixed AI drag teardown on close/unmount.
+Synthetic browser runs passed both routes at 360/767/768/769/1024px, including
+the source's 768px link/header-action visibility boundary. Browser APIs were
+intercepted; no real email/subscription mutations occurred. Live user details
+remain blocked by 403. The system Chrome was unstable; the successful probe
+used Playwright's isolated headless shell. These results do not replace Task
+12's authorized paired-BU visual/behavior acceptance. Local suite: 582 tests,
+97.09% lines against the unchanged 95.01% gate. ESLint is unavailable because
+the existing worktree has no ESLint configuration.
+
+- [x] Write gated-action tests for AI enabled/disabled, drawer close/reset
   after location/metric change, toolkit/usage link labels/targets, banner
   propagation and mobile-versus-desktop action availability. Include enabled
   flag with absent content as characterized in Task 1.
-- [ ] Add analytics assertions on the **actual shared source event envelope**:
+- [x] Add analytics assertions on the **actual shared source event envelope**:
 
 ```ts
 expect(window.dataLayer).toContainEqual(expect.objectContaining({
@@ -699,7 +724,7 @@ expect(window.dataLayer).toContainEqual(expect.objectContaining({
 Initialize the typed dataLayer through the main roadmap's analytics adapter;
 use synthetic employee/role values. Run page/panel/integration tests;
 expected RED is missing source side effects.
-- [ ] Publish banner and clear it through shared layout lifecycle according
+- [x] Publish banner and clear it through shared layout lifecycle according
   to source. Render configured links as `{displayText,link}`, opening a new
   tab with safe opener handling. Do not treat links as strings or infer titles.
 - [ ] Match AI end-side resizable/no-backdrop drawer, top gap 56px,

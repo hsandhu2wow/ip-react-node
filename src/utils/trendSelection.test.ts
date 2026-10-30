@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { WfCardData, WfPageData } from '../types/wf.types';
-import { createTrendSelection, updateTrendSelection } from './trendSelection';
+import { createTrendSelection, updateTrendSelection, updateMobileTrendSelection } from './trendSelection';
 
 function page(cards: WfCardData[]): WfPageData {
   return {
@@ -36,6 +36,40 @@ const history: WfCardData = {
 };
 
 describe('trend selection', () => {
+  it('starts mobile on the first mobile card and its first contents, not a desktop-only view', () => {
+    const data = page([trend, { ...history, hasMobileView: true }]);
+    const selection = createTrendSelection(data, true);
+    expect(selection.cardKey).toBe('history');
+    expect(selection.date).toBe('M2');
+    expect(selection.contents?.timePeriod).toBe('Store M2');
+    expect(createTrendSelection(page([trend]), true).contents).toBeUndefined();
+    expect(createTrendSelection(undefined, true).cardKey).toBe('');
+  });
+
+  it('commits a mobile tab/date using wire-defined history keys and hierarchy fallback', () => {
+    const data = page([
+      { ...history, hasMobileView: true, mobileDateFilterTabName: 'Month' },
+      { ...trend, hasMobileView: true, mobileDateFilterTabName: 'Trend' },
+    ]);
+    let selection = updateMobileTrendSelection(data, createTrendSelection(data, true), 'weekly', 'Month', 'M1');
+    expect(selection.contents?.timePeriod).toBe('Store M1');
+    selection = updateMobileTrendSelection(data, selection, 'weekly', 'Trend', 'M2');
+    expect(selection.cardKey).toBe('trend');
+    expect(selection.contents?.timePeriod).toBe('Store trend');
+    expect(updateMobileTrendSelection(data, selection, 'weekly', 'Missing', 'M1')).toBe(selection);
+  });
+
+  it('selects the matching My Plan card for card-level Half Year dates', () => {
+    const data = page(['H2', 'H1'].map(half => ({
+      key: half, displayName: half, hasMobileView: true, mobileDateFilterTabName: 'Half Year',
+      dateFilterKey: 'half_year', half_year: half, dateFilterValues: ['H2', 'H1'],
+      cardContents: { tableData, timePeriod: `Plan ${half}` },
+    })));
+    const selection = updateMobileTrendSelection(data, createTrendSelection(data, true), 'myPlan', 'Half Year', 'H1');
+    expect(selection.cardKey).toBe('H1');
+    expect(selection.contents?.timePeriod).toBe('Plan H1');
+  });
+
   it('initially falls back to the first hierarchy option for hierarchy arrays', () => {
     const selection = createTrendSelection(page([trend]));
     expect(selection.hierarchy).toBe('stores');
