@@ -1,0 +1,20 @@
+import type { ReactNode } from 'react'
+import { SideNav } from '../SideNav/SideNav'
+import { MobileNav } from '../MobileNav/MobileNav'
+import styles from './AppShell.module.scss'
+
+interface Props {
+  children: ReactNode
+}
+
+export function AppShell({ children }: Props) {
+  return (
+    <div className={styles.shell}>
+      <SideNav />
+      <MobileNav />
+      <div className={styles.main}>
+        {children}
+      </div>
+    </div>
+  )
+}

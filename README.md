@@ -5,6 +5,18 @@ The objective is **one-to-one functional and visual parity**, not a redesign:
 routes, permissions, data, interactions, analytics, responsive behavior and
 integrations must match the agreed Angular baseline.
 
+**Frontend modernisation, October 30:** `feat/frontend-architecture-modernisation`
+starts from the committed Weekly/MyPlan continuation (`9313306`). Scoped styles
+now use SCSS Modules; global backend-HTML CSS and BU theme assets are unchanged.
+Native Fetch replaces Axios underneath the existing TanStack Query hooks.
+Application composition lives in `src/app`, Quick Facts and Weekly/MyPlan in
+`src/features`, and reusable infrastructure in `src/shared`. MSW intercepts
+HTTP in query/transport integration tests using sanitized fixtures; unexpected
+requests fail instead of reaching a backend. These refactors do not certify
+browser or all-BU parity. Dated reports below retain their historical scope.
+The October 30 run passes **604 tests in 72 files**, with **97.15% line
+coverage** (2,733/2,813), retaining the **95.01%** line gate.
+
 **Branch integration, October 26:** Quick Facts parity (`6035014`) is merged
 into dev (`e8817e8`), and that dev baseline is incorporated in this Weekly/MyPlan
 branch. Seasonal/profile cards, chart/table/filter refinements, recognition,
@@ -65,11 +77,12 @@ in another checkout. Recheck both HEADs before executing the plan.
 
 ## Stack and setup
 
-React 19, TypeScript 6, Vite 8, React Router 7, TanStack Query 5, Axios,
-Chart.js 4 and CSS Modules. The repository is a **frontend**; despite its name,
+React 19, TypeScript 6, Vite 8, React Router 7, TanStack Query 5, native Fetch,
+Chart.js 4 and SCSS Modules (Dart Sass), with Vitest/RTL and MSW for testing.
+The repository is a **frontend**; despite its name,
 it does not implement a Node backend. It reuses the existing Python APIs.
 
-Use Node 22.12+ in the Node 22 line, or a supported newer LTS release.
+Use Node 22.13+ in the Node 22 line, or a supported newer LTS release.
 The checked-in Cloud Build configuration uses `node:22`.
 
 ```bash
@@ -85,8 +98,8 @@ VITE_API_URL=/api
 Vite exposes `VITE_*` values to the browser: never place credentials there.
 Keep this local file uncommitted; the current `.gitignore` does not ignore
 environment files.
-The current demo portal is hardcoded to `WW` in `AuthContext`; no
-`VITE_PORTAL` setting is implemented in this checkout.
+The demo identity in `src/shared/context/AuthContext.tsx` reads `VITE_PORTAL`
+and defaults to `SI`; this is not authenticated BU selection.
 
 Start the existing Python backend separately, using its own setup instructions
 and an authorized development identity/session. Then run:
@@ -108,11 +121,12 @@ start the backend.
 | `npm run preview` | Preview built frontend; no preview API proxy is configured |
 | `npm test -- --run` | Run the Vitest suite once |
 | `npm run test:coverage` | Run tests with V8 coverage; text summary and HTML report at `coverage/index.html` |
-| `npm test -- --run src/utils/periods.test.ts src/utils/breakdown.test.ts` | Focused period/axis tests |
+| `npm test -- --run src/features/quick-facts/utils/periods.test.ts src/features/quick-facts/utils/breakdown.test.ts` | Focused period/axis tests |
+| `npm test -- --run src/shared/api/client.test.ts src/shared/api/forms.http.test.ts src/features/trend/api/trend.http.test.ts src/features/quick-facts/hooks/sqfQueries.test.tsx` | MSW-backed transport, multipart and query integration tests |
 | `npm run lint` | Declared, but no ESLint configuration is tracked at the reviewed commit |
 
-There are **66 test files** in this worktree, using Vitest, jsdom and
-React Testing Library. They cover components, hooks, context, API wrappers and
+Tests use Vitest, jsdom and React Testing Library, with native Node web APIs for
+multipart HTTP contract tests. They cover components, hooks, context, API wrappers and
 pure utilities. No configured browser E2E or Angular-versus-React screenshot
 suite is present. The obsolete MetricCard renderer and its five tests were
 removed during cleanup; the active SummaryCard/DetailsCard suites remain.
@@ -122,9 +136,10 @@ tooltips. A second pass adds chart data/label/tooltip callbacks, nested tables,
 scroll shadows, tab switching and hierarchy/URL state persistence.
 The fixture-driven application tests now cover routing, provider/query
 integration, period/breakdown selection, location/date changes and query errors.
-The latest October 26 run passed all **556 tests** (500 after branch integration).
-Line coverage increased from the merged branch's **86.19% to 97.01%**;
-statements are 95.41%, branches 88.26% and functions 94.52%.
+The October 30 run passes **604 tests in 72 files**. Coverage is **97.15% lines**,
+95.65% statements, 88.42% branches and 94.98% functions. The October 26
+coverage follow-up passed 556 tests after the initial 500-test integration and
+restored line coverage from 86.19% to 97.01%; those are historical measurements.
 The original smaller baseline's 58.37% and pre-merge 97.88% results are historical,
 not measurements of the combined code. Coverage includes all application
 TS/TSX files, excluding tests, setup and type declarations. It does not measure
@@ -143,6 +158,11 @@ response structure, filter keys and rendering flags are retained. Charts were
 omitted from these fixtures and are tested separately. Provenance and capture
 paths are embedded in the fixture. Tests mock HTTP transport and require no
 running API, credentials or network access; these are not production snapshots.
+MSW setup lives in `src/test/server.ts` and `src/test/handlers.ts`; handlers are
+reset after each test and the server is closed after each suite. Add
+`server.use(...)` overrides to exercise errors or alternate responses. Keep
+SDK/canvas and isolated component mocks where a network interceptor is not
+the relevant boundary.
 
 ## Current route coverage
 

@@ -1,5 +1,48 @@
 # Technical architecture and development
 
+## October 30 frontend modernisation
+
+The modernisation branch starts at Weekly/MyPlan commit `9313306`, retaining
+its committed mobile/filter and page integration work. The refactor changes
+organisation and HTTP/testing infrastructure, not routes, query keys, retries,
+selection rules or backend payloads.
+
+- Scoped styles are `.module.scss`, compiled by Dart Sass through Vite. The
+  initial conversion preserves all declarations and `:global(...)` selectors.
+  Compiled rules, declarations, media queries and keyframes were compared with
+  the CSS baseline after normalising generated module identifiers. Keep global
+  backend-HTML classes in `src/styles/globals.css` and runtime BU theme assets
+  separate; Sass variables must not replace runtime theme custom properties.
+- TanStack Query remains responsible for server-state lifecycles. Native Fetch
+  replaces Axios in `src/shared/api/client.ts`, preserving the small
+  `get`/`post` response envelope used by endpoint wrappers. Credentials are
+  `include`, the timeout remains 30 seconds, and multipart boundaries are
+  browser-generated. Explicit text and empty responses are retained. Legacy
+  JSON bodies without a JSON content type are still decoded; malformed JSON
+  success responses with a JSON content type reject explicitly.
+- Non-2xx responses throw `HttpError` with `response.status` and
+  `response.data`, preserving seasonal/recognition error consumers. TrendPage
+  now uses `isHttpError`, not an Axios guard. Network errors, timeouts and
+  caller cancellations propagate; Fetch does not add transport retries.
+- MSW's Node interceptor starts in `src/test/setup.ts`, fails on unhandled
+  requests, resets overrides after each test and closes after each suite.
+  Default hierarchy/status/summary handlers use the sanitized SQF fixture.
+  Query integration tests exercise real Query hooks, endpoint functions and
+  Fetch; multipart transport/submission tests use the Node environment to keep
+  native File/FormData paired with native Fetch rather than jsdom's File.
+  Tests use `VITE_API_URL=/api`; no live API, credentials or service worker
+  registration is needed. Existing isolated SDK/canvas/component mocks remain.
+
+The current directory map and HTTP contract below supersede historical
+layer-based paths in the dated migration plans. This is not new Angular or
+all-BU parity certification.
+
+Validation on October 30: 604 tests across 72 files pass; the production build
+passes with its existing large-chunk warning. Full-source coverage is 97.15%
+lines (2,733/2,813), 95.65% statements, 94.98% functions and 88.42% branches.
+The line gate remains 95.01%. The type-only exclusion follows the moved
+directories (`src/**/types/**`); no executable-source exclusion was added.
+
 ## October 26 branch integration
 
 The coverage follow-up passes 556 tests across 66 files and restores the
@@ -22,7 +65,7 @@ absent; implementation is not evidence of Angular or all-BU acceptance.
 
 `npm run build` now runs `scripts/prebuild.mjs` first. Cloud Build decrypts the
 matching per-project configuration before the build; prebuild writes the
-frontend allowlist into ignored `.env.production.local`. `src/config/theme.ts`
+frontend allowlist into ignored `.env.production.local`. `src/app/config/theme.ts`
 applies the configured title and theme assets. A local build without the
 decrypted file uses defaults, not an authenticated BU deployment.
 
@@ -49,13 +92,13 @@ Browser
     AppShell
       QuickFactsLayout + FilterProvider
         FilterBar + route page
-          Query hooks -> typed API functions -> Axios
+          Query hooks -> typed API functions -> native Fetch
             /api -> existing Python/backend services
 ```
 
 `src/main.tsx` creates a React root in StrictMode, BrowserRouter and one
 QueryClientProvider. The QueryClient retries queries three times with a
-one-second delay. `src/App.tsx` mounts AuthProvider, AppShell and the routes.
+one-second delay. `src/app/App.tsx` mounts AuthProvider, AppShell and the routes.
 StrictMode performs development checks; it is not an Angular change-detection
 or authentication replacement.
 
@@ -65,19 +108,21 @@ not old June specs or comments referring to Vite 7.
 
 | Directory | Responsibility |
 |---|---|
-| `src/api/` | Axios instance and endpoint wrappers |
-| `src/context/` | Demo identity and shared filter state |
-| `src/hooks/` | Query lifecycles and card derivation |
-| `src/pages/` | Route-specific composition |
-| `src/components/` | Navigation, filters, cards, tables and modal presentation |
-| `src/types/` | SQF/Weekly backend response declarations |
-| `src/utils/` | Period/axis/tree/table transformations, formatting and HTML tooltips |
+| `src/app/` | Routing, shell/navigation/filter layout, theme bootstrap and shared route composition |
+| `src/features/quick-facts/` | Summary/details pages, card components, API mapping, query/derivation hooks and card transforms |
+| `src/features/trend/` | Weekly Facts/My Plan pages, tables/dialogs, actions context, query/API contracts, types and selection/projection |
+| `src/shared/api/` | Fetch transport and cross-feature feedback, NPS, recognition and user endpoints |
+| `src/shared/context/` | Demo identity and shared filter state |
+| `src/shared/components/` | Reused dialogs, preview/recognition workflow and snackbar |
+| `src/shared/types/` | Common SQF/card/hierarchy wire declarations used by filters, cards and exports |
+| `src/shared/utils/` | Formatting, hierarchy, analytics, export/capture and HTML tooltip infrastructure |
+| `src/test/` | Test lifecycle, MSW server/handlers and sanitized fixtures |
 | `src/styles/globals.css` | Theme/layout variables and global backend-HTML classes |
 | `public/assets/images/` | Two data-refresh state illustrations |
 
 ## Routing and identity
 
-`src/App.tsx` implements summary, details, Weekly and My Plan beneath
+`src/app/App.tsx` implements summary, details, Weekly and My Plan beneath
 `/quick-facts`. The route shell provides shared filter state while moving
 between these child routes. Other registered top-level application routes
 render Coming Soon; unknown routes redirect to Quick Facts.
@@ -86,10 +131,10 @@ The desktop/mobile navigation maps **Trend** to `/quick-facts/weekly`;
 **Weekly** still points to `/weekly` and shows a Soon marker. My Plan has a
 route but no implemented Weekly/My Plan switch in `TrendPage`.
 
-`AuthContext.tsx` supplies `{ name: 'Demo User', portal: 'WW' }` and
-`isAuthenticated: true`. There is no user bootstrap, source role/feature/CFC
+`src/shared/context/AuthContext.tsx` supplies a demo user whose portal reads
+`VITE_PORTAL` (default `SI`) and `isAuthenticated: true`. There is no user bootstrap, source role/feature/CFC
 model or genuine account switch/logout. Real authorization remains a migration
-prerequisite, not something `withCredentials` or `ProtectedRoute` already solves.
+prerequisite, not something cookie credentials or `ProtectedRoute` already solves.
 
 ## Filter state and data flow
 
@@ -152,7 +197,7 @@ intent, not the actual implementation.
 
 ## API contracts
 
-`src/api/client.ts` uses `VITE_API_URL`, cookie credentials and a 30-second
+`src/shared/api/client.ts` uses `VITE_API_URL`, cookie credentials and a 30-second
 timeout. Set `VITE_API_URL=/api`; there is no code fallback to that value.
 These paths are relative to that base:
 
@@ -238,7 +283,7 @@ context adds desktop child/peer and mobile parent/child/hierarchy/date/WFM
 projection; the page wires desktop controls only. Original column IDs also
 associate sparse rows with their headers. WFM/double-goal/three-column layout,
 mobile state wiring and computed sticky geometry remain open. Global backend-HTML styles and external per-BU theme variables
-remain separate from CSS Module layout. Shared auth/filter/action adapters
+remain separate from SCSS Module layout. Shared auth/filter/action adapters
 must be integrated rather than reimplemented inside TrendPage.
 
 There is no proven exhaustive enabled-BU list in frontend source. Identity,
@@ -260,7 +305,7 @@ actions with trusted HTML, source icon mapping, maximum 530px by 648px sizing
 and no initial autofocus. Its portal owns keyboard/backdrop dismissal, scroll
 locking, focus trapping and restoration; it is cleared on page-response/metric
 changes. Optional refresh metadata is supported at the component boundary;
-composed mobile information remains future work. Structured Axios errors show
+composed mobile information remains future work. Structured HTTP errors show
 the backend title/message/support email and remove stale page content, retaining
 an explicit fallback for errors without a response body.
 Angular SQF card Metrics Info uses `QfPopupComponent` (maximum 530px by 648px,
@@ -287,9 +332,8 @@ page. Reintroduce them together with source-equivalent behavior and focused test
 
 ## Tooling, tests and deployment
 
-There are 33 `.test.ts`/`.test.tsx` files: 15 component, 7 utility,
-4 hook, 4 page, 1 context, 1 API and 1 application integration test file. Vitest uses jsdom, globals and
-`src/test/setup.ts`. No browser differential runner or checked-in CI test job
+Vitest uses jsdom for UI tests, Node for multipart HTTP contract tests, globals
+and `src/test/setup.ts`. No browser differential runner or checked-in CI test job
 is present. `cloudbuild.yaml` builds/deploys but does
 not run tests or lint. `npm run lint` has no tracked ESLint configuration.
 
@@ -301,7 +345,7 @@ foundation passed 267 tests. The October 26 continuation passes 293 tests in
 use a fixed UTC clock with user approval, avoiding an after-22:00 wraparound
 failure without changing formatter behavior.
 New query tests
-exercise real React Query hooks and API wrappers with mocked HTTP transport,
+exercise real React Query hooks and API wrappers with MSW-intercepted HTTP,
 covering filter changes, request gating, errors and cached hierarchy/status.
 Page tests render real card components while controlling query/filter state.
 Calendar, location tree and HTML tooltip tests exercise user interactions and

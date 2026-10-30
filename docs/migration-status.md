@@ -5,6 +5,23 @@ Broad review: **October 14, 2026**; focused Weekly Facts/My Plan review:
 including user-visible behavior, permissions, integrations and responsive UI.
 This is a source/history assessment, **not runtime or production certification**.
 
+## Frontend modernisation: October 30
+
+`feat/frontend-architecture-modernisation` branches from the committed
+Weekly/MyPlan continuation (`9313306`), not the older dev baseline. It replaces
+the Axios dependency with native Fetch beneath the existing TanStack Query
+hooks, converts scoped styles mechanically to SCSS Modules, colocates Quick
+Facts and Weekly/MyPlan code under `src/features`, and introduces MSW-backed
+query/HTTP tests. Shared transport, dialogs, filtering and export infrastructure
+live in `src/shared`; application routing/layout lives in `src/app`.
+The 95.01% line threshold remains unchanged; only the type-declaration exclusion
+path follows the moved type directories. Global CSS, BU themes, backend
+contracts and wireframes are unchanged. Historical source paths below refer
+to the dated implementation, not the current directory layout.
+The modernised branch passes 604 tests across 72 files and builds; line
+coverage is 97.15% (2,733/2,813). These checks do not replace browser/BU
+qualification.
+
 ## Implementation update: October 26
 
 **Coverage follow-up:** The combined Weekly branch now passes 556 tests in
