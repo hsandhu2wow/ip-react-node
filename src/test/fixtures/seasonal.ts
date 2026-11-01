@@ -1,4 +1,4 @@
-import type { ISeasonalCardAPI } from '../../types/sqf.types'
+import type { ISeasonalCardAPI } from '../../shared/types/sqf.types'
 
 export const seasonalAPI: ISeasonalCardAPI = {
   APP_LEVEL: 'SQF', Budget_TY: '', Card_Name: 'Seasonal', Card_id: '12',

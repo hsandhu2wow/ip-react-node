@@ -1,0 +1,70 @@
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgb(0 0 0 / 32%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dialog {
+  background: #fff;
+  color: #333;
+  border-radius: 4px;
+  padding: 24px;
+  max-width: min(530px, calc(100vw - 80px));
+  max-height: min(648px, calc(100dvh - 48px));
+  overflow: auto;
+  box-sizing: border-box;
+  box-shadow: 0 8px 24px rgb(0 0 0 / 20%);
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  height: 40px;
+  gap: 4px;
+  font-size: 16px;
+  line-height: 16px;
+  font-weight: 700;
+}
+
+.title {
+  display: flex;
+  gap: 4px;
+}
+
+.icon {
+  font-size: 16px;
+  line-height: 16px;
+  width: 16px;
+  height: 16px;
+}
+
+.close {
+  margin-left: auto;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  cursor: pointer;
+  width: 16px;
+  height: 16px;
+}
+
+.body,
+.content {
+  display: flex;
+  flex-direction: column;
+  font-size: 14px;
+  line-height: 125%;
+}
+
+.body {
+  gap: 16px;
+}
+
+.content {
+  gap: 12px;
+}

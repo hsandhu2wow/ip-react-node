@@ -1,0 +1,320 @@
+// src/types/sqf.types.ts
+
+/** Raw API response from getUniversalFilterGeneric */
+export interface ISQFGenericFilter {
+  name: string
+  code: string
+  level: number | string
+  level_desc: string
+  children?: ISQFGenericFilter[]
+  leafChildren?: ISQFGenericFilter[]
+  selected?: boolean
+  nonClickable?: boolean
+  alwaysHidden?: boolean
+}
+
+/** Processed tree node used throughout the UI */
+export interface IQFTree {
+  name: string
+  code: string
+  level: string
+  level_desc: string
+  depth: number
+  apiDepth: number
+  children?: IQFTree[]
+  expandable: boolean
+  parent?: IQFTree
+  selected?: boolean
+  leafChildren?: ISQFGenericFilter[] | null
+  alwaysHidden?: boolean
+  hidden?: boolean
+  isChecked?: boolean
+  nonClickable?: boolean
+}
+
+/** KPI value displayed in a card — matches actual backend shape */
+export interface ISQFInfoNumber {
+  displayValue: string | number
+  text: string
+  color?: string        // HEX color string e.g. "#219653", NOT a class name
+  infoMessage?: string
+  val?: number          // raw numeric value used for sorting in DetailsPage
+}
+
+/** Chart data from the backend — custom format transformed into Chart.js by our component */
+export interface ISQFChartDataRow {
+  value: number
+  color: string
+  dataLabel?: string
+  tooltip?: string
+}
+
+export interface ISQFChartDataset {
+  data?: ISQFChartDataRow[]
+  _data?: ISQFChartDataRow[]    // some responses use _data
+  barThickness?: number
+  needleData?: { value: number; color: string; dataLabel: string | string[] }
+}
+
+export interface ISQFChartData {
+  chartType: 'bar' | 'horizontalBar' | 'pie' | 'doughnut' | 'gauge'
+  chartOptions: {
+    labels?: string[]
+    stacked?: boolean
+    displayColors?: boolean
+    showCustomTooltip?: boolean
+    hasFixedDataLabel?: boolean
+    displayDataLabelIndex?: number
+    padding?: object
+    hideLabels?: boolean
+    showOnlyDataSet?: string
+  }
+  datasets: Record<string, ISQFChartDataset>
+}
+
+/** Table data returned by the backend — rows are objects keyed by column0, column1, etc. */
+export interface ISQFTableCell {
+  displayValue?: string | number
+  /** Raw value used for column sorting */
+  value?: string | number | null
+  color?: string
+  cssClass?: string
+}
+
+export interface ISQFTableRow {
+  [key: string]: ISQFTableCell | unknown   // column0, column1, ... keys
+  breakdown_table_data?: ISQFTableRow[]
+  key?: string
+  customFontWeight?: number
+  rowHeight?: string | number
+}
+
+export interface ISQFTableData {
+  type?: 'basic' | 'nested' | 'comments'
+  headers?: Array<string | { text: string; tooltip?: string }>
+  data?: ISQFTableRow[]
+  footer?: ISQFTableRow[]
+  sortCol?: string
+  sortOrder?: string
+  freeze_first_column?: boolean
+  columnWidth?: string[]
+  hasHTMLHeaders?: boolean
+  headersCssClass?: string[]
+  scrollHelpText?: { desktop?: string; mobile?: string }
+  tableWithoutHeaders?: boolean
+  customMinWidth?: string
+  richText?: string
+  /** Comments tables: headers/rows used on extra-small screens */
+  mobileHeaders?: Array<string | { text: string; tooltip?: string }>
+  mobileData?: ISQFTableRow[]
+  /** @deprecated legacy field — backend now uses `data` */
+  rows?: Array<(string | number | null)[]>
+}
+
+/** One tab within a tabbed metric card */
+export interface ISQFTabData {
+  tabName?: string
+  label?: string
+  richText?: string
+  reportingTime?: string
+  chartData?: ISQFChartData
+  tableData?: ISQFTableData
+  infoNumbers?: ISQFInfoNumber[]
+}
+
+/** One item in an expandable list section of a summary card */
+export interface IExpandableListItem {
+  header: string        // raw HTML shown as the clickable row header
+  content?: string      // raw HTML shown when expanded
+  isExpanded?: boolean  // whether item starts expanded
+}
+
+/** Error payload from the backend (mapped from Angular's error handling) */
+export interface ISQFCardError {
+  cutOffTime?: string | null
+  /** Epoch ms of the data-load ETA, stamped alongside cutOffTime */
+  cutOffAt?: number
+  generic?: boolean | string
+  level?: boolean
+  wmd?: boolean
+  /** Human-readable error heading, e.g. "Data refresh failed, we are currently investigating" */
+  message?: string
+  supportEmail?: string
+}
+
+
+/** Core metric card shape — returned by /sqf/summaryCards and /sqf/detailCard */
+export interface ISQFMetricCard {
+  cardName: string
+  cardType: 'summary' | 'details' | 'SUMMARY' | 'DETAIL' | 'Summary' | 'Details'
+  /** Backend status, e.g. 'error-NoDataFound' */
+  status?: string
+  /** Overrides the "Departments" breakdown label for the department axis */
+  breakdownLabelOverride?: string
+  cardTitle?: string
+  cardHeader?: string
+  reportingPeriod?: string
+  seq?: number
+  location?: string
+  infoNumbers?: ISQFInfoNumber[]
+  chartData?: ISQFChartData
+  tableData?: ISQFTableData
+  tabs?: ISQFTabData[]
+  error?: ISQFCardError
+  hidden?: boolean
+  isDetailsPageAvailable?: boolean
+  canDrillDown?: boolean
+  childCode?: string
+  cardCode?: string
+  children?: Array<{ code: string; label: string }>
+  jsId?: string
+  // Tabbed/filtered card variant
+  cards?: ISQFMetricCard[]
+  filterKeys?: Record<string, string>   // { cardKeysColKey → dropdownKey }
+  dropdowns?: Array<{ key: string; icon?: string; data: Array<{ key: string; text: string }> }>
+  // Computed at fetch time
+  isGenericCardApi?: boolean
+  apiType?: string
+  tableOnly?: boolean
+  sortByVal?: number
+  // Card content extensions
+  updatedTime?: string                              // ISO date or displayable time string from API
+  dataInfo?: { title: string; body: string }        // "Metrics Info" popup content
+  subHeading?: string                               // label above KPI numbers
+  customInfoNumbers?: string                        // raw HTML replacing infoNumbers display
+  richText?: string                                 // raw HTML block after chart
+  expandable_list?: IExpandableListItem[]
+  customDrillDownText?: string                      // overrides "details" label in footer link
+  autoExpandForMobile?: boolean                     // auto-expand table on mobile
+  keys?: Record<string, string>                     // identifies this card within a filtered card.cards[]
+}
+
+/** Config entry from getSQFMetricCardsStatus */
+export interface IAvailableCardConfig {
+  titleText?: string
+  sequence: number
+  summary?: boolean | number   // API returns 0/1
+  details?: boolean | number   // API returns 0/1
+  summary_start_level?: number
+  summary_last_level?: number
+  details_start_level?: number
+  details_last_level?: number
+  is_generic_api?: boolean | number
+  hide_cfc?: boolean | number
+  show_only_cfc?: boolean | number
+}
+
+/** Map of cardName → config, from getSQFMetricCardsStatus */
+export type IAvailableMetricCards = Record<string, IAvailableCardConfig>
+
+export interface IDataLoadETA {
+  METRIC: string
+  Expected_Time: string
+}
+
+export type ETAMap = Record<string, { time: Date; day?: string }>
+
+/** Reporting period offered by the Quick Facts filter */
+export type Period = 'WTD' | 'YDAY'
+
+/** Global breakdown axis: one level down the hierarchy, or departments */
+export type BreakdownAxis = 'childLevel' | 'department'
+
+/** Per-period value: a bare card array, or the original { cards, sortBy } shape */
+export type ISQFPeriodValue = ISQFMetricCard[] | { cards: ISQFMetricCard[]; sortBy?: string }
+
+/** summaryCards / detailCard response: only periods that have data are present */
+export type ISQFPeriodResponse = Partial<Record<Period, ISQFPeriodValue>>
+
+export type ISQFCardsResponse = ISQFPeriodResponse | ISQFMetricCard[] | { cards: ISQFMetricCard[]; sortBy?: string }
+
+/** Legacy Seasonal API, separate from the v4 generic metric-card payload. */
+export interface ISeasonalChartAPI { Day: string; Sales: string }
+export interface ISeasonalTableAPI {
+  CHILD_CODE: string
+  CHILD_DESC: string
+  PARENT_CODE: string
+  LEVEL?: string
+  SALES_TY: string
+  SALES_LY?: string
+  SALES_TY_LY_DIFF_PERC?: string
+  SELL_THRU_BY_COMMITMENT_TY?: string
+  SELL_THRU_BY_SOH_TY?: string
+  SALES_QTY_TY?: string
+  SALES_QTY_TY_VS_LY_PERC?: string
+  SOH?: string
+  OPTIMISED_SELL_THRU?: string
+}
+export interface ISeasonalCardAPI {
+  APP_LEVEL: string
+  Budget_TY: string
+  CHILD_DESC: string
+  CHILD_CODE: string
+  Card_Name: string
+  Card_id: string
+  LEVEL: string
+  isPinned: boolean
+  cardType: string
+  parentLevel: string
+  parentCode: string
+  metrics_chart?: ISeasonalChartAPI[]
+  metrics_main?: ISeasonalChartAPI[]
+  metrics_table: ISeasonalTableAPI[]
+  table_column_name: string
+  updated_time: string
+  SALES_TY: string
+  SALES_TY_LY_DIFF_PERC?: string
+  SALES_LY?: string
+  SALES_QTY_TY_VS_LY_PERC?: string | number
+  SELL_THRU_BY_COMMITMENT_TY?: string
+  SELL_THRU_BY_SOH_TY?: string
+  SALES_QTY_TY?: string | number
+  ZERO_SALES_SOH_ARTICLES?: string
+  isTableOnly?: boolean
+}
+export interface ISeasonalChart { day: string; sales: number }
+export interface ISeasonalTable {
+  state: string
+  parentCode: string
+  salesETD: string
+  salesETDUnFormatted: number
+  salesLyETD: string | null
+  salesVsLyETD: string | null
+  salesVsLyETDColorVal: string
+  sellThruByCommitment: string | null
+  sellThruByCommitmentColorVal: string
+  sellThruBySOH: string | null
+  sellThruBySOHColorVal: string
+  salesQtyTy: string | number
+  salesQtyTyColorVal: string
+  salesQtyTyVsLyPerc: string
+  salesQtyTyVsLyPercColorVal: string
+  soh: number | null
+  optimized_sell_thru: string | null
+}
+export interface ISeasonalCard extends Omit<ISQFMetricCard, 'chartData' | 'tableData' | 'error' | 'cardType'> {
+  error?: ISQFCardError | null
+  type: 'seasonal'
+  cardType: string
+  fullLocationName?: string
+  id?: string
+  title?: string
+  level?: string
+  isPinned?: boolean
+  parentLevel?: string
+  parentCode?: string
+  cardLevel?: string
+  updatedAt?: string
+  infoMainNumberFull?: number | null
+  infoMainNumber?: string
+  infoMainNumberText?: string
+  infoSubNumber?: string
+  infoSubDetails?: string
+  infoAdditional1?: string
+  infoAdditional1Text?: string
+  infoAdditional2?: string
+  infoAdditional2Text?: string
+  chartData?: ISeasonalChart[]
+  tableData?: ISeasonalTable[]
+  zero_sales_soh_articles?: number | null
+}

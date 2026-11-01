@@ -1,15 +1,14 @@
 # React App Tutorial — For Angular Developers
 
 > This tutorial explains **every layer** of the `ip-react-node` app using Angular analogies.
-> Every concept is backed by actual code from the codebase.
+> Examples explain the codebase; simplified examples are not complete page implementations.
 
-> **Migration status, 2026-10-10:** This is an educational guide, not a
-> certification of Angular parity. React currently uses demo authentication
-> and has incomplete routes/actions. See the [README](../README.md),
-> [source comparison](angular-react-parity-analysis.md) and
-> [migration plan](superpowers/plans/2026-10-10-angular-react-migration.md)
-> for the current baseline and full-parity scope. Examples below may simplify
-> page composition; use the implementation for complete behavior.
+> **Reviewed October 14, 2026:** Use the [technical architecture](technical-architecture.md)
+> for current contracts and the [migration status](migration-status.md) and
+> [roadmap](superpowers/plans/2026-10-14-angular-react-migration.md) for parity
+> gaps and future work. After the October 20 test expansion this worktree has
+> 33 test files, demo
+> authentication and only a partial Angular migration.
 
 ---
 
@@ -44,7 +43,7 @@ import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import './styles/globals.css'
-import App from './App.tsx'
+import App from './app/App.tsx'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -71,7 +70,7 @@ createRoot(document.getElementById('root')!).render(
 | `provideRouter(routes)` | `<BrowserRouter>` wrapping |
 | `provideHttpClient()` | `<QueryClientProvider>` wrapping |
 | `providers: [MyService]` | Wrapping with a `<Provider>` component |
-| `NgZone` / change detection | React render/state updates; `<StrictMode>` adds development checks, not change detection |
+| `NgZone` / change detection | React state/render updates; `<StrictMode>` adds development checks, not change detection |
 
 **Key insight:** In React there is no module system or decorator-based DI. Instead, "global providers" are **components** that wrap the tree. Anything below `<QueryClientProvider>` can access React Query. Anything below `<BrowserRouter>` can use routing hooks. This is the React equivalent of Angular's root-level providers.
 
@@ -129,7 +128,7 @@ export class SideNavComponent {
 }
 ```
 
-### React way (`src/components/layout/SideNav/SideNav.tsx`):
+### React way (`src/app/layout/SideNav/SideNav.tsx`):
 ```tsx
 export function SideNav() {
   const { user } = useAuth()       // ← reads from context (like DI)
@@ -210,15 +209,20 @@ export function AppShell({ children }: { children: ReactNode }) {
 
 Angular automatically scopes component styles with generated attributes. React has no built-in scoping — **CSS Modules** are the community solution.
 
+This project uses **SCSS Modules**: Sass preprocesses `.module.scss`, then
+CSS Modules provides the same local scoping. The October 30 conversion keeps
+existing selectors and declarations unchanged; global backend HTML classes and
+runtime BU theme variables remain global rather than being moved into Sass.
+
 ```css
-/* SideNav.module.css */
+/* SideNav.module.scss */
 .sidenav { position: fixed; width: 56px; }
 .itemActive { background: rgba(255,255,255,0.12); }
 ```
 
 ```tsx
 // SideNav.tsx — import the CSS file as an object
-import styles from './SideNav.module.css'
+import styles from './SideNav.module.scss'
 
 // Use class names as object properties:
 <nav className={styles.sidenav}>
@@ -252,7 +256,7 @@ At build time, `.sidenav` becomes something like `.SideNav_sidenav__x3k2` — gl
 
 These are then used in CSS Modules:
 ```css
-/* AppShell.module.css */
+/* AppShell.module.scss */
 .main {
   margin-left: var(--sidenav-width);    /* auto-adjusts for mobile */
   padding-top: var(--mob-appbar-height);
@@ -265,7 +269,7 @@ These are then used in CSS Modules:
 
 **Angular equivalent:** `RouterModule.forRoot(routes)` + `<router-outlet>`
 
-### Route definition (`src/App.tsx`)
+### Route definition (`src/app/App.tsx`)
 
 ```tsx
 // Angular routes look like:
@@ -300,7 +304,7 @@ export function QuickFactsLayout() {
       <div style={{ '--page-bar-height': '0px' } as React.CSSProperties}>
         <FilterBar />
         <div className={styles.content}>
-          <Outlet />   {/* SummaryPage, DetailsPage or TrendPage renders here */}
+          <Outlet />   {/* SummaryPage, DetailsPage or TrendPage */}
         </div>
         <footer className={styles.footer}>
           <span>Store Insights · Powered by Quick Facts</span>
@@ -313,14 +317,14 @@ export function QuickFactsLayout() {
 
 ### Route guard = `ProtectedRoute`
 
-The current `AuthProvider` always supplies authenticated demo context.
-This guard is scaffolding, not source-equivalent IAP/role authorization;
-logout currently reloads the page.
+The current provider always supplies authenticated demo context with portal
+`WW`; logout reloads the page. This is not the Angular backend/IAP bootstrap,
+role checks or source feature permissions.
 
 Angular uses `CanActivate`. React has no built-in guard — you build your own as a component:
 
 ```tsx
-// src/context/AuthContext.tsx
+// src/shared/context/AuthContext.tsx
 export function ProtectedRoute({ children }: { children: ReactNode }) {
   const { isAuthenticated } = useAuth()
   if (!isAuthenticated) {
@@ -335,7 +339,7 @@ export function ProtectedRoute({ children }: { children: ReactNode }) {
 Angular uses `ActivatedRoute`. React uses the `useParams` hook:
 
 ```tsx
-// src/pages/quick-facts/DetailsPage.tsx
+// src/features/quick-facts/pages/DetailsPage.tsx
 import { useParams } from 'react-router-dom'
 
 export function DetailsPage() {
@@ -359,20 +363,23 @@ import { NavLink, Navigate } from 'react-router-dom'
 <Navigate to="/quick-facts/summary" replace />
 ```
 
-`NavLink` automatically adds an active class when the URL matches — equivalent to `routerLinkActive`.
+`NavLink` exposes active state to its render/class callbacks and adds
+`aria-current` when active. This app also uses `getActivePrefix` for overlapping
+Daily/Trend paths; a plain string `className` does not automatically incorporate
+that custom active styling.
 
 ### Reading query params (URL search params)
 
 Angular: `this.route.queryParams` — React:
 
 ```tsx
-// src/context/FilterContext.tsx
+// src/shared/context/FilterContext.tsx
 import { useSearchParams } from 'react-router-dom'
 
 const [searchParams, setSearchParams] = useSearchParams()
 const code = searchParams.get('code')   // ?code=WW001
 
-// Update URL query params without navigation:
+// Replace the current history entry with updated query params:
 setSearchParams(prev => {
   const next = new URLSearchParams(prev)
   next.set('code', node.code)
@@ -380,10 +387,11 @@ setSearchParams(prev => {
 }, { replace: true })
 ```
 
-`FilterContext` also stores reporting period (`WTD`/`YDAY`) and breakdown axis
-(`childLevel`/`department`), synchronized to `period` and `axis` query parameters.
-These React URL additions must be compared with Angular's actual state lifetime
-and query contract; they do not prove matching deep-link behavior.
+The filter also stores `selectedPeriod` (`WTD`/`YDAY`) and
+`selectedBreakdownAxis` (`childLevel`/`department`) in `period`/`axis` query
+parameters. Initialization reads URL state, but arbitrary browser-history URL
+changes are not fully synchronized back into context. Existing page/sidebar
+links do not explicitly carry search parameters.
 
 ---
 
@@ -398,7 +406,7 @@ React has no class-based DI. Instead, **Context** is a shared value that any com
 #### 1. Create the context shape
 
 ```tsx
-// src/context/AuthContext.tsx
+// src/shared/context/AuthContext.tsx
 interface AuthContextType {
   user: AuthUser
   isAuthenticated: boolean
@@ -451,7 +459,7 @@ export function SideNav() {
 `FilterContext` is the complex one. It holds the selected location node, the date, and the flat tree of all locations:
 
 ```tsx
-// src/context/FilterContext.tsx — simplified
+// src/shared/context/FilterContext.tsx — simplified
 export function FilterProvider({ children }) {
   const [treeNodes, setTreeNodes] = useState<IQFTree[]>([])
   const [selectedNode, setSelectedNodeState] = useState<IQFTree | null>(null)
@@ -517,7 +525,7 @@ setMenuOpen(prev => !prev)   // functional form — safe when using previous val
 ### State inside SideNav
 
 ```tsx
-// src/components/layout/SideNav/SideNav.tsx
+// src/app/layout/SideNav/SideNav.tsx
 export function SideNav() {
   const [menuOpen, setMenuOpen] = useState(false)
 
@@ -595,7 +603,7 @@ useEffect(() => {
 ### ESC key handler in MobileNav
 
 ```tsx
-// src/components/layout/MobileNav/MobileNav.tsx
+// src/app/layout/MobileNav/MobileNav.tsx
 useEffect(() => {
   function handleKeyDown(e: KeyboardEvent) {
     if (e.key === 'Escape' && drawerOpen) close()
@@ -626,20 +634,27 @@ dropdownRef.current?.contains(e.target as Node)
 **Angular equivalent:** `HttpClient` + RxJS `Observable` + `async` pipe
 
 React has no built-in HTTP client or reactive streams. This app uses:
-- **Axios** for HTTP (`src/api/client.ts`)
+- **Native Fetch** for HTTP, through a typed wrapper (`src/shared/api/client.ts`)
 - **TanStack Query (React Query)** for caching, loading states, retries
 
-### The API client (`src/api/client.ts`)
+### The API client (`src/shared/api/client.ts`)
 
 ```ts
-import axios from 'axios'
+import { createHttpClient } from './client'
 
-const client = axios.create({
+// Example factory usage; endpoint modules normally import the default singleton.
+const client = createHttpClient({
   baseURL: import.meta.env.VITE_API_URL,  // from .env file, like Angular's environment.ts
-  withCredentials: true,                  // send session cookie
   timeout: 30_000,
 })
 ```
+
+The wrapper sets `credentials: 'include'` to send session cookies. It handles
+HTTP error rejection, JSON/text/empty responses, timeout/cancellation and
+multipart bodies, returning `{ data }` to preserve endpoint function contracts.
+HTTP errors expose `HttpError.response.status` and `.data`; network failures
+also reject. TanStack Query manages state and caching but does not send HTTP
+requests itself.
 
 Angular equivalent:
 ```typescript
@@ -649,7 +664,7 @@ export const environment = { apiUrl: '/api' }
 // http.interceptor.ts — withCredentials
 ```
 
-### API functions (`src/api/sqf.ts`)
+### API functions (`src/features/quick-facts/api/sqf.ts`)
 
 ```ts
 // Plain async functions — no Observables
@@ -666,8 +681,8 @@ export async function getSummaryCards(
 }
 ```
 
-Historical array-only Angular equivalent (the current source additionally
-supports period-keyed responses and wrapper values):
+Historical array-only Angular example (current source also supports
+period-keyed and wrapper responses):
 ```typescript
 getSummaryCards(apiDepth: number, date: string, code?: string): Observable<ISQFMetricCard[]> {
   const path = apiDepth && code
@@ -677,7 +692,7 @@ getSummaryCards(apiDepth: number, date: string, code?: string): Observable<ISQFM
 }
 ```
 
-### TanStack Query (`src/hooks/useSummaryCards.ts`)
+### TanStack Query (`src/features/quick-facts/hooks/useSummaryCards.ts`)
 
 ```ts
 export function useSummaryCards() {
@@ -693,18 +708,18 @@ export function useSummaryCards() {
     // enabled = only fetch when isLoaded (like combineLatest with a boolean guard)
     enabled: isLoaded,
 
-    staleTime: 0,  // data is immediately stale; normal mount/focus rules may refetch
+    staleTime: 0,  // immediately stale; eligible for normal mount/focus refetch
   })
 }
 ```
 
 **When `selectedNode` or `selectedDate` changes, `queryKey` changes → React Query automatically re-fetches.** This is the React equivalent of `switchMap` in RxJS.
 
-### Using the query in a component (`src/pages/quick-facts/SummaryPage.tsx`)
+### Using the query in a component (`src/features/quick-facts/pages/SummaryPage.tsx`)
 
 ```tsx
 export function SummaryPage() {
-  // The actual page enriches period-selected cards with status and ETA metadata.
+  // Simplified composition; actual page also handles hierarchy loading/order.
   const summaryQuery = useEnrichedSummaryCards()
 
   // Three states: loading, error, success
@@ -731,15 +746,16 @@ Angular equivalent with `async` pipe:
 | `isLoading` | `loading$` BehaviorSubject |
 | `isError` | `error$` BehaviorSubject |
 | `data` | value from `async` pipe |
-| `staleTime: 0` | data remains cached but is immediately stale and eligible for refetch |
+| `staleTime: 0` | Cached data is immediately stale, not uncached |
 | Retry config in `QueryClient` | `retryWhen()` operator |
 
-`summaryCards` and `detailCard` may return `{ WTD, YDAY }`, with each period
-containing an array or `{ cards, sortBy }`. `usePeriodCards` normalizes the
-response and selects an available period; changing period uses already-fetched
-data rather than adding the period to the HTTP request. Do not render raw
-period objects as arrays or silently turn an unsupported response into an
-apparently successful empty page.
+Summary/details endpoints may return `{ WTD, YDAY }`, each containing a card
+array or `{ cards, sortBy }`. `usePeriodCards` normalizes/selects the active
+period before enrichment/rendering; do not map the raw response as an array.
+The current fallback is derived and does not write back to context/URL.
+Changing period alone selects from fetched data rather than adding a request
+parameter. Unsupported shapes currently normalize to no cards, a parity/error
+handling gap rather than a recommended validation pattern.
 
 ---
 
@@ -752,17 +768,27 @@ In Angular you extract logic into services. In React you extract stateful logic 
 ### `useFilterTree` — triggers when the filter context initialises
 
 ```ts
-// src/hooks/useFilterTree.ts (simplified concept)
+// src/app/hooks/useFilterTree.ts
 export function useFilterTree() {
   const { initTree } = useFilter()
 
-  useQuery({
-    queryKey: ['sqf', 'universal-filter'],
+  const query = useQuery({
+    queryKey: ['sqf', 'filter-tree'],
     queryFn: getUniversalFilter,
-    onSuccess: (data) => initTree(data),   // calls FilterContext.initTree once data arrives
+    staleTime: Infinity,
+    gcTime: Infinity,
   })
+
+  useEffect(() => {
+    if (query.data) initTree(query.data)
+  }, [query.data, initTree])
+
+  return query
 }
 ```
+
+TanStack Query v5 removed query `onSuccess` callbacks; this effect follows the
+actual implementation. Hook imports are omitted from the example.
 
 Called once inside `FilterBar`:
 ```tsx
@@ -806,21 +832,21 @@ Here's what happens when you open `/quick-facts/summary` and change the location
          /quick-facts → <ProtectedRoute><QuickFactsLayout /></ProtectedRoute>
 
 3. QuickFactsLayout renders:
-   <FilterProvider>        ← creates selectedNode/selectedDate state
+   <FilterProvider>        ← location/date/period/axis state
      <FilterBar />         ← calls useFilterTree() → GET /api/sqf/getUniversalFilterGeneric
      <Outlet />            ← renders SummaryPage
 
 4. FilterBar receives API response:
    → initTree(rawData) is called
-   → tree is flattened, selectedNode defaults to first selectable node
+   → tree is flattened, selectedNode restores URL code or uses first selectable node
    → isLoaded becomes true
-   → URL gets ?code=WW001&date=2026-06-30
+   → defaults are not automatically written into the URL
 
 5. SummaryPage watches isLoaded:
    useSummaryCards() → queryKey includes selectedNode.code
    → enabled: isLoaded = true
    → GET /api/sqf/summaryCards/1/2026-06-30/WW001
-   → data arrives → cards render
+   → data arrives → period selection + card-status enrichment → cards render
 
 6. User changes location dropdown:
    → setSelectedNode(newNode) called
@@ -870,22 +896,21 @@ Instead of JS calculations for offsets, CSS custom properties do it automaticall
 ```
 
 ```css
-/* AppShell.module.css */
+/* AppShell.module.scss */
 .main {
   margin-left: var(--sidenav-width);    /* auto: 56px desktop, 0 mobile */
   padding-top: var(--mob-appbar-height); /* auto: 0 desktop, 56px mobile */
 }
 
-/* FilterBar.module.css */
+/* FilterBar.module.scss */
 .filterBar {
   position: sticky;
   top: calc(var(--mob-appbar-height) + var(--page-bar-height));
 }
 ```
 
-`PageBar` was removed in the August layout changes. `QuickFactsLayout` sets
-`--page-bar-height: 0px`; the retained variable must not be mistaken for a
-rendered tab bar.
+`PageBar` was removed in the August changes. The current route layout sets
+`--page-bar-height: 0px`; the retained CSS variable is not a rendered tab bar.
 
 **Why `sticky` not `fixed`?** `position: fixed` escapes the document flow and needs manual `left: 56px` to avoid the sidenav. `position: sticky` sticks within its parent's scroll container — which already has the correct `margin-left` applied by AppShell. Much simpler.
 
@@ -979,7 +1004,7 @@ it('shows user menu when user row is clicked', () => {
 ```bash
 npm test           # watch mode
 npx vitest run     # CI / one-shot (equivalent of ng test --watch=false)
-npx vitest run src/components/layout/SideNav/SideNav.test.tsx  # single file
+npx vitest run src/app/layout/SideNav/SideNav.test.tsx  # single file
 ```
 
 ---
@@ -998,7 +1023,7 @@ Angular is built with TypeScript at its core. React is optional-TypeScript. This
 ### Interfaces vs Angular models
 
 ```ts
-// src/types/sqf.types.ts
+// src/shared/types/sqf.types.ts
 export interface ISQFMetricCard {
   cardName: string
   cardTitle?: string
@@ -1041,7 +1066,7 @@ interface Props<T> {
 | `@NgModule` providers | `<Provider>` components in `main.tsx` |
 | `@Component` class | `function MyComponent()` |
 | `template` / `templateUrl` | JSX returned from function |
-| `styleUrls` | `import styles from './X.module.css'` |
+| `styleUrls` | `import styles from './X.module.scss'` |
 | `@Input()` | function parameter (prop) |
 | `@Output() EventEmitter` | callback prop: `onSelect: (v) => void` |
 | `<ng-content>` | `{children}` prop |
@@ -1058,7 +1083,7 @@ interface Props<T> {
 | `@Injectable` service | Custom hook (`useMyService`) |
 | `BehaviorSubject` | `useState` |
 | `async` pipe | `query.data` from TanStack Query |
-| `HttpClient.get<T>()` | `axios.get<T>()` |
+| `HttpClient.get<T>()` | Typed Fetch wrapper `client.get<T>()`, called by Query hooks |
 | `ngOnInit` | `useEffect(() => {}, [])` |
 | `ngOnDestroy` | `return () => cleanup()` inside `useEffect` |
 | `ngOnChanges` | `useEffect(() => {}, [dep])` |
