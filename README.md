@@ -5,22 +5,42 @@ The objective is **one-to-one functional and visual parity**, not a redesign:
 routes, permissions, data, interactions, analytics, responsive behavior and
 integrations must match the agreed Angular baseline.
 
-**Branch integration, October 26:** `feat/quick-facts-feature-parity` is
-integrated into `dev-branch`, then dev into `feat/weekly-facts-myplan-parity`.
-The Quick Facts branch brings seasonal/profile cards, chart/table/filter
-refinements, recognition/feedback/NPS, preview/export, subscription/AI action
-plumbing and per-BU build/theme configuration. The dated assessments below
-describe their reviewed baselines, not certification of this combined work.
-The merge retains the later cleanup and regression suites; wireframes are
-excluded from its changes. Full Angular/all-BU acceptance remains outstanding.
-The reconciled dev suite passes 452 tests in 63 files and builds successfully.
-Combined full-source line coverage is 85.57%, below the retained 95.01% gate:
-the incoming export/capture and other new code needs additional tests. The user
-approved publishing these merges with that gap recorded, without weakening
-the gate. Earlier coverage figures below describe their smaller dated baseline.
+**Frontend modernisation, October 30:** `feat/frontend-architecture-modernisation`
+starts from the committed Weekly/MyPlan continuation (`9313306`). Scoped styles
+now use SCSS Modules; global backend-HTML CSS and BU theme assets are unchanged.
+Native Fetch replaces Axios underneath the existing TanStack Query hooks.
+Application composition lives in `src/app`, Quick Facts and Weekly/MyPlan in
+`src/features`, and reusable infrastructure in `src/shared`. MSW intercepts
+HTTP in query/transport integration tests using sanitized fixtures; unexpected
+requests fail instead of reaching a backend. These refactors do not certify
+browser or all-BU parity. Dated reports below retain their historical scope.
+The October 30 run passes **604 tests in 72 files**, with **97.15% line
+coverage** (2,733/2,813), retaining the **95.01%** line gate.
 
-**Status as of October 21, 2026:** partial migration. Quick Facts summary/details
-and basic Weekly Facts/My Plan tables exist. Authentication is still a demo
+**Branch integration, October 26:** Quick Facts parity (`6035014`) is merged
+into dev (`e8817e8`), and that dev baseline is incorporated in this Weekly/MyPlan
+branch. Seasonal/profile cards, chart/table/filter refinements, recognition,
+feedback/NPS, preview/export, subscription/AI action plumbing and per-BU
+build/theme configuration are retained alongside the Weekly hierarchy/dialog
+work. Both regression suites are preserved; wireframes are unchanged.
+At integration, the dev merge passed 452 tests and built, but its 85.57% full-source line
+coverage is below the unchanged 95.01% gate. The user approved publishing
+with this gap recorded. Earlier coverage and capability descriptions below
+refer to their dated smaller baseline, not the combined branch.
+The combined Weekly branch initially passed **500 tests in 65 files** with
+**86.19%** line coverage, below the gate accepted for branch synchronization.
+
+**Coverage follow-up, October 26:** The combined branch now passes **556 tests
+in 66 files**, with **97.01% line coverage** (2,629 of 2,710 lines). The unchanged
+**95.01%** gate passes again. New tests exercise export/capture success and
+failure handling, OAuth/SDK boundaries, gauge drawing callbacks, feedback and
+recognition keyboard/search flows, subscription hierarchy, preview lifecycle,
+AI resizing and footer scrolling. No application behavior or coverage scope
+changed; mocked external boundaries do not establish browser or all-BU parity.
+
+**Status as of October 26, 2026:** partial migration. Quick Facts summary/details
+and Weekly Facts/My Plan tables with desktop hierarchy/child-peer controls and
+information/alert dialogs exist. Authentication is still a demo
 stub, several actions are inert, and most other Angular applications are not
 migrated. Implemented components and passing unit tests, when available, do not
 by themselves establish Angular parity.
@@ -58,11 +78,12 @@ in another checkout. Recheck both HEADs before executing the plan.
 
 ## Stack and setup
 
-React 19, TypeScript 6, Vite 8, React Router 7, TanStack Query 5, Axios,
-Chart.js 4 and CSS Modules. The repository is a **frontend**; despite its name,
+React 19, TypeScript 6, Vite 8, React Router 7, TanStack Query 5, native Fetch,
+Chart.js 4 and SCSS Modules (Dart Sass), with Vitest/RTL and MSW for testing.
+The repository is a **frontend**; despite its name,
 it does not implement a Node backend. It reuses the existing Python APIs.
 
-Use Node 22.12+ in the Node 22 line, or a supported newer LTS release.
+Use Node 22.13+ in the Node 22 line, or a supported newer LTS release.
 The checked-in Cloud Build configuration uses `node:22`.
 
 ```bash
@@ -78,8 +99,8 @@ VITE_API_URL=/api
 Vite exposes `VITE_*` values to the browser: never place credentials there.
 Keep this local file uncommitted; the current `.gitignore` does not ignore
 environment files.
-The current demo portal is hardcoded to `WW` in `AuthContext`; no
-`VITE_PORTAL` setting is implemented in this checkout.
+The demo identity in `src/shared/context/AuthContext.tsx` reads `VITE_PORTAL`
+and defaults to `SI`; this is not authenticated BU selection.
 
 **Temporary build workaround:** KMS decryption in `cloudbuild.yaml` is commented
 out because the build service account lacks key-decryption permission. Fresh
@@ -107,11 +128,12 @@ start the backend.
 | `npm run preview` | Preview built frontend; no preview API proxy is configured |
 | `npm test -- --run` | Run the Vitest suite once |
 | `npm run test:coverage` | Run tests with V8 coverage; text summary and HTML report at `coverage/index.html` |
-| `npm test -- --run src/utils/periods.test.ts src/utils/breakdown.test.ts` | Focused period/axis tests |
+| `npm test -- --run src/features/quick-facts/utils/periods.test.ts src/features/quick-facts/utils/breakdown.test.ts` | Focused period/axis tests |
+| `npm test -- --run src/shared/api/client.test.ts src/shared/api/forms.http.test.ts src/features/trend/api/trend.http.test.ts src/features/quick-facts/hooks/sqfQueries.test.tsx` | MSW-backed transport, multipart and query integration tests |
 | `npm run lint` | Declared, but no ESLint configuration is tracked at the reviewed commit |
 
-There are **33 test files** in this worktree, using Vitest, jsdom and
-React Testing Library. They cover components, hooks, context, API wrappers and
+Tests use Vitest, jsdom and React Testing Library, with native Node web APIs for
+multipart HTTP contract tests. They cover components, hooks, context, API wrappers and
 pure utilities. No configured browser E2E or Angular-versus-React screenshot
 suite is present. The obsolete MetricCard renderer and its five tests were
 removed during cleanup; the active SummaryCard/DetailsCard suites remain.
@@ -121,13 +143,17 @@ tooltips. A second pass adds chart data/label/tooltip callbacks, nested tables,
 scroll shadows, tab switching and hierarchy/URL state persistence.
 The fixture-driven application tests now cover routing, provider/query
 integration, period/breakdown selection, location/date changes and query errors.
-The October 20 run passed all **248 tests**. Using the same source scope as the initial
-measurement, line coverage increased from **58.37% to 97.24%**;
-statements are 96.09%, branches 88.82% and functions 96.63%. Coverage includes all application
+The October 30 run passes **604 tests in 72 files**. Coverage is **97.15% lines**,
+95.65% statements, 88.42% branches and 94.98% functions. The October 26
+coverage follow-up passed 556 tests after the initial 500-test integration and
+restored line coverage from 86.19% to 97.01%; those are historical measurements.
+The original smaller baseline's 58.37% and pre-merge 97.88% results are historical,
+not measurements of the combined code. Coverage includes all application
 TS/TSX files, excluding tests, setup and type declarations. It does not measure
 CSS, browser rendering or Angular parity. Generated reports are ignored by Git.
 Chart tests mock the canvas renderer and verify the data/options passed to it,
-not Chart.js drawing or source gauge parity.
+including the emitted gauge plugin drawing operations against a mocked canvas,
+not real browser pixels or source gauge parity.
 `npm run test:coverage` enforces **95.01% global line coverage**. Other metrics
 are reported, not gated; branch coverage is not yet above 95%.
 
@@ -139,6 +165,11 @@ response structure, filter keys and rendering flags are retained. Charts were
 omitted from these fixtures and are tested separately. Provenance and capture
 paths are embedded in the fixture. Tests mock HTTP transport and require no
 running API, credentials or network access; these are not production snapshots.
+MSW setup lives in `src/test/server.ts` and `src/test/handlers.ts`; handlers are
+reset after each test and the server is closed after each suite. Add
+`server.use(...)` overrides to exercise errors or alternate responses. Keep
+SDK/canvas and isolated component mocks where a network interceptor is not
+the relevant boundary.
 
 ## Current route coverage
 
@@ -147,22 +178,29 @@ running API, credentials or network access; these are not production snapshots.
 | `/quick-facts` | Redirects to summary |
 | `/quick-facts/summary` | Summary cards |
 | `/quick-facts/details/:type` | Details, sorting, sidebar and child drill-down |
-| `/quick-facts/weekly` | Partial Weekly Facts table; generic history, mobile and integrations incomplete |
-| `/quick-facts/myplan` | Partial My Plan table; Half Year/defaults/mobile and integrations incomplete |
+| `/quick-facts/weekly` | History/hierarchy, child-peer tables, info/alerts and structured errors; mobile/layout/integrations incomplete |
+| `/quick-facts/myplan` | Shared history/hierarchy, table and dialog behavior; card-level Half Year/mobile/integrations incomplete |
 | `/weekly`, `/trend`, `/dashboards` | Coming Soon |
 | `/pricing-simulator`, `/availability-navigator` | Coming Soon; these names do not replace Angular's routes |
 | Other paths | Redirect to Quick Facts; not source-equivalent application coverage |
 
 `ProtectedRoute` receives an always-authenticated demo user. Logout reloads the
 page. Feedback/download are disabled, recognition simulates loading, and Weekly
-Metrics Info/subscription labels have no action flow. Consult the
+subscriptions have no preferences flow. Metrics Info and header/cell alerts now
+open a Weekly-specific dialog. Consult the
 [gap matrix](docs/migration-status.md#feature-parity-matrix) before declaring a
 feature complete.
 
-The October 21 Weekly/MyPlan review confirmed real local SI responses with
-`monthNo`/`halfNo` history keys and My Plan variance enabled by default, which
-the current React page does not handle correctly. Other gaps include hierarchy
-selection, mobile column projection, WFM/goal/sticky layouts and working
+The October 23 initial Weekly/MyPlan migration slice adds response-defined
+history keys (including observed `monthNo`/`halfNo`), server variance/KPI
+expansion defaults, selection resets on new responses, source grouping/column
+membership fixes and typed subscription transport. The subscription UI is
+still not implemented. The October 26 continuation adds source-style desktop
+history/hierarchy selection, child/peer projection, original-column header
+association, Weekly information/alert dialogs and structured error details.
+Mobile projection is tested at the utility boundary, not wired to a complete
+mobile experience. Remaining gaps include card-level Half Year, source
+initializer characterization, mobile selection/layout, WFM/goal/sticky layouts and working
 subscriptions/AI/export. The new plan covers source-specific behavior and
 qualification for every enabled BU. Only one local SI profile was probed;
 cross-BU browser parity is **not verified**, and the saved API fixture remains
@@ -180,5 +218,5 @@ Keep migration changes scoped to their feature and accompanying tests/docs.
 Do not overwrite another checkout's local work, copy environment secrets or
 treat wireframes as the source specification. Wireframes are excluded from
 this documentation change; some remain tracked in this branch, so avoid
-indiscriminate staging. No application changes or deployment are part of this
-documentation refresh.
+indiscriminate staging. The October 23 initial implementation is scoped to the
+Weekly/MyPlan feature branch; no deployment or shared dispatch change was made.

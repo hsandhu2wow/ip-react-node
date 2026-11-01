@@ -5,6 +5,72 @@ Broad review: **October 14, 2026**; focused Weekly Facts/My Plan review:
 including user-visible behavior, permissions, integrations and responsive UI.
 This is a source/history assessment, **not runtime or production certification**.
 
+## Frontend modernisation: October 30
+
+`feat/frontend-architecture-modernisation` branches from the committed
+Weekly/MyPlan continuation (`9313306`), not the older dev baseline. It replaces
+the Axios dependency with native Fetch beneath the existing TanStack Query
+hooks, converts scoped styles mechanically to SCSS Modules, colocates Quick
+Facts and Weekly/MyPlan code under `src/features`, and introduces MSW-backed
+query/HTTP tests. Shared transport, dialogs, filtering and export infrastructure
+live in `src/shared`; application routing/layout lives in `src/app`.
+The 95.01% line threshold remains unchanged; only the type-declaration exclusion
+path follows the moved type directories. Global CSS, BU themes, backend
+contracts and wireframes are unchanged. Historical source paths below refer
+to the dated implementation, not the current directory layout.
+The modernised branch passes 604 tests across 72 files and builds; line
+coverage is 97.15% (2,733/2,813). These checks do not replace browser/BU
+qualification.
+
+## Implementation update: October 26
+
+**Coverage follow-up:** The combined Weekly branch now passes 556 tests in
+66 files, with 97.01% lines (2,629/2,710), 95.41% statements, 94.52% functions
+and 88.26% branches. The unchanged 95.01% global line gate passes. Tests add
+export/capture/SDK/error-path coverage, gauge callbacks and user interactions;
+no production code, coverage exclusions or thresholds changed. This resolves
+the integration coverage gap below, not the all-BU/browser qualification gaps.
+
+**Integration follow-up:** Quick Facts parity is merged into dev at `e8817e8`;
+the Weekly feature branch now incorporates that dev baseline while retaining
+its selection/projection/popup work. The combined branch builds and passes
+500 tests in 65 files. Imported code lowers full-source line coverage to
+86.19%, below the unchanged 95.01% gate. The user approved publishing these
+merges with the gap recorded; the follow-up above restores the line gate. The
+smaller-scope measurements below are historical, not current combined coverage.
+
+The next feature-branch slice adds desktop hierarchy/history selection and
+child/peer projection for Weekly/MyPlan, original-column header association,
+Weekly-specific Metrics Info/header/cell alert dialogs and structured error
+details. Mobile projection is tested as a utility but is not yet connected to
+the mobile menu/page lifecycle. The feature remains separate from `dev-branch`;
+wireframes remain excluded.
+
+The suite passes **293 tests in 35 files**, with **97.88% line coverage** under
+the unchanged all-source policy and 95.01% gate. User-approved fixed UTC clocks
+remove an existing after-22:00 cutoff-test failure without changing application
+code. Source-derived unit/integration behavior is not all-BU visual acceptance:
+identity, Half Year, full mobile/table layouts, subscriptions/actions and browser
+qualification remain open. See the
+[latest focused progress entry](weekly-facts-myplan-parity.md#implementation-progress-october-26).
+
+## Implementation update: October 23
+
+The documentation/cleanup/test baseline is pushed on `document-migration-plan`
+at `07540f3`, merged and pushed to `dev-branch` at `e657079`. The initial
+Weekly/MyPlan migration slice is on `feat/weekly-facts-myplan-parity`, created
+from that dev merge; it is not part of dev until separately integrated.
+Wireframes were excluded and the other checkout was not changed.
+
+This slice fixes dynamic history keys, server variance/KPI expansion defaults,
+response/table selection resets, source columnid membership, empty KPI groups,
+KPI substring matching and singleton spacers. It also corrects wire types and
+adds subscription transport (not preferences UI). That slice passed 267 tests
+in 33 files with 97.62% line coverage; this remains unit/integration evidence,
+not all-BU/browser acceptance. The assessment/gap ledger below retain their
+review dates; the [focused progress entry](weekly-facts-myplan-parity.md#implementation-progress-october-23)
+identifies remaining prerequisites and scope.
+
 ## Review baseline and limits
 
 | Item | React | Angular |
@@ -295,8 +361,8 @@ the full applications have been exercised.
 | G08 | No feature-alert workflow; card InfoModal uses 90%/480px/80vh and raw body HTML instead of source QfPopup contract | Alerts/acknowledgment/responsive panel — 2C; separate SQF/Weekly dimensions, HTML transformation and close/focus behavior — 3, 4 |
 | G09 | Basic table shows sort icon but does not sort; chart gauge uses Doughnut and ignores needle | Match source sorting/chart variants and data formatting — 3 |
 | G10 | Recognition timer, feedback/download disabled | Real requests, previews/artifacts and failure/cancel states — 3 |
-| G11 | Trend defaults false/true, no Weekly/MyPlan switch, history handles month or weekNo; observed monthNo/halfNo do not resolve; empty KPI group can throw | Detailed WF03–WF08 selection/table/default/mobile work and per-BU evidence — 4 |
-| G12 | Metrics Info/subscriptions are text; AI/banner/action configs mostly unused | Detailed WF09–WF14 overlays, subscriptions, gated integrations and source events/artifacts — 4 |
+| G11 | October 23 fixes dynamic history/defaults, response/table resets and group bugs; feature switch, hierarchy/mobile/Half Year/layout parity still open | Remaining WF03–WF08 source lifecycle, selection/table/mobile work and per-BU evidence — 4 |
+| G12 | Metrics Info/subscriptions are text; subscription transport/types added October 23 but UI/actions remain absent | Detailed WF09–WF14 overlays, subscriptions, gated integrations and source events/artifacts — 4 |
 | G13 | Whole source route families missing/placeholder | Independent application source designs and end-to-end delivery — 5 |
 | G14 | V8 coverage with above-95% line gate and offline API-derived fixtures; no browser parity runner, ESLint config or CI test job | Differential coverage, targeted/full suites and operational acceptance — 0, 6 |
 

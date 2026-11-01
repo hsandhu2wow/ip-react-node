@@ -8,10 +8,171 @@ supersedes Stage 4 of the October 14 roadmap.
 **Conclusion:** React has page endpoints and a basic grouped HTML table, but
 Weekly Facts/My Plan are **not parity-complete for any BU**. Source review
 identifies shared behavior and portal-specific branches; it does not certify
-all deployed data/configurations. The current 97.24% line coverage measures
+all deployed data/configurations. The October 20 baseline's 97.24% line coverage measures
 existing React code, not missing Angular functionality or browser pixels.
 
 ## Baseline and evidence
+
+### Latest continuation: page integrations
+
+The existing feature worktree now wires response-provided banners into the
+shared layout immediately below the filter bar. Banners retain Angular's
+hardcoded `error` icon, rich text and dismissal. Dismissal survives table/AI
+interaction, resets for a replacement response/metric, and registration clears
+on loading, error or page unmount so notifications do not leak into Summary.
+DOMPurify sanitizes this new HTML surface, preserving the safe formatting/links
+of Angular's `[innerHTML]` rather than introducing an unsanitized banner.
+
+Toolkit and usage-dashboard links use the response's exact `displayText` and
+`link`, with safe new-tab opener handling. They are hidden at **768px and below**,
+matching Angular's `hide-xsm`. Browser testing caught and corrected the 768px
+edge case: page selection uses the 767px TypeScript boundary, whereas these
+links and shared header actions follow the 768px SCSS boundary. This does not
+resolve every pre-existing header/table breakpoint discrepancy.
+
+Weekly/My Plan now use the shared analytics adapter and its actual
+`quick_facts_element_click` envelope. Events cover initial desktop
+initialization, view/date changes, committed mobile dates/history, and matching
+hierarchy changes, with source metric/card/location values. Tests assert
+synthetic employee/role fields, response/metric transitions, StrictMode
+deduplication and absence of events for mobile preview/cancel/equal dates.
+Analytics rejection is logged without interrupting the table. The existing
+shared user-details adapter's fallback behavior is unchanged.
+
+The existing AI drawer is reused, not replaced. Regression cases cover
+enabled-without-content behavior, close/reset on response/metric transitions
+and disabled/error states. Closing or unmounting during a resize now removes
+the global drag state and document listeners instead of leaving the page in
+resize mode.
+
+**Local evidence:** 582 tests in 69 files, 97.09% line coverage with the
+unchanged 95.01% gate; production TypeScript/build validation passes with
+the existing large-chunk warning. A synthetic browser probe covers both pages at 360,
+767, 768, 769 and 1024px: banner dismissal, configured links, date/view/hierarchy,
+mobile projection/cancellation, real dataLayer events and AI open/resize/close.
+It completes ten page/viewport scenarios with no runtime errors or mutating
+API calls. All browser API requests are intercepted; this is not authorized
+live-data, visual pixel-parity, export or all-BU acceptance. External hosts
+(including hosted icon fonts) are blocked in this probe, so its screenshots
+must not be treated as visual-parity evidence.
+
+The system Chrome remains intermittently unstable. A missing, isolated
+Playwright Chromium headless shell was installed for the successful run;
+the browser runner/screenshots are session artifacts, not application
+dependencies. The local user-details endpoint still returns **403**.
+ESLint cannot run because this worktree has no ESLint configuration; no
+lint-pass claim or unrelated configuration change is made.
+
+### Implementation progress: October 27
+
+Continued in the existing `feat/weekly-facts-myplan-parity` worktree.
+Mobile page state now selects only `hasMobileView` cards, starts from the first
+mobile card/contents and forwards the mobile/date/hierarchy context to the
+existing table projection. The date menu supports tab preview, cancellation
+with Escape/outside click, date commit, bounded older/newer buttons and hidden
+arrows when the response enables mobile hierarchy selection. Focus returns to
+the date trigger, including card-level My Plan Half Year changes; a replacement
+response closes the menu and resets mobile history.
+
+The mobile header uses `mobileDisplayName`, renders the source no-mobile-details
+message instead of a desktop table when no mobile cards exist, and opens the
+composed mobile info body with refresh time and metric information. The entire
+variance row is a single keyboard-accessible toggle with On/Off state.
+
+Source quirks are not silently corrected: selecting the same date label after
+previewing another tab does not commit that tab, matching Angular's
+`mobileDateFilterChanged` guard. My Plan `Half Year` resolves `half_year` on
+the card rather than assuming it is a contents history property.
+
+The observer boundary is 767px (desktop at 768/769), matching Angular's
+TypeScript. Separate desktop/mobile selections are retained on resize to avoid
+displaying a desktop-only card on mobile. This is **not** certification of
+Angular's unusual unconditional desktop-then-mobile initialization or its
+SCSS/observer breakpoint disagreement; those remain browser-characterization
+items before exact responsive parity can be claimed.
+
+Verification is local regression/type/build validation, not all-BU acceptance.
+Live comparison is blocked: the local backend returns 403 for user details.
+A synthetic Playwright probe loaded the mobile React table, but Chrome crashed
+natively during interaction in headless mode and at launch in headed mode.
+No paired screenshots or completed browser acceptance run is claimed, and no
+feedback/subscription/email requests were sent.
+
+### Implementation progress: October 26
+
+**Branch synchronization:** Quick Facts parity (`6035014`) is merged into dev
+at `e8817e8`, and that dev baseline is incorporated here. Its subscription/AI
+header actions, preferences dialog and page-preview plumbing are retained
+alongside this branch's history/hierarchy, column modes and Weekly popup.
+Metric-based subscription wrappers delegate to the dialog's key-based transport,
+so both callers share the same endpoint/FormData implementation. Page-response
+or metric changes close overlays; errors disable registered page actions.
+These imported implementations still require source/browser qualification;
+earlier descriptions of missing UI below are dated pre-integration gaps.
+The user approved publishing with the imported code's coverage gap documented,
+without lowering the 95.01% gate.
+Initial combined validation passed 500 tests in 65 files and the build;
+line coverage was 86.19%, below its retained gate. A test-only follow-up now
+passes 556 tests in 66 files with 97.01% line coverage, so the unchanged 95.01%
+gate passes again. External SDK/canvas/network boundaries remain mocked.
+These results supersede the pre-integration 293-test/97.88% figures below.
+
+The next slice on **`feat/weekly-facts-myplan-parity`** adds a pure selection
+boundary and desktop hierarchy control to both pages. Initial/view selection
+prefers history then hierarchy; hierarchy changes combine history where
+configured, date changes preserve Angular's date-first fallback, and unmatched
+filters retain the previously displayed table. A new response resets the first
+view/date/hierarchy selection. The child/peer switch is available only for
+cards offering it, and its selection persists across responses as in Angular.
+
+Table projection supports desktop child/peer modes and the source mobile
+parent/child/date/hierarchy/WFM rules. Cell/header association now uses original
+`columnid`, including rows with missing cells. **Mobile projection is not yet
+wired to mobile page/menu state** and is not mobile acceptance evidence.
+
+Metrics Info and header/cell alerts now open the distinct Weekly HTML popup,
+with source type/icon mapping, maximum 530px by 648px sizing, no initial
+autofocus, keyboard/backdrop dismissal and focus restoration. Structured error
+responses display title/message/support details rather than stale tables.
+The separate feature-alert acknowledgment and SQF popup remain out of scope.
+
+All **293 tests in 35 files** pass; full-source coverage is **97.88% lines**,
+96.85% statements, 97.73% functions and 90.34% branches with the existing
+95.01% line gate unchanged. The build passes with the existing large-chunk
+warning. With user approval, the existing cutoff tests now use a fixed UTC
+clock: their previous relative-hour calculation failed after 22:00 UTC.
+No formatter application behavior changed.
+
+This advances parts of Tasks 4/5/8, not complete tasks or an enabled BU.
+Still open: real identity/permission gates and authorized BU profiles,
+card-level Half Year and dual-initializer characterization, complete mobile
+selection/layout, header KPI controls and table geometry/themes, subscriptions
+UI, AI/banner/links/analytics, feedback/export and paired-browser qualification.
+No new live API capture, subscription write, deployment or dev merge occurred
+in this continuation.
+
+### Implementation progress: October 23
+
+The documented baseline was committed/pushed on `document-migration-plan`
+(`07540f3`) and merged into `dev-branch` (`e657079`). Initial migration work
+is on **`feat/weekly-facts-myplan-parity`**, created from that merge, not on dev.
+Wireframes were excluded from these commits.
+
+The first implementation slice corrects alert/link/AI/hierarchy wire types;
+adds GET/POST subscription transport with source casing and multipart fields;
+handles response-defined history keys; applies server variance and table KPI
+expansion defaults; resets stale view/date on changed responses; and matches
+source columnid filtering, empty-group handling, KPI substring matching and
+singleton spacers. Subscription transport does not mean its UI is complete.
+That slice passed 267 tests with 97.62% line coverage under the same
+source-inclusion policy.
+
+This is partial work across plan Task 2 and the source-independent parts of
+Tasks 4/5, not completion of the entire tasks. Identity prerequisites,
+hierarchy/mobile/Half Year selection, source initializer quirks, table display
+contexts/layout, dialogs/actions and all-BU browser evidence remain open.
+The gap ledger below records the **October 21 assessment**; use the dated
+progress entries for which foundation issues have since changed.
 
 | Evidence | Reviewed baseline / limit |
 |---|---|

@@ -12,9 +12,30 @@
 
 ## Scope, authority and execution rules
 
-This is a **future implementation plan**, not a completion report.
-No application behavior, deployment, subscriptions or saved business data was
-changed while writing it. The detailed requirements, source map, real local
+**Execution update, October 26:** The next feature slice adds typed desktop
+selection/hierarchy state, child/peer column controls, source mobile projection
+at the utility boundary, original-column header association, Weekly information/
+alert dialogs and structured error details. The suite passes 293 tests in 35
+files with 97.88% line coverage. This advances Tasks 4/5/8; none is fully closed:
+mobile state wiring, Half Year/initializer characterization, table geometry,
+error illustrations and paired-browser evidence remain outstanding alongside
+the identity/BU/action prerequisites. See the
+[current progress register](../../weekly-facts-myplan-parity.md#implementation-progress-october-26).
+
+**Execution update, October 23:** The baseline is merged into `dev-branch`
+(`e657079`); migration starts on `feat/weekly-facts-myplan-parity`.
+The initial slice implements Task 2's response types and subscription
+transport, dynamic-key/default/response-reset portions of Task 4, and
+source column-membership/KPI/group fixes from Task 5. Task checkboxes remain
+open where the complete task needs identity integration, qualified fixtures,
+display contexts or browser evidence. No full task/all-BU completion is claimed.
+See the [progress register](../../weekly-facts-myplan-parity.md#implementation-progress-october-23).
+
+This is an implementation plan, not a completion report. At creation on
+October 21, no application behavior, deployment, subscriptions or saved
+business data was changed while writing it. The October 23 progress entry
+above records the initial application changes; no deployment or live
+subscription mutation was performed. The detailed requirements, source map, real local
 response observations, BU matrix and source discrepancies are in the
 [parity assessment](../../weekly-facts-myplan-parity.md).
 
@@ -32,9 +53,9 @@ that behavior, then rerun. Do not rewrite every component before the first
 failing assertion. Code examples below pin critical contracts; surrounding
 UI must satisfy the source-derived acceptance cases, not a redesigned mockup.
 
-For implementation commits, stage only the task's explicit files. Commit
-only with permission; the current user's changes remain **uncommitted**.
-If commits are authorized, use a scoped message and the repository-required
+For implementation commits, stage only the task's explicit files. The user
+authorized committing/pushing the baseline, merging it into dev and starting
+the feature branch on October 23. Use a scoped message and the repository-required
 Copilot co-author trailer. Never `git add .` in this dirty worktree.
 
 ### Delivery order and gates
@@ -314,6 +335,12 @@ resolved identity/portal scope or clear relevant caches on a scope change.
 
 ## Task 4: Implement desktop selection, defaults and lifecycle
 
+**October 26 status:** `createTrendSelection` / `updateTrendSelection` now
+encapsulate desktop history/hierarchy selection, including asymmetric source
+fallbacks and no-match table retention. Page controls and response resets are
+wired and tested for both metrics. Keep the remaining full lifecycle/Half Year
+and authorized integration requirements below open.
+
 **Create:** `src/utils/trendSelection.ts`, `src/utils/trendSelection.test.ts`.
 **Modify:** `TrendPage.tsx`, `TrendPage.test.tsx` in
 `src/pages/quick-facts/`.
@@ -385,6 +412,11 @@ background refresh before changing visible loading/reset behavior.
   state, never stale-location content or blank unhandled history.
 
 ## Task 5: Match column projection and KPI grouping
+
+**October 26 status:** Desktop child/peer and mobile projection rules now have
+typed context and focused tests, preserving original IDs and wire order.
+TrendPage forwards desktop state through TrendTable; actual mobile state
+forwarding is deferred to Task 7, not a completed mobile implementation.
 
 **Modify:** `src/utils/tableTransform.{ts,test.ts}`.
 
@@ -501,6 +533,17 @@ switch, and test clicking it does not trigger an alert/row action.
 
 ## Task 7: Reproduce mobile selection and responsive controls
 
+**October 27 partial implementation:** Mobile menu preview/cancel/commit,
+bounded history arrows, mobile hierarchy context, page column projection,
+header/info/variance and My Plan card-level Half Year selection are wired and
+covered by regressions. `TrendMobileFilters` owns the menu; the existing
+selection utility owns card/date resolution. The Half Year rule is implemented
+inside `updateMobileTrendSelection` rather than introducing a second helper
+used only once. Desktop/mobile selection state is kept separately on resize.
+Live source initializer/breakpoint characterization and pixel comparison remain
+open: user-details GET returns 403 and Chrome crashes during the synthetic
+browser probe. Do not mark the task or any BU qualified from unit tests.
+
 **Modify:** `src/utils/trendSelection.{ts,test.ts}`,
 `src/pages/quick-facts/TrendPage.{tsx,module.css,test.tsx}`,
 `src/components/trend/TrendTable.tsx`.
@@ -548,6 +591,12 @@ approves an exception to source behavior.
   build; expected GREEN covers menu state and selected table, not jsdom layout.
 
 ## Task 8: Implement Weekly info/alert dialogs and error presentation
+
+**October 26 status:** Weekly Metrics Info, header/cell alerts and structured
+404/500 details are wired with focused dialog/page tests. The popup supports
+source sizing/icon/HTML and dismissal/focus behavior; keep mobile composition,
+error illustrations, real-provider rejection cases and visual qualification
+open.
 
 **Create:** `src/components/trend/TrendInfoDialog.{tsx,module.css,test.tsx}`.
 **Modify:** TrendPage/TrendTable and their tests.
@@ -640,14 +689,28 @@ all locations.
 
 ## Task 10: Wire banners, AI, links and analytics
 
-**Create:** `src/components/trend/TrendInsightsPanel.{tsx,module.css,test.tsx}`.
+**Create:** `src/components/trend/TrendBanner.{tsx,module.css}`.
+**Reuse:** the existing `AiInsightsSidenav`; do not create a duplicate AI panel.
 **Modify:** TrendPage, shared filter/layout/actions, global CSS, integration tests.
 
-- [ ] Write gated-action tests for AI enabled/disabled, drawer close/reset
+**Continuation evidence:** shared-layout banners, configured links and exact
+analytics envelope are wired. Local integration tests cover response/metric
+reset, enabled AI with absent content, safe banner HTML, mobile cancellation
+and initialization deduplication. Fixed AI drag teardown on close/unmount.
+Synthetic browser runs passed both routes at 360/767/768/769/1024px, including
+the source's 768px link/header-action visibility boundary. Browser APIs were
+intercepted; no real email/subscription mutations occurred. Live user details
+remain blocked by 403. The system Chrome was unstable; the successful probe
+used Playwright's isolated headless shell. These results do not replace Task
+12's authorized paired-BU visual/behavior acceptance. Local suite: 582 tests,
+97.09% lines against the unchanged 95.01% gate. ESLint is unavailable because
+the existing worktree has no ESLint configuration.
+
+- [x] Write gated-action tests for AI enabled/disabled, drawer close/reset
   after location/metric change, toolkit/usage link labels/targets, banner
   propagation and mobile-versus-desktop action availability. Include enabled
   flag with absent content as characterized in Task 1.
-- [ ] Add analytics assertions on the **actual shared source event envelope**:
+- [x] Add analytics assertions on the **actual shared source event envelope**:
 
 ```ts
 expect(window.dataLayer).toContainEqual(expect.objectContaining({
@@ -661,7 +724,7 @@ expect(window.dataLayer).toContainEqual(expect.objectContaining({
 Initialize the typed dataLayer through the main roadmap's analytics adapter;
 use synthetic employee/role values. Run page/panel/integration tests;
 expected RED is missing source side effects.
-- [ ] Publish banner and clear it through shared layout lifecycle according
+- [x] Publish banner and clear it through shared layout lifecycle according
   to source. Render configured links as `{displayText,link}`, opening a new
   tab with safe opener handling. Do not treat links as strings or infer titles.
 - [ ] Match AI end-side resizable/no-backdrop drawer, top gap 56px,
@@ -782,7 +845,8 @@ replace realistic fixtures to make these commands green.
 
 ## Completion record and handoff
 
-The October 21 deliverable is the source assessment and this plan only.
+The October 21 deliverable was the source assessment and this plan only.
+Implementation began October 23 in the scoped feature branch described above.
 Implementation may use task-by-task subagents or inline execution with review
 checkpoints when requested; neither mode is started by this document.
 Before implementation, obtain missing authorized BU/session/theme evidence and

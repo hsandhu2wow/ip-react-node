@@ -1,0 +1,51 @@
+.banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 48px;
+  padding: 3px 12px;
+  color: #333;
+}
+
+.info {
+  background: #edf5fa;
+}
+
+.icon {
+  flex: 0 0 24px;
+  font-size: 24px;
+}
+
+.new .icon { color: #e6007e; }
+.info .icon { color: #3f69ae; }
+.success .icon { color: #146a30; }
+.warning .icon { color: #7a640c; }
+.danger .icon { color: #b10200; }
+
+.text {
+  flex-grow: 1;
+  margin-left: 8px;
+}
+
+.text a {
+  color: #333;
+}
+
+.text a:hover {
+  text-decoration: none;
+}
+
+.close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  padding: 8px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: #676d70;
+  cursor: pointer;
+}

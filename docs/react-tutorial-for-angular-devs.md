@@ -43,7 +43,7 @@ import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import './styles/globals.css'
-import App from './App.tsx'
+import App from './app/App.tsx'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -128,7 +128,7 @@ export class SideNavComponent {
 }
 ```
 
-### React way (`src/components/layout/SideNav/SideNav.tsx`):
+### React way (`src/app/layout/SideNav/SideNav.tsx`):
 ```tsx
 export function SideNav() {
   const { user } = useAuth()       // ← reads from context (like DI)
@@ -209,15 +209,20 @@ export function AppShell({ children }: { children: ReactNode }) {
 
 Angular automatically scopes component styles with generated attributes. React has no built-in scoping — **CSS Modules** are the community solution.
 
+This project uses **SCSS Modules**: Sass preprocesses `.module.scss`, then
+CSS Modules provides the same local scoping. The October 30 conversion keeps
+existing selectors and declarations unchanged; global backend HTML classes and
+runtime BU theme variables remain global rather than being moved into Sass.
+
 ```css
-/* SideNav.module.css */
+/* SideNav.module.scss */
 .sidenav { position: fixed; width: 56px; }
 .itemActive { background: rgba(255,255,255,0.12); }
 ```
 
 ```tsx
 // SideNav.tsx — import the CSS file as an object
-import styles from './SideNav.module.css'
+import styles from './SideNav.module.scss'
 
 // Use class names as object properties:
 <nav className={styles.sidenav}>
@@ -251,7 +256,7 @@ At build time, `.sidenav` becomes something like `.SideNav_sidenav__x3k2` — gl
 
 These are then used in CSS Modules:
 ```css
-/* AppShell.module.css */
+/* AppShell.module.scss */
 .main {
   margin-left: var(--sidenav-width);    /* auto-adjusts for mobile */
   padding-top: var(--mob-appbar-height);
@@ -264,7 +269,7 @@ These are then used in CSS Modules:
 
 **Angular equivalent:** `RouterModule.forRoot(routes)` + `<router-outlet>`
 
-### Route definition (`src/App.tsx`)
+### Route definition (`src/app/App.tsx`)
 
 ```tsx
 // Angular routes look like:
@@ -319,7 +324,7 @@ role checks or source feature permissions.
 Angular uses `CanActivate`. React has no built-in guard — you build your own as a component:
 
 ```tsx
-// src/context/AuthContext.tsx
+// src/shared/context/AuthContext.tsx
 export function ProtectedRoute({ children }: { children: ReactNode }) {
   const { isAuthenticated } = useAuth()
   if (!isAuthenticated) {
@@ -334,7 +339,7 @@ export function ProtectedRoute({ children }: { children: ReactNode }) {
 Angular uses `ActivatedRoute`. React uses the `useParams` hook:
 
 ```tsx
-// src/pages/quick-facts/DetailsPage.tsx
+// src/features/quick-facts/pages/DetailsPage.tsx
 import { useParams } from 'react-router-dom'
 
 export function DetailsPage() {
@@ -368,7 +373,7 @@ that custom active styling.
 Angular: `this.route.queryParams` — React:
 
 ```tsx
-// src/context/FilterContext.tsx
+// src/shared/context/FilterContext.tsx
 import { useSearchParams } from 'react-router-dom'
 
 const [searchParams, setSearchParams] = useSearchParams()
@@ -401,7 +406,7 @@ React has no class-based DI. Instead, **Context** is a shared value that any com
 #### 1. Create the context shape
 
 ```tsx
-// src/context/AuthContext.tsx
+// src/shared/context/AuthContext.tsx
 interface AuthContextType {
   user: AuthUser
   isAuthenticated: boolean
@@ -454,7 +459,7 @@ export function SideNav() {
 `FilterContext` is the complex one. It holds the selected location node, the date, and the flat tree of all locations:
 
 ```tsx
-// src/context/FilterContext.tsx — simplified
+// src/shared/context/FilterContext.tsx — simplified
 export function FilterProvider({ children }) {
   const [treeNodes, setTreeNodes] = useState<IQFTree[]>([])
   const [selectedNode, setSelectedNodeState] = useState<IQFTree | null>(null)
@@ -520,7 +525,7 @@ setMenuOpen(prev => !prev)   // functional form — safe when using previous val
 ### State inside SideNav
 
 ```tsx
-// src/components/layout/SideNav/SideNav.tsx
+// src/app/layout/SideNav/SideNav.tsx
 export function SideNav() {
   const [menuOpen, setMenuOpen] = useState(false)
 
@@ -598,7 +603,7 @@ useEffect(() => {
 ### ESC key handler in MobileNav
 
 ```tsx
-// src/components/layout/MobileNav/MobileNav.tsx
+// src/app/layout/MobileNav/MobileNav.tsx
 useEffect(() => {
   function handleKeyDown(e: KeyboardEvent) {
     if (e.key === 'Escape' && drawerOpen) close()
@@ -629,20 +634,27 @@ dropdownRef.current?.contains(e.target as Node)
 **Angular equivalent:** `HttpClient` + RxJS `Observable` + `async` pipe
 
 React has no built-in HTTP client or reactive streams. This app uses:
-- **Axios** for HTTP (`src/api/client.ts`)
+- **Native Fetch** for HTTP, through a typed wrapper (`src/shared/api/client.ts`)
 - **TanStack Query (React Query)** for caching, loading states, retries
 
-### The API client (`src/api/client.ts`)
+### The API client (`src/shared/api/client.ts`)
 
 ```ts
-import axios from 'axios'
+import { createHttpClient } from './client'
 
-const client = axios.create({
+// Example factory usage; endpoint modules normally import the default singleton.
+const client = createHttpClient({
   baseURL: import.meta.env.VITE_API_URL,  // from .env file, like Angular's environment.ts
-  withCredentials: true,                  // send session cookie
   timeout: 30_000,
 })
 ```
+
+The wrapper sets `credentials: 'include'` to send session cookies. It handles
+HTTP error rejection, JSON/text/empty responses, timeout/cancellation and
+multipart bodies, returning `{ data }` to preserve endpoint function contracts.
+HTTP errors expose `HttpError.response.status` and `.data`; network failures
+also reject. TanStack Query manages state and caching but does not send HTTP
+requests itself.
 
 Angular equivalent:
 ```typescript
@@ -652,7 +664,7 @@ export const environment = { apiUrl: '/api' }
 // http.interceptor.ts — withCredentials
 ```
 
-### API functions (`src/api/sqf.ts`)
+### API functions (`src/features/quick-facts/api/sqf.ts`)
 
 ```ts
 // Plain async functions — no Observables
@@ -680,7 +692,7 @@ getSummaryCards(apiDepth: number, date: string, code?: string): Observable<ISQFM
 }
 ```
 
-### TanStack Query (`src/hooks/useSummaryCards.ts`)
+### TanStack Query (`src/features/quick-facts/hooks/useSummaryCards.ts`)
 
 ```ts
 export function useSummaryCards() {
@@ -703,7 +715,7 @@ export function useSummaryCards() {
 
 **When `selectedNode` or `selectedDate` changes, `queryKey` changes → React Query automatically re-fetches.** This is the React equivalent of `switchMap` in RxJS.
 
-### Using the query in a component (`src/pages/quick-facts/SummaryPage.tsx`)
+### Using the query in a component (`src/features/quick-facts/pages/SummaryPage.tsx`)
 
 ```tsx
 export function SummaryPage() {
@@ -756,7 +768,7 @@ In Angular you extract logic into services. In React you extract stateful logic 
 ### `useFilterTree` — triggers when the filter context initialises
 
 ```ts
-// src/hooks/useFilterTree.ts
+// src/app/hooks/useFilterTree.ts
 export function useFilterTree() {
   const { initTree } = useFilter()
 
@@ -884,13 +896,13 @@ Instead of JS calculations for offsets, CSS custom properties do it automaticall
 ```
 
 ```css
-/* AppShell.module.css */
+/* AppShell.module.scss */
 .main {
   margin-left: var(--sidenav-width);    /* auto: 56px desktop, 0 mobile */
   padding-top: var(--mob-appbar-height); /* auto: 0 desktop, 56px mobile */
 }
 
-/* FilterBar.module.css */
+/* FilterBar.module.scss */
 .filterBar {
   position: sticky;
   top: calc(var(--mob-appbar-height) + var(--page-bar-height));
@@ -992,7 +1004,7 @@ it('shows user menu when user row is clicked', () => {
 ```bash
 npm test           # watch mode
 npx vitest run     # CI / one-shot (equivalent of ng test --watch=false)
-npx vitest run src/components/layout/SideNav/SideNav.test.tsx  # single file
+npx vitest run src/app/layout/SideNav/SideNav.test.tsx  # single file
 ```
 
 ---
@@ -1011,7 +1023,7 @@ Angular is built with TypeScript at its core. React is optional-TypeScript. This
 ### Interfaces vs Angular models
 
 ```ts
-// src/types/sqf.types.ts
+// src/shared/types/sqf.types.ts
 export interface ISQFMetricCard {
   cardName: string
   cardTitle?: string
@@ -1054,7 +1066,7 @@ interface Props<T> {
 | `@NgModule` providers | `<Provider>` components in `main.tsx` |
 | `@Component` class | `function MyComponent()` |
 | `template` / `templateUrl` | JSX returned from function |
-| `styleUrls` | `import styles from './X.module.css'` |
+| `styleUrls` | `import styles from './X.module.scss'` |
 | `@Input()` | function parameter (prop) |
 | `@Output() EventEmitter` | callback prop: `onSelect: (v) => void` |
 | `<ng-content>` | `{children}` prop |
@@ -1071,7 +1083,7 @@ interface Props<T> {
 | `@Injectable` service | Custom hook (`useMyService`) |
 | `BehaviorSubject` | `useState` |
 | `async` pipe | `query.data` from TanStack Query |
-| `HttpClient.get<T>()` | `axios.get<T>()` |
+| `HttpClient.get<T>()` | Typed Fetch wrapper `client.get<T>()`, called by Query hooks |
 | `ngOnInit` | `useEffect(() => {}, [])` |
 | `ngOnDestroy` | `return () => cleanup()` inside `useEffect` |
 | `ngOnChanges` | `useEffect(() => {}, [dep])` |
