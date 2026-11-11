@@ -1,0 +1,75 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 720" role="img" aria-labelledby="title desc">
+  <title id="title">OLD: Angular and Flask on Google App Engine</title>
+  <desc id="desc">Users access Angular and Flask in the default App Engine service. Flask accesses Cloud SQL, Cloud Storage, employee search, SendGrid and dashboard integrations. Business-unit dispatch routes to other services. Cloud Build, KMS and Angular CLI deliver the application. This is a logical view of checked-in configuration, not a live infrastructure inventory.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="9" markerHeight="9" refX="8" refY="4" orient="auto"><path d="M0 0L8 4L0 8" fill="none" stroke="#64748b" stroke-width="1.5"/></marker>
+    <style>
+      text{font-family:Arial,Helvetica,sans-serif;fill:#172b46}
+      .title{font-size:23px;font-weight:700}.label{font-size:18px;font-weight:700}.body{font-size:16px}.small{font-size:14px}
+      .box{fill:#fff;stroke:#94a3b8;stroke-width:1.5}
+      .legacy{fill:#fff7ed;stroke:#c2410c;stroke-width:1.5}
+      .data{fill:#eefbf4;stroke:#15803d;stroke-width:1.5}
+      .boundary{fill:#f8fafc;stroke:#cbd5e1;stroke-width:1.5;stroke-dasharray:6 4}
+      .line{fill:none;stroke:#64748b;stroke-width:2;marker-end:url(#arrow)}
+    </style>
+  </defs>
+  <rect width="1440" height="720" fill="#fff"/>
+  <rect class="box" x="24" y="22" width="240" height="94" rx="12"/>
+  <text class="label" x="44" y="56">Users / browser</text>
+  <text class="body" x="44" y="83">Desktop and mobile web</text>
+  <path class="line" d="M264 69H328"/>
+  <text class="small" x="272" y="55">HTTPS</text>
+  <rect class="boundary" x="332" y="12" width="700" height="516" rx="14"/>
+  <text class="title" x="354" y="45">Google App Engine</text>
+  <text class="small" x="354" y="69">Default service: frontend + Python application deployed together</text>
+  <rect class="legacy" x="354" y="92" width="654" height="174" rx="10"/>
+  <text class="label" x="374" y="121">Angular 22 / TypeScript</text>
+  <text class="body" x="374" y="151">Angular Router / HttpClient / services / RxJS</text>
+  <text class="body" x="374" y="179">Material + CDK / SCSS / jQuery + DataTables</text>
+  <text class="body" x="374" y="207">Chart.js + ng2-charts / html2canvas / jsPDF</text>
+  <text class="body" x="374" y="235">Portal modules, dashboards and analytics</text>
+  <path class="line" d="M681 266V309"/>
+  <text class="small" x="696" y="293">/api + JSON / multipart</text>
+  <rect class="legacy" x="354" y="314" width="654" height="188" rx="10"/>
+  <text class="label" x="374" y="345">Flask / Python / Gunicorn</text>
+  <text class="body" x="374" y="374">Quick Facts / Weekly Facts / admin / dashboard APIs</text>
+  <text class="body" x="374" y="402">Trusted identity headers + employee / portal permission checks</text>
+  <text class="body" x="374" y="430">Business rules / SQLAlchemy + PyMySQL</text>
+  <text class="body" x="374" y="458">Deployment runtime: Python 3.12</text>
+  <text class="small" x="374" y="485">App Engine API and scheduling dependencies need migration review</text>
+  <rect class="data" x="1090" y="92" width="326" height="112" rx="10"/>
+  <text class="label" x="1110" y="124">Cloud SQL / MySQL</text>
+  <text class="body" x="1110" y="153">Portal and metric databases</text>
+  <text class="body" x="1110" y="181">Existing application data</text>
+  <rect class="data" x="1090" y="230" width="326" height="112" rx="10"/>
+  <text class="label" x="1110" y="262">Google Cloud Storage</text>
+  <text class="body" x="1110" y="291">Assets / BU themes / uploads</text>
+  <text class="body" x="1110" y="319">Backend storage operations</text>
+  <rect class="data" x="1090" y="368" width="326" height="134" rx="10"/>
+  <text class="label" x="1110" y="400">External integrations</text>
+  <text class="body" x="1110" y="429">Employee search / SendGrid</text>
+  <text class="body" x="1110" y="457">Tableau / Google integrations</text>
+  <text class="small" x="1110" y="484">Browser + backend, depending on feature</text>
+  <path class="line" d="M1008 380H1050V148H1090"/>
+  <path class="line" d="M1050 380V286H1090"/>
+  <path class="line" d="M1008 435H1090"/>
+  <path class="line" d="M1008 207H1068V435H1090"/>
+  <text class="small" x="1040" y="61">Data and integrations</text>
+  <rect class="box" x="24" y="166" width="280" height="184" rx="10"/>
+  <text class="label" x="44" y="197">BU-specific services</text>
+  <text class="body" x="44" y="228">App Engine dispatch routes</text>
+  <text class="body" x="44" y="256">Pricing Simulator / widgets</text>
+  <text class="body" x="44" y="284">ACT / notifications*</text>
+  <text class="small" x="44" y="316">*Availability varies by deployment.</text>
+  <path class="line" d="M144 116V166"/>
+  <rect class="box" x="24" y="386" width="280" height="116" rx="10"/>
+  <text class="label" x="44" y="418">Scheduled tasks</text>
+  <text class="body" x="44" y="447">App Engine cron configuration</text>
+  <text class="body" x="44" y="475">Alerts / notifications</text>
+  <path class="line" d="M304 444H354"/>
+  <rect class="box" x="24" y="568" width="1392" height="128" rx="12"/>
+  <text class="label" x="44" y="600">Existing delivery and configuration</text>
+  <text class="body" x="44" y="632">Source &#8594; Cloud Build &#8594; KMS config decryption &#8594; npm / Angular CLI + Jasmine / Karma &#8594; App Engine deployment</text>
+  <text class="body" x="44" y="663">Node is a frontend build tool here, not the application API backend. Platform: Google Cloud. Browser events: GA4 / GTM.</text>
+  <path class="line" d="M681 568V528"/>
+</svg>

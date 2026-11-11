@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Store Insights - OLD and NEW architecture | WIQ</title>
+  <style>
+    :root { color-scheme: light; --ink:#172b46; --muted:#526478; --blue:#2563eb; --green:#15803d; --amber:#b45309; }
+    * { box-sizing:border-box; }
+    html { scroll-behavior:smooth; }
+    body { margin:0; background:#dfe7ef; color:var(--ink); font:18px/1.45 Arial,Helvetica,sans-serif; }
+    nav { position:sticky; top:0; z-index:5; background:#13273f; color:white; padding:12px 24px; display:flex; gap:20px; align-items:center; justify-content:center; }
+    nav a { color:white; text-decoration:none; font-size:14px; padding:4px; }
+    nav button { border:1px solid #b9cbe0; border-radius:6px; color:white; background:none; padding:7px 12px; cursor:pointer; font:inherit; font-size:14px; }
+    main { padding:24px; overflow:auto; }
+    .slide { position:relative; width:1280px; height:800px; margin:0 auto 28px; padding:36px 48px 64px; background:#fff; box-shadow:0 6px 30px #172b4614; scroll-margin-top:70px; }
+    .eyebrow { margin:0 0 8px; color:#60758b; font-size:13px; font-weight:700; text-transform:uppercase; letter-spacing:2px; }
+    h1,h2 { margin:0 0 8px; font-size:34px; letter-spacing:-.6px; line-height:1.18; }
+    h3 { margin:0 0 9px; font-size:22px; }
+    p { margin:0 0 12px; }
+    .subtitle { font-size:18px; color:var(--muted); margin:0 0 14px; }
+    .tag { display:inline-block; padding:3px 9px; margin-right:8px; border-radius:5px; font-size:12px; font-weight:700; letter-spacing:.3px; vertical-align:middle; background:#fff7ed; color:#9a3412; }
+    .tag.new { background:#eff6ff; color:#1d4ed8; }
+    .diagram { width:100%; height:522px; display:block; object-fit:contain; }
+    .callout { padding:12px 16px; border-left:4px solid var(--blue); border-radius:0 7px 7px 0; background:#eff6ff; font-size:17px; }
+    .callout.amber { background:#fffbeb; border-color:var(--amber); }
+    .legend { display:flex; gap:24px; font-size:14px; margin:4px 0 10px; }
+    .key::before { content:""; display:inline-block; width:11px; height:11px; border-radius:2px; margin-right:7px; background:var(--blue); }
+    .key.retained::before { background:var(--green); } .key.pending::before { background:var(--amber); }
+    footer { position:absolute; left:48px; right:48px; bottom:21px; border-top:1px solid #dce3eb; padding-top:10px; display:flex; justify-content:space-between; font-size:12px; color:#60758b; }
+    table { width:100%; border-collapse:collapse; font-size:16px; margin:18px 0; }
+    th { text-align:left; padding:11px 12px; color:white; background:#172b46; font-size:13px; letter-spacing:.3px; }
+    td { padding:9px 12px; border-bottom:1px solid #dce3eb; vertical-align:top; }
+    tr:nth-child(even) td { background:#f7fafc; }
+    td:first-child { font-weight:700; width:15%; } td:nth-child(2) { width:23%; } td:nth-child(3) { width:25%; }
+    .hero { padding:20px 24px; border-radius:10px; background:#132d4b; color:white; margin:19px 0; }
+    .hero strong { font-size:25px; display:block; margin-bottom:5px; }
+    .hero p { margin:0; color:#e0ebf8; font-size:17px; }
+    .cards { display:grid; grid-template-columns:repeat(3,1fr); gap:18px; margin:20px 0; }
+    .card { padding:21px; border:1px solid #d7e2ec; border-top:4px solid var(--blue); border-radius:8px; min-height:164px; }
+    .card p { font-size:17px; color:var(--muted); }
+    .card h3 { font-size:21px; }
+    .measure { font-size:15px; background:#f5f8fc; border-radius:8px; padding:14px 18px; }
+    .measure strong { color:var(--blue); }
+    .readiness { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin:19px 0; }
+    .gate { border:1px solid #dce3eb; border-radius:8px; padding:16px 18px; min-height:125px; }
+    .gate h3 { font-size:20px; }
+    .gate p { font-size:16px; color:var(--muted); margin:0; }
+    .small { font-size:14px; color:var(--muted); }
+    @media screen and (max-width:1327px) { .slide { margin-left:0; margin-right:0; } nav { justify-content:flex-start; flex-wrap:wrap; gap:12px; } }
+    @media print {
+      @page { size:1280px 800px; margin:0; }
+      html,body { margin:0; padding:0; background:white; print-color-adjust:exact; -webkit-print-color-adjust:exact; }
+      nav { display:none; } main { padding:0; overflow:visible; }
+      .slide { margin:0; box-shadow:none; break-after:page; break-inside:avoid; }
+      .slide:last-child { break-after:auto; }
+    }
+  </style>
+</head>
+<body>
+  <nav aria-label="Presentation pages">
+    <strong>WIQ / Store Insights</strong>
+    <a href="#old">1. OLD</a><a href="#new">2. NEW</a><a href="#changes">3. Changes</a><a href="#benefits">4. WIQ benefits</a><a href="#readiness">5. Readiness</a>
+    <button type="button" onclick="window.print()">Print / Save PDF</button>
+  </nav>
+  <main>
+    <section class="slide" id="old" aria-labelledby="old-title">
+      <p class="eyebrow">Store Insights / existing full-stack architecture</p>
+      <h1 id="old-title"><span class="tag">OLD</span>Angular + Flask on App Engine</h1>
+      <p class="subtitle">Existing application: browser frontend and Python APIs share the default App Engine deployment.</p>
+      <img class="diagram" src="old-angular.svg" alt="OLD architecture: Angular and Flask on App Engine connect to MySQL, Storage and external services.">
+      <div class="callout amber">Established business rules, data and integrations remain valuable. "OLD" identifies the existing implementation, not obsolete technology.</div>
+      <footer><span>WIQ / logical architecture based on local source and deployment configuration / 26 Oct 2026</span><span>1 / 5</span></footer>
+    </section>
+    <section class="slide" id="new" aria-labelledby="new-title">
+      <p class="eyebrow">Store Insights / approved target direction</p>
+      <h2 id="new-title"><span class="tag new">NEW TARGET</span>React + FastAPI on Cloud Run</h2>
+      <p class="subtitle">Separate frontend and backend services; retain existing data/integration investments and introduce infrastructure as code.</p>
+      <img class="diagram" src="new-react-fastapi.svg" alt="NEW planned architecture: React and FastAPI run in separate Cloud Run services, with retained data and integrations and a planned IaC delivery pipeline.">
+      <div class="legend"><span class="key">Technology change</span><span class="key retained">Retain and validate</span><span class="key pending">Decision or readiness work</span></div>
+      <p class="small">Target, not current deployment. IaC tool undecided; Terraform is a candidate. Identity, ingress and operational migration need design.</p>
+      <footer><span>Separate service split approved / current React deployment still targets App Engine and Flask</span><span>2 / 5</span></footer>
+    </section>
+    <section class="slide" id="changes" aria-labelledby="changes-title">
+      <p class="eyebrow">Technology changes / business rationale</p>
+      <h2 id="changes-title">What changes, and what stays</h2>
+      <p class="subtitle">Modernise the frontend, API framework and compute layer without adding a database rewrite.</p>
+      <table>
+        <thead><tr><th>Layer</th><th>OLD</th><th>NEW TARGET</th><th>Why it matters</th></tr></thead>
+        <tbody>
+          <tr><td>Frontend</td><td>Angular / TypeScript</td><td>React / TypeScript</td><td>Align with WIQ's predominant frontend framework.</td></tr>
+          <tr><td>UI / data state</td><td>Material/CDK, services, RxJS, jQuery tables</td><td>React components, CSS Modules, Query + Axios</td><td>Reusable patterns and explicit API-state handling.</td></tr>
+          <tr><td>Python APIs</td><td>Flask</td><td>FastAPI / typed models / OpenAPI</td><td>Clearer contracts and validation; migrate business/access rules.</td></tr>
+          <tr><td>Hosting</td><td>App Engine app + dispatch</td><td>Cloud Run frontend + backend containers</td><td>Independent releases and container-based operations.</td></tr>
+          <tr><td>Infrastructure</td><td>App/dispatch/cron YAML + deploy scripts</td><td>Infrastructure as code, tool undecided</td><td>Reviewable resource changes and reproducible environments.</td></tr>
+          <tr><td>Build / tests</td><td>Angular CLI / Jasmine + Karma</td><td>Vite / Vitest + Testing Library / API tests</td><td>React-aligned tooling and planned container quality gates.</td></tr>
+          <tr><td>Retained</td><td>Python, MySQL, Cloud Storage, charts, integrations</td><td>Retain where compatible; reconnect and verify</td><td>Preserve data and business investment; reduce migration scope.</td></tr>
+        </tbody>
+      </table>
+      <div class="callout">This is <strong>not</strong> a Node API rewrite. Node builds the frontend; Python remains the backend language. Cloud Build is retained with a planned container release pipeline.</div>
+      <footer><span>Actual current technologies compared with approved target / no performance or cost uplift assumed</span><span>3 / 5</span></footer>
+    </section>
+    <section class="slide" id="benefits" aria-labelledby="benefits-title">
+      <p class="eyebrow">Why this matters for WIQ</p>
+      <h2 id="benefits-title">One frontend ecosystem. Broader team ownership.</h2>
+      <div class="hero"><strong>Most WIQ projects already use React.</strong><p>Aligning Store Insights creates opportunities to reuse team knowledge, components and delivery practices instead of maintaining a separate frontend skill silo.</p></div>
+      <div class="cards">
+        <article class="card"><h3>Developer mobility</h3><p>React-experienced teammates can move between projects with less framework-specific onboarding.</p></article>
+        <article class="card"><h3>Shared UI investment</h3><p>Reuse compatible WIQ layouts, filters, accessible components and test patterns once standards are agreed.</p></article>
+        <article class="card"><h3>Cross-project support</h3><p>A larger familiar contributor pool can spread review, maintenance and support responsibilities.</p></article>
+        <article class="card"><h3>Clear API contracts</h3><p>FastAPI models and OpenAPI support consistent integration, validation and contract testing.</p></article>
+        <article class="card"><h3>Independent releases</h3><p>Separate containers let frontend and backend evolve and scale independently, with versioned rollback.</p></article>
+        <article class="card"><h3>Repeatable environments</h3><p>Reviewed IaC definitions make infrastructure changes visible and reduce manual environment drift.</p></article>
+      </div>
+      <div class="measure"><strong>Measure, do not assume:</strong> onboarding time, cross-project contributions, component reuse, delivery lead time, deployment failures/recovery, p95 latency and cloud spend.</div>
+      <footer><span>WIQ React adoption is team-provided context / reuse, delivery speed and savings require execution and evidence</span><span>4 / 5</span></footer>
+    </section>
+    <section class="slide" id="readiness" aria-labelledby="readiness-title">
+      <p class="eyebrow">Delivery reality / decision gates</p>
+      <h2 id="readiness-title">A target architecture, not a completed migration</h2>
+      <div class="callout amber"><strong>Today:</strong> React still uses Flask/App Engine. Frontend identity is a demo stub; several portal routes remain placeholders. FastAPI, Cloud Run and IaC are planned.</div>
+      <div class="readiness">
+        <article class="gate"><h3>1. Identity + ingress</h3><p>Choose trusted SSO and frontend/API routing. Preserve portal/role access; review cookies, CORS and CSRF. App Engine header assumptions need explicit replacement.</p></article>
+        <article class="gate"><h3>2. API + feature parity</h3><p>Migrate Flask handlers and framework-specific code. Verify JSON, errors, uploads, PDFs and all portal integrations, not only Quick Facts.</p></article>
+        <article class="gate"><h3>3. Data + runtime</h3><p>Prove SQL/Storage access, credentials and outbound integrations. Match Cloud Run scaling to database connection limits; review blocking Python I/O.</p></article>
+        <article class="gate"><h3>4. IaC + platform ownership</h3><p>Select the tool, state/locking, environments, IAM and secret delivery. Inventory App Engine cron/APIs and decide scheduler/task replacements.</p></article>
+        <article class="gate"><h3>5. CI/CD + observability</h3><p>Add frontend/API quality gates, container builds and an approved registry. Define logging, alerts, revision rollout and rollback; align with WIQ standards.</p></article>
+        <article class="gate"><h3>6. Controlled cutover</h3><p>Demonstrate functional, visual and accessibility parity. Benchmark latency/cost, stage traffic and retain a tested fallback until acceptance.</p></article>
+      </div>
+      <div class="callout"><strong>Decision summary:</strong> React + FastAPI + separate Cloud Run services approved as the direction. IaC tooling, identity/ingress and operational detail remain open. No guaranteed cost reduction or automatic performance gain.</div>
+      <footer><span>Technical detail, assumptions and source evidence: README.md in this directory</span><span>5 / 5</span></footer>
+    </section>
+  </main>
+</body>
+</html>
