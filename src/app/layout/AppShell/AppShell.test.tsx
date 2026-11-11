@@ -1,8 +1,13 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { AuthProvider } from '../../../shared/context/AuthContext'
 import { AppShell } from './AppShell'
+
+vi.mock('../useNavGroups', async () => {
+  const { fullAccessNavGroups } = await import('../navTestFixture')
+  return { useNavGroups: () => fullAccessNavGroups }
+})
 
 function renderShell(path = '/quick-facts') {
   return render(

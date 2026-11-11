@@ -2,3 +2,15 @@
 .content {
   /* PageBar (48px) + FilterBar (48px) are sticky — they take up space naturally */
 }
+
+.layout { --page-bar-height: 0px; }
+
+@media (max-width: 768px) {
+  .trend {
+    --mob-appbar-height: 60px;
+  }
+}
+
+@media (max-width: 767px) {
+  .trend { --page-bar-height: 48px; }
+}

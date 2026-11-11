@@ -1,8 +1,13 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import { render, screen, within, fireEvent } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { AuthProvider } from '../../../shared/context/AuthContext'
 import { MobileNav } from './MobileNav'
+
+vi.mock('../useNavGroups', async () => {
+  const { fullAccessNavGroups } = await import('../navTestFixture')
+  return { useNavGroups: () => fullAccessNavGroups }
+})
 
 function renderNav(path = '/quick-facts') {
   return render(
@@ -35,14 +40,15 @@ describe('MobileNav', () => {
     expect(screen.getByTestId('mobile-title').textContent).toBe('Trend')
   })
 
-  it('shows "Trend" title on /quick-facts/weekly', () => {
+  it('keeps the source My Insights app title above the separate Trend heading', () => {
     renderNav('/quick-facts/weekly')
-    expect(screen.getByTestId('mobile-title').textContent).toBe('Trend')
+    expect(screen.getByTestId('mobile-title').textContent).toBe('My Insights')
+    expect(screen.queryByText('powered by Weekly Facts and My Plan')).not.toBeInTheDocument()
   })
 
-  it('shows "Trend" title on /quick-facts/myplan', () => {
+  it('shows "My Insights" above My Plan', () => {
     renderNav('/quick-facts/myplan')
-    expect(screen.getByTestId('mobile-title').textContent).toBe('Trend')
+    expect(screen.getByTestId('mobile-title').textContent).toBe('My Insights')
   })
 
   it('marks Trend as active on /quick-facts/weekly and not Daily', () => {

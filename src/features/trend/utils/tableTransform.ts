@@ -6,12 +6,14 @@ const CHILD_LEVEL_COL_TYPES = ['', 'parentNode', 'selectedNode', 'childNode'];
 const PEER_LEVEL_COL_TYPES = ['', 'parentNode', 'selectedNode', 'peerNode'];
 
 export interface WfTableDisplayContext {
+  isCompact?: boolean;
   isMobile?: boolean;
   parentCode?: string;
   childCode?: string;
   hierarchyNode?: string;
   selectedDateFilter?: string;
   isWfmPortal?: boolean;
+  isStore?: boolean;
   toggleChildLevelKey?: string;
   showChildLevel?: boolean;
 }

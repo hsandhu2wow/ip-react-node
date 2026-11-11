@@ -47,7 +47,7 @@ export function TrendMobileFilters({ tabs, tab, date, onChange, hierarchy }: Pro
   }, [open]);
 
   return (
-    <div className={styles.row}>
+    <div className={`${styles.row} ${!hierarchy ? styles.withArrows : ''}`}>
       {!hierarchy && (
         <button type="button" className={styles.arrow} aria-label="Older period"
           disabled={index < 0 || index === dates.length - 1} onClick={() => onChange(tab, dates[index + 1])}>

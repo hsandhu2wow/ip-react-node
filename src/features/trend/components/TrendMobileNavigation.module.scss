@@ -1,0 +1,27 @@
+.navigation { display: none; }
+
+@media (max-width: 767px) {
+  .navigation {
+    display: flex;
+    align-items: stretch;
+    position: sticky;
+    top: 60px;
+    height: 48px;
+    border-bottom: 1px solid #d3d3d3;
+    background: #fff;
+    z-index: 910;
+
+    a {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex: 1;
+      color: var(--color-primary);
+      font-size: 16px;
+      text-decoration: none;
+      border-bottom: 4px solid transparent;
+
+      &[aria-current='page'] { border-color: var(--color-primary); }
+    }
+  }
+}

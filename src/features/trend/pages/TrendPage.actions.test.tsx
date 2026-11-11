@@ -1,15 +1,20 @@
 import { StrictMode, useEffect } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { MemoryRouter, useLocation } from 'react-router-dom';
 import { TrendPage } from './TrendPage';
 import { FilterProvider, useFilter } from '../../../shared/context/FilterContext';
-import { TrendActionsProvider } from '../context/TrendActionsContext';
+import { TrendActionsProvider, useTrendActions } from '../context/TrendActionsContext';
 import { useTrendData } from '../hooks/useTrendData';
 import { getUserDetails } from '../../../shared/api/users';
+import { getUserSubscriptions, updateUserSubscriptions } from '../api/trend';
 import type { WfMetric, WfPageData } from '../types/wf.types';
 
 vi.mock('../hooks/useTrendData');
+vi.mock('../api/trend', () => ({
+  getUserSubscriptions: vi.fn(),
+  updateUserSubscriptions: vi.fn(),
+}));
 vi.mock('../../../shared/api/users', () => ({
   getUserDetails: vi.fn(async () => ({ employee_number: 'fixture-employee', Store_Insights_Role: 'fixture-role' })),
 }));
@@ -51,12 +56,18 @@ function InitialiseFilter() {
   return null;
 }
 
-function TestPage({ metric = 'weekly' }: { metric?: WfMetric }) {
+function SubscriptionAction() {
+  const actions = useTrendActions();
+  return actions.subscriptionEnabled && <button onClick={actions.openSubscription}>Subscription preferences</button>;
+}
+
+function TestPage({ metric = 'weekly', storeTree = false }: { metric?: WfMetric; storeTree?: boolean }) {
   return (
     <MemoryRouter>
       <FilterProvider>
         <TrendActionsProvider>
-          <InitialiseFilter />
+          {storeTree ? <InitialiseStoreFilter /> : <InitialiseFilter />}
+          <SubscriptionAction />
           <TrendPage metric={metric} />
         </TrendActionsProvider>
       </FilterProvider>
@@ -64,11 +75,117 @@ function TestPage({ metric = 'weekly' }: { metric?: WfMetric }) {
   );
 }
 
+function InitialiseStoreFilter() {
+  const { initTree } = useFilter();
+  useEffect(() => initTree([{
+    code: 'National', name: 'Synthetic National', level: 0, level_desc: 'National',
+    children: [{ code: 'fixture-store', name: 'Synthetic Store', level: 5, level_desc: 'Store', children: [] }],
+  }]), [initTree]);
+  return null;
+}
+
+function CurrentLocation() {
+  const { pathname, search } = useLocation();
+  return <output data-testid="route">{pathname}{search}</output>;
+}
+
+function choose(name: string, option: string) {
+  fireEvent.click(screen.getByRole('combobox', { name }));
+  fireEvent.click(screen.getByRole('option', { name: option }));
+}
+
+function InitialiseHierarchy() {
+  const { initTree } = useFilter();
+  useEffect(() => initTree([{
+    code: 'fixture-national', name: 'Synthetic National', level: 1, level_desc: 'National',
+    children: [{ code: 'fixture-state', name: 'Synthetic State', level: 2, level_desc: 'State', children: [] }],
+  }]), [initTree]);
+  return null;
+}
+
+describe('Angular metric and view controls', () => {
+  it('opens the source view listbox and commits its selection without a native select popup', () => {
+    render(<TestPage />);
+    const trigger = screen.getByRole('combobox', { name: 'Select tab' });
+    fireEvent.click(trigger);
+    expect(screen.getByRole('listbox', { name: 'Select tab' })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('option', { name: 'Monthly Overview' }));
+    expect(trigger).toHaveTextContent('Monthly Overview');
+    expect(screen.queryByRole('listbox')).not.toBeInTheDocument();
+    expect(trigger).toHaveFocus();
+    expect(screen.getByText('Weekly Facts - Monthly Overview')).toBeInTheDocument();
+  });
+
+  it('places the child-level switch before variance, matching source keyboard and visual order', () => {
+    vi.mocked(useTrendData).mockReturnValue({
+      data: { ...data, varianceFlag: { text: 'Show variance', value: false },
+        cards: [{ ...data.cards[0], toggleChildLevelKey: 'Child level' }] },
+      isLoading: false, isError: false,
+    } as ReturnType<typeof useTrendData>);
+    render(<TestPage />);
+    const switches = screen.getAllByRole('checkbox');
+    expect(switches[0]).toBe(screen.getByRole('checkbox', { name: 'Child level' }));
+    expect(switches[1]).toBe(screen.getByRole('checkbox', { name: 'Show variance' }));
+  });
+
+  it('uses the fetched portal for table layout instead of the demo authentication portal', async () => {
+    vi.mocked(getUserDetails).mockResolvedValue({
+      portal: '360FM', weekly_facts_enabled: true, my_plan_enabled: true,
+    });
+    render(<TestPage />);
+    expect(await screen.findByRole('heading', { level: 1, name: 'Weekly Facts' })).toBeInTheDocument();
+    expect(screen.getByRole('table')).toHaveClass('wf-table-wfm');
+  });
+
+  it('navigates through location breadcrumbs without losing date and period parameters', () => {
+    render(
+      <MemoryRouter initialEntries={['/quick-facts/weekly?code=fixture-state&date=2026-10-25&period=YDAY']}>
+        <FilterProvider><InitialiseHierarchy /><TrendPage metric="weekly" /><CurrentLocation /></FilterProvider>
+      </MemoryRouter>,
+    );
+    expect(screen.getByRole('navigation', { name: 'Location breadcrumbs' })).toHaveTextContent('Synthetic State');
+    fireEvent.click(screen.getByRole('button', { name: 'Synthetic National' }));
+    expect(screen.getByTestId('route')).toHaveTextContent('/quick-facts/weekly?code=fixture-national&date=2026-10-25&period=YDAY');
+    expect(screen.queryByRole('navigation', { name: 'Location breadcrumbs' })).not.toBeInTheDocument();
+  });
+
+  it('switches enabled metrics while preserving location and query parameters', async () => {
+    vi.mocked(getUserDetails).mockResolvedValue({
+      weekly_facts_enabled: true, my_plan_enabled: true, portal: 'SI',
+    });
+    render(
+      <MemoryRouter initialEntries={['/quick-facts/weekly?code=fixture-national&period=YDAY']}>
+        <FilterProvider><InitialiseFilter /><TrendPage metric="weekly" /><CurrentLocation /></FilterProvider>
+      </MemoryRouter>,
+    );
+    expect(await screen.findByRole('link', { name: 'My Plan' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Weekly Facts' })).toHaveAttribute('aria-current', 'page');
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Trend');
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('powered by Weekly Facts and My Plan');
+    fireEvent.click(screen.getByRole('link', { name: 'My Plan' }));
+    expect(screen.getByTestId('route')).toHaveTextContent('/quick-facts/myplan?code=fixture-national&period=YDAY');
+  });
+
+  it('offers source view buttons for a single enabled metric instead of a view dropdown', async () => {
+    vi.mocked(getUserDetails).mockResolvedValue({
+      weekly_facts_enabled: true, my_plan_enabled: false, portal: 'SI',
+    });
+    render(<TestPage />);
+    expect(await screen.findByRole('button', { name: 'Monthly Overview' })).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'My Plan' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('combobox', { name: 'Select tab' })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Monthly Overview' }));
+    expect(screen.getByRole('button', { name: 'Monthly Overview' })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByText('Weekly Facts - Monthly Overview')).toBeInTheDocument();
+  });
+});
+
 function events() {
   return (window as Window & { dataLayer?: Record<string, unknown>[] }).dataLayer || [];
 }
 
 beforeEach(() => {
+  vi.mocked(getUserDetails).mockResolvedValue({ employee_number: 'fixture-employee', Store_Insights_Role: 'fixture-role' });
   vi.stubGlobal('innerWidth', 1024);
   vi.stubGlobal('dataLayer', []);
   vi.mocked(useTrendData).mockReturnValue({ data, isLoading: false, isError: false } as ReturnType<typeof useTrendData>);
@@ -76,6 +193,78 @@ beforeEach(() => {
 afterEach(() => {
   vi.unstubAllGlobals();
   vi.restoreAllMocks();
+});
+
+describe('Source subscription profile integration', () => {
+  it.each<WfMetric>(['weekly', 'myPlan'])('offers national pseudo-locations only for Weekly Facts, not %s indiscriminately', async metric => {
+    vi.mocked(getUserDetails).mockResolvedValue({
+      portal: 'SI', sqf_area_of_responsibility: 'National', weekly_facts_enabled: true, my_plan_enabled: true,
+    });
+    vi.mocked(useTrendData).mockReturnValue({
+      data: { ...data, is_web_subscription_enabled: true }, isLoading: false, isError: false,
+    } as ReturnType<typeof useTrendData>);
+    vi.mocked(getUserSubscriptions).mockResolvedValue({ subscribed_locations: [], subscribed_views: [] });
+    render(<TestPage metric={metric} />);
+    await screen.findByRole('link', { name: 'My Plan' });
+    fireEvent.click(screen.getByRole('button', { name: 'Subscription preferences' }));
+    expect(!!screen.queryByRole('checkbox', { name: 'W-Retail' })).toBe(metric === 'weekly');
+    expect(!!screen.queryByRole('checkbox', { name: 'Metro' })).toBe(metric === 'weekly');
+  });
+
+  it('waits for the fetched profile before initializing an early-opened subscription dialog', async () => {
+    let resolveProfile!: (value: Awaited<ReturnType<typeof getUserDetails>>) => void;
+    vi.mocked(getUserDetails).mockReturnValue(new Promise(resolve => { resolveProfile = resolve; }));
+    vi.mocked(useTrendData).mockReturnValue({
+      data: { ...data, is_web_subscription_enabled: true }, isLoading: false, isError: false,
+    } as ReturnType<typeof useTrendData>);
+    vi.mocked(getUserSubscriptions).mockResolvedValue({ subscribed_locations: [], subscribed_views: [] });
+    render(<TestPage storeTree />);
+    fireEvent.click(screen.getByRole('button', { name: 'Subscription preferences' }));
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    await act(async () => resolveProfile({
+      portal: 'SI', store_insights_role_desc: 'Store', sqf_area_of_responsibility: 'fixture-store',
+    }));
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+    expect(screen.queryByRole('tree')).not.toBeInTheDocument();
+  });
+
+  it.each<WfMetric>(['weekly', 'myPlan'])('uses Store responsibility without a location picker for %s', async metric => {
+    vi.mocked(getUserDetails).mockResolvedValue({
+      portal: 'SI', store_insights_role_desc: 'Store', sqf_area_of_responsibility: 'fixture-store',
+      weekly_facts_enabled: true, my_plan_enabled: true,
+    });
+    vi.mocked(useTrendData).mockReturnValue({
+      data: { ...data, is_web_subscription_enabled: true, available_views: ['week'] }, isLoading: false, isError: false,
+    } as ReturnType<typeof useTrendData>);
+    vi.mocked(getUserSubscriptions).mockResolvedValue({ subscribed_locations: [], subscribed_views: ['week'] });
+    vi.mocked(updateUserSubscriptions).mockResolvedValue(undefined);
+    render(<TestPage metric={metric} storeTree />);
+    await screen.findByRole('link', { name: 'My Plan' });
+    fireEvent.click(screen.getByRole('button', { name: 'Subscription preferences' }));
+    await waitFor(() => expect(screen.getByRole('checkbox', { name: 'Weekly Overview' })).toBeChecked());
+    expect(screen.queryByRole('tree')).not.toBeInTheDocument();
+    expect(screen.queryByText(/for your preferred locations/)).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Save preferences' }));
+    await waitFor(() => expect(updateUserSubscriptions).toHaveBeenCalledWith(
+      metric === 'weekly' ? 'wf' : 'myplan', ['fixture-store'], ['week'],
+    ));
+  });
+
+  it('uses the account responsibility, not the visible tree root, for national subscription nodes', async () => {
+    vi.mocked(getUserDetails).mockResolvedValue({
+      portal: 'SI', sqf_area_of_responsibility: 'fixture-store', weekly_facts_enabled: true, my_plan_enabled: true,
+    });
+    vi.mocked(useTrendData).mockReturnValue({
+      data: { ...data, is_web_subscription_enabled: true }, isLoading: false, isError: false,
+    } as ReturnType<typeof useTrendData>);
+    vi.mocked(getUserSubscriptions).mockResolvedValue({ subscribed_locations: [], subscribed_views: [] });
+    render(<TestPage storeTree />);
+    await screen.findByRole('link', { name: 'My Plan' });
+    fireEvent.click(screen.getByRole('button', { name: 'Subscription preferences' }));
+    expect(screen.getByRole('tree')).toBeInTheDocument();
+    expect(screen.queryByRole('checkbox', { name: 'W-Retail' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('checkbox', { name: 'Metro' })).not.toBeInTheDocument();
+  });
 });
 
 describe('Weekly/My Plan configured links', () => {
@@ -127,15 +316,15 @@ describe('Weekly/My Plan analytics', () => {
   it('emits exact desktop My Plan view, date and successful hierarchy change events', async () => {
     render(<TestPage metric="myPlan" />);
     await waitFor(() => expect(events()).toHaveLength(1));
-    fireEvent.change(screen.getByRole('combobox', { name: 'View' }), { target: { value: 'groups' } });
+    choose('View', 'Groups');
     await waitFor(() => expect(events()).toHaveLength(2));
     expect(events().at(-1)).toMatchObject({
       quickFactEventType: 'myPlanHierarchyDropdownChanged', quickFactCardType: 'Weekly Overview', selectedLocation: 'fixture-national',
     });
-    fireEvent.change(screen.getByRole('combobox', { name: 'Select tab' }), { target: { value: 'month' } });
+    choose('Select tab', 'Monthly Overview');
     await waitFor(() => expect(events()).toHaveLength(3));
     expect(events().at(-1)?.quickFactEventType).toBe('myPlanTabChanged');
-    fireEvent.change(screen.getByRole('combobox', { name: 'Select date' }), { target: { value: 'M1' } });
+    choose('Select date', 'M1');
     await waitFor(() => expect(events()).toHaveLength(4));
     expect(events().at(-1)).toMatchObject({
       quickFactEventType: 'myPlanDateFilterChanged', quickFactCardType: 'Monthly Overview - M1',
@@ -178,7 +367,7 @@ describe('Weekly/My Plan analytics', () => {
     } as ReturnType<typeof useTrendData>);
     rerender(<TestPage />);
     await waitFor(() => expect(events()).toHaveLength(1));
-    fireEvent.change(screen.getByRole('combobox', { name: 'View' }), { target: { value: 'groups' } });
+    choose('View', 'Groups');
     expect(events()).toHaveLength(1);
   });
 
@@ -190,7 +379,7 @@ describe('Weekly/My Plan analytics', () => {
     await waitFor(() => expect(log).toHaveBeenCalledWith('Unable to send Weekly Facts/My Plan analytics', error));
     expect(events()).toHaveLength(0);
     expect(screen.getByText('Weekly Facts - Weekly Overview')).toBeInTheDocument();
-    fireEvent.change(screen.getByRole('combobox', { name: 'Select tab' }), { target: { value: 'month' } });
+    choose('Select tab', 'Monthly Overview');
     await waitFor(() => expect(events()).toHaveLength(1));
   });
 });

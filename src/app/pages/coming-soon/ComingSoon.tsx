@@ -4,7 +4,7 @@ import styles from './ComingSoon.module.scss'
 
 export function ComingSoon() {
   const { pathname } = useLocation()
-  const routeName = pathname.replace(/^\//, '').split('/')[0] || 'home'
+  const routeName = (pathname.replace(/^\//, '').split('/')[0] || 'home').replace(/-/g, ' ')
 
   return (
     <div className={styles.page}>

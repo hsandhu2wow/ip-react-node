@@ -229,6 +229,53 @@ body {
   font-weight: 700;
 }
 
+.wf-tt__divider {
+  height: 1px;
+  margin: 8px 0;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.wf-tt__stores + .wf-tt__stores {
+  margin-top: 8px;
+}
+
+.wf-tt__stores-label {
+  margin-bottom: 4px;
+  font-weight: 700;
+}
+
+.wf-tt__stores-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 1px 0;
+}
+
+.wf-tt-dot {
+  flex: 0 0 8px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.tt-dot--green { background: #7dd9a4; }
+.tt-dot--red { background: #f7a0a0; }
+
+.wf-tt__store-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.wf-tt__store-val {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 4px;
+  font-weight: 700;
+}
+
 .tt-badge--green {
   background: rgba(33, 150, 83, 0.3);
   color: #7dd9a4;
@@ -370,10 +417,6 @@ td.wf-table__data.goal-tracker-title {
   justify-content: flex-end;
 }
 
-.wf-table__data.center-aligned {
-  text-align: center;
-}
-
 .wf-table__tags {
   display: flex;
   gap: 4px;
@@ -401,6 +444,22 @@ td.wf-table__data.goal-tracker-title {
   align-items: flex-end;
   justify-content: center;
   gap: 1px;
+}
+
+.wf-table.wf-table--show-variance .wf-table__data {
   height: 44px;
-  padding: 4px 4px;
+  padding: 4px;
+}
+
+.wf-table.wf-table-three-col .wf-table__data.left-align > div.wf-table__value-cell,
+.wf-table.wf-table-three-col .goal-tracker:not(.goal-tracker-title) > div {
+  align-items: flex-start;
+  justify-content: flex-start;
+  text-align: left;
+}
+
+.wf-table .goal-tracker > div > div,
+.wf-table .goal-tracker .wf-table__kpi-value {
+  min-width: 0;
+  flex: 1;
 }

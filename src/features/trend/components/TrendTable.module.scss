@@ -3,7 +3,12 @@
   overflow: auto;
   width: 100%;
   max-width: 100%;
-  max-height: 80vh;
+  max-height: 87vh;
+
+  @media (min-height: 600px) and (max-height: 740px) { max-height: 72vh; }
+  @media (min-height: 741px) and (max-height: 900px) { max-height: 79vh; }
+  @media (min-height: 901px) and (max-height: 1199px) { max-height: 82vh; }
+  @media (min-width: 1024px) { max-height: 92vh; }
 }
 
 .table {
@@ -11,7 +16,8 @@
   border-collapse: collapse;
   border-spacing: 0;
   border-radius: 0 0 4px 4px;
-  table-layout: fixed;
+  &:global(.wf-table-fixed) { table-layout: fixed; }
+  &:global(.wf-table-wfm__store) { min-width: 400px; width: fit-content; }
 }
 
 .headerCell {
@@ -27,7 +33,8 @@
   border-bottom: 2px solid #d0d0d0;
   white-space: nowrap;
   text-align: left;
-  z-index: 12;
+  line-height: 107%;
+  letter-spacing: 0.1px;
 }
 
 .dataCell {
@@ -43,6 +50,79 @@
   background-color: inherit;
 }
 
+.table :global(.wf-table__goals) {
+  font-weight: bold;
+  color: var(--color-primary) !important;
+  background-color: #f7f7f7 !important;
+  z-index: 15;
+}
+
+.table :global(.wf-table__metric-name-header) {
+  z-index: 20;
+}
+
+.table :global(td:has(.metric-name)) {
+  background-color: #fff;
+  z-index: 10;
+}
+
+.table :global(.metric-name) {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+  min-width: 0;
+}
+
+.table :global(.transform-text) {
+  color: var(--color-primary);
+  letter-spacing: 0.5px;
+  margin: 0 auto;
+  justify-content: center;
+}
+
+.table :global(.transform-text > div) {
+  display: inline-grid;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  width: 100%;
+}
+
+.table :global(.transform-text span) {
+  transform: rotate(270deg);
+  white-space: nowrap;
+}
+
+.table :global(tr:has(> td.wf-table__goals:first-child[rowspan='1'])) {
+  height: 40px;
+}
+
+.table :global(.right-align > div) {
+  justify-content: right;
+  text-align: right;
+  width: 100%;
+}
+
+.table :global(.right-align .wf-table__kpi-value) {
+  display: block;
+  text-align: right;
+}
+
+.table :global(.left-align > div) {
+  justify-content: left;
+  padding-left: 10px;
+}
+
+.table :global(.wf-table__kpi-value) {
+  white-space: wrap;
+  word-break: break-word;
+}
+
+.table:global(.wf-table-wfm) {
+  th, td { line-height: 125%; }
+}
+
 .rowLarge {
   height: 24px;
 }
@@ -52,6 +132,31 @@
   display: flex;
   gap: 4px;
   align-items: center;
+}
+
+.thDiv {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.thDiv > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+.expandButton {
+  display: inline-flex;
+  margin-left: auto;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #fff;
+  cursor: pointer;
+
+  span { font-size: 18px; line-height: 18px; }
 }
 
 .metaRow {

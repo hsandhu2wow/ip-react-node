@@ -3,12 +3,13 @@ import type { ChartOptions } from 'chart.js'
 import { Bar } from 'react-chartjs-2'
 import type { ISeasonalChart } from '../../../../shared/types/sqf.types'
 import { beautify } from '../../../../shared/utils/formatters'
+import { BAR_ANIMATION } from '../MetricCard/MetricCardChart'
 import styles from './SeasonalBarChart.module.scss'
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend)
 const green = '#219653'
 const options: ChartOptions<'bar'> = {
-  layout: { padding: { top: 8 } }, responsive: true, aspectRatio: 1.46,
+  layout: { padding: { top: 8 } }, responsive: true, aspectRatio: 1.46, animation: BAR_ANIMATION,
   plugins: {
     legend: { display: false }, datalabels: { display: false },
     tooltip: { mode: 'index', intersect: false, padding: { left: 10, top: 10, bottom: 10, right: 10 },

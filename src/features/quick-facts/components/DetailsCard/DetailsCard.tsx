@@ -9,6 +9,8 @@ import { MetricCardTable } from '../MetricCard/MetricCardTable'
 import { MetricCardTabs } from '../MetricCard/MetricCardTabs'
 import { InfoModal } from '../../../../shared/components/InfoModal/InfoModal'
 import { useCardsPreview } from '../../../../shared/components/PreviewDialog/cardsPreviewContext'
+import { useAuth } from '../../../../shared/context/AuthContext'
+import { childLevelLabel } from '../../../../shared/utils/levelLabels'
 import { useOptionalFilter } from '../../../../shared/context/FilterContext'
 import { sendQFDataToAnalytics } from '../../../../shared/utils/analytics'
 import { REPORTING_PERIODS, isCutOffTimePast, formatUpdatedTime } from '../../../../shared/utils/formatters'
@@ -185,6 +187,7 @@ export function DetailsCard({
   useEffect(() => setSelectedDept(''), [card?.childCode, card?.children])
 
   const filter = useOptionalFilter()
+  const { user } = useAuth()
   const locationCode = filter?.selectedNode?.code
   const breakdownAxisChangeCount = filter?.breakdownAxisChangeCount ?? 0
   const axisResolved = !!card?.cards && !isLegacyBreakdownCard(card) && !!axisCard
@@ -215,6 +218,10 @@ export function DetailsCard({
   const showRecognize = shouldShowRecognize(card.cardHeader)
   const cutOffPast = isCutOffTimePast(card.error)
   const isLegacy = !!card.cards && isLegacyBreakdownCard(card)
+  const breakdownLabel =
+    (axis ?? filter?.selectedBreakdownAxis) === 'childLevel'
+      ? childLevelLabel(filter?.selectedNode, user.portal)
+      : card.breakdownLabelOverride || 'Departments'
   const { nextLevel, isStore, childCode } = computeDrillDown(card, selectedNode ?? null, detailsLastLevel)
 
   const { infoNumbers, chartData, tabs, tableData } = contentCard ?? ({} as ISQFMetricCard)
@@ -287,6 +294,12 @@ export function DetailsCard({
                 <span className={styles.subTitleItem}>
                   <span className={`material-icons ${styles.subTitleIcon}`}>calendar_today</span>
                   <span className={styles.subTitleText}>{reportingPeriod}</span>
+                </span>
+              )}
+              {!isLegacy && tableData && (
+                <span className={styles.subTitleItem}>
+                  <span className={`material-icons ${styles.subTitleIcon}`}>category</span>
+                  <span className={styles.subTitleText}>{breakdownLabel}</span>
                 </span>
               )}
               {isLegacy && card.dropdowns?.map(dd => (
