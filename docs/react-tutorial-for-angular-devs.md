@@ -1,14 +1,16 @@
 # React App Tutorial — For Angular Developers
 
-> This tutorial explains **every layer** of the `ip-react-node` app using Angular analogies.
+> This tutorial introduces the main layers of the `ip-react-node` app using Angular analogies.
 > Examples explain the codebase; simplified examples are not complete page implementations.
 
-> **Reviewed October 14, 2026:** Use the [technical architecture](technical-architecture.md)
-> for current contracts and the [migration status](migration-status.md) and
-> [roadmap](superpowers/plans/2026-10-14-angular-react-migration.md) for parity
-> gaps and future work. After the October 20 test expansion this worktree has
-> 33 test files, demo
-> authentication and only a partial Angular migration.
+> **Reading note, November 2, 2026:** Originally reviewed October 14, with
+> module/style/transport references updated during modernisation. This remains
+> an educational guide, not a current-state specification. Use the
+> [documentation hub](README.md), [technical architecture](technical-architecture.md)
+> and [feature guide](feature-guide.md) for current contracts, and the
+> [migration strategy](migration-strategy.md) for remaining gates.
+> Authentication is still a demo; historical test counts and plans are not
+> acceptance evidence for a new change.
 
 ---
 

@@ -1,5 +1,14 @@
 # Weekly Facts and My Plan: Angular parity assessment
 
+> **Current-state guide, November 2, 2026:** The shared feature is now under
+> `src/features/trend/`, with shared infrastructure under `src/shared/`.
+> Read the [feature guide](feature-guide.md#weekly-facts-and-my-plan) and
+> [architecture](technical-architecture.md) for implementation at `16e8c6f`.
+> The dated assessment and continuation entries below preserve source evidence;
+> they are not a single current inventory. Desktop/mobile actions and dialogs
+> have progressed beyond the original basic-table baseline, but enabled-BU
+> parity is still unqualified. See the [acceptance gates](migration-strategy.md#delivery-roadmap-and-acceptance-gates).
+
 Reviewed **October 21, 2026**. Target: the same behavior and appearance as
 Angular on **every enabled BU**, not a desktop-only approximation.
 The [implementation plan](superpowers/plans/2026-10-21-weekly-facts-myplan-parity.md)
@@ -457,6 +466,10 @@ Source quirks below qualify these rules; a cleaner invented resolver is not
 automatically one-to-one.
 
 ## Gap ledger
+
+For current implementation/test mapping by these same WF IDs, use the
+[traceability register](migration-traceability.md#weekly-facts-and-my-plan).
+The following table retains the original October 21 baseline.
 
 | ID | Current React evidence | Required migration outcome |
 |---|---|---|

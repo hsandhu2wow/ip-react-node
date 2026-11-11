@@ -1,5 +1,14 @@
 # Migration status and Angular source comparison
 
+> **Current-state guide, November 2, 2026:** Use the
+> [documentation hub](README.md), [feature guide](feature-guide.md) and
+> [architecture](technical-architecture.md) for code at `16e8c6f`.
+> Modernisation is integrated into dev and Weekly/MyPlan at that commit.
+> This file retains dated source assessments: older statements about missing
+> mobile/actions, tables, gauges or URL reactivity are not current inventories.
+> See [delivery gates](migration-strategy.md#delivery-roadmap-and-acceptance-gates)
+> for remaining work. This refresh adds no new Angular/live-BU qualification.
+
 Broad review: **October 14, 2026**; focused Weekly Facts/My Plan review:
 **October 21, 2026**. Goal: one-to-one Angular-to-React parity,
 including user-visible behavior, permissions, integrations and responsive UI.

@@ -1,222 +1,132 @@
 # Store Insights React migration
 
-This repository recreates the Angular **Store Insights** application in React.
-The objective is **one-to-one functional and visual parity**, not a redesign:
-routes, permissions, data, interactions, analytics, responsive behavior and
-integrations must match the agreed Angular baseline.
+Recreate Angular **Store Insights** in React with **one-to-one functional and
+visual parity across every enabled business unit (BU)**. This is a migration,
+not a redesign. Preserve behavior, data contracts, permissions, analytics,
+responsive layouts, themes and integrations.
 
-**Frontend modernisation, October 30:** `feat/frontend-architecture-modernisation`
-starts from the committed Weekly/MyPlan continuation (`9313306`). Scoped styles
-now use SCSS Modules; global backend-HTML CSS and BU theme assets are unchanged.
-Native Fetch replaces Axios underneath the existing TanStack Query hooks.
-Application composition lives in `src/app`, Quick Facts and Weekly/MyPlan in
-`src/features`, and reusable infrastructure in `src/shared`. MSW intercepts
-HTTP in query/transport integration tests using sanitized fixtures; unexpected
-requests fail instead of reaching a backend. These refactors do not certify
-browser or all-BU parity. Dated reports below retain their historical scope.
-The October 30 run passes **604 tests in 72 files**, with **97.15% line
-coverage** (2,733/2,813), retaining the **95.01%** line gate.
+This repository contains the **React frontend**, despite its `ip-react-node`
+name. It uses the existing Python APIs; there is no Node application server,
+new backend or database migration here.
 
-**Branch integration, October 26:** Quick Facts parity (`6035014`) is merged
-into dev (`e8817e8`), and that dev baseline is incorporated in this Weekly/MyPlan
-branch. Seasonal/profile cards, chart/table/filter refinements, recognition,
-feedback/NPS, preview/export, subscription/AI action plumbing and per-BU
-build/theme configuration are retained alongside the Weekly hierarchy/dialog
-work. Both regression suites are preserved; wireframes are unchanged.
-At integration, the dev merge passed 452 tests and built, but its 85.57% full-source line
-coverage is below the unchanged 95.01% gate. The user approved publishing
-with this gap recorded. Earlier coverage and capability descriptions below
-refer to their dated smaller baseline, not the combined branch.
-The combined Weekly branch initially passed **500 tests in 65 files** with
-**86.19%** line coverage, below the gate accepted for branch synchronization.
+## Start here
 
-**Coverage follow-up, October 26:** The combined branch now passes **556 tests
-in 66 files**, with **97.01% line coverage** (2,629 of 2,710 lines). The unchanged
-**95.01%** gate passes again. New tests exercise export/capture success and
-failure handling, OAuth/SDK boundaries, gauge drawing callbacks, feedback and
-recognition keyboard/search flows, subscription hierarchy, preview lifecycle,
-AI resizing and footer scrolling. No application behavior or coverage scope
-changed; mocked external boundaries do not establish browser or all-BU parity.
-
-**Status as of October 26, 2026:** partial migration. Quick Facts summary/details
-and Weekly Facts/My Plan tables with desktop hierarchy/child-peer controls and
-information/alert dialogs exist. Authentication is still a demo
-stub, several actions are inert, and most other Angular applications are not
-migrated. Implemented components and passing unit tests, when available, do not
-by themselves establish Angular parity.
-
-## Technical documentation
-
-| Document | Contents |
+| Reader / task | Start with |
 |---|---|
-| [Architecture and development](docs/technical-architecture.md) | Current providers, routing, state, API contracts, caching, tooling and deployment |
-| [Migration status and source comparison](docs/migration-status.md) | Reviewed commits, recent changes, feature gaps and source references |
-| [Future migration plan](docs/superpowers/plans/2026-10-14-angular-react-migration.md) | Prioritized delivery slices, dependencies and acceptance gates |
-| [Weekly Facts/My Plan assessment](docs/weekly-facts-myplan-parity.md) | Thorough source review, recent changes, real SI response shapes, BU differences and parity gaps |
-| [Weekly Facts/My Plan implementation plan](docs/superpowers/plans/2026-10-21-weekly-facts-myplan-parity.md) | Detailed replacement for roadmap Stage 4, task dependencies and per-BU acceptance |
-| [React guide for Angular developers](docs/react-tutorial-for-angular-devs.md) | Educational walkthrough of existing React patterns |
-| [OLD/NEW architecture and WIQ business case](docs/architecture/README.md) | Presentation, PDF and editable diagrams: Angular/Flask/App Engine versus the React/FastAPI/Cloud Run target; IaC tool undecided |
+| Anyone new to the project | [Documentation hub](docs/README.md) |
+| Why migrate? What are the benefits and risks? | [Migration strategy and rationale](docs/migration-strategy.md) |
+| Run and debug locally | [Development guide](docs/development.md) |
+| Understand design and data flow | [Technical architecture](docs/technical-architecture.md) |
+| Change a feature | [Feature guide](docs/feature-guide.md) and [contributing](CONTRIBUTING.md) |
+| Trace migration evidence | [Requirement/code/test register](docs/migration-traceability.md) |
+| HTTP or backend integration | [API reference](docs/api-reference.md) |
+| Tests, fixtures and parity checks | [Testing guide](docs/testing.md) |
+| Build, configuration or deployment | [Operations guide](docs/operations.md) |
+| Any AI assistant | [AGENTS.md](AGENTS.md) and [AI collaboration guide](docs/ai-guide.md) |
+| Why a technical choice was made | [Architecture decisions](docs/decisions/README.md) |
 
-Earlier date-stamped specs/plans under `docs/superpowers/` retain historical
-scope and intent. They are not completion reports, and earlier feature
-deferrals do not exclude those features from the full migration.
+Copilot's [entry point](.github/copilot-instructions.md) and Claude's
+[entry point](CLAUDE.md) use the same tool-neutral guide. Other tools and people
+can read it directly; none of the project documentation requires a particular
+AI product.
 
-## Reviewed checkouts
+## Current status
 
-| | React | Angular |
-|---|---|---|
-| Repository/application | `hsandhu2wow/ip-react-node` | `dsa-buying-insights/store-insights` |
-| Branch | `document-migration-plan` | `feature/smkt-qf-yday-toggle-mobile` |
-| Commit | `c97525f268befdc68446c7c864a9f2c79b279d5c` | `02a9cf69889d74fb8542ec26c9ecb57aae041278` |
+Documentation reviewed **November 2, 2026**, against code at `16e8c6f`.
+Quick Facts summary/details, seasonal/profile cards and shared
+feedback/NPS/recognition/preview/export workflows are implemented. Weekly Facts
+and My Plan share a renderer with desktop and mobile selection, tables,
+information/alert dialogs, subscriptions, AI drawer, banners and analytics.
+Implementation does **not** mean all source behavior has been qualified.
 
-The Angular source is at
-`/Users/lakhwinderkaur/Documents/work-wow/dsa-buying-insights/store-insights`;
-its Git root is the parent `dsa-buying-insights` repository.
-This review uses its committed product source, excluding local configuration
-edits. The React review is for this worktree, not uncommitted work or documents
-in another checkout. Recheck both HEADs before executing the plan.
+Real identity/roles/feature gating, source-specific table/layout fidelity,
+authorized all-BU comparisons and production integration checks remain open.
+Authentication is a demo. Several top-level routes still show Coming Soon.
+See the [current feature guide](docs/feature-guide.md) and
+[delivery gates](docs/migration-strategy.md#delivery-roadmap-and-acceptance-gates).
+
+The last recorded integrated-code validation on November 2 passed **604 tests
+in 72 files**, **97.15% line coverage**, and the production build. These are
+dated results, not a substitute for running checks on a new change or proof
+of Angular/browser parity. The enforced global line gate is **95.01%**.
 
 ## Stack and setup
 
 React 19, TypeScript 6, Vite 8, React Router 7, TanStack Query 5, native Fetch,
-Chart.js 4 and SCSS Modules (Dart Sass), with Vitest/RTL and MSW for testing.
-The repository is a **frontend**; despite its name,
-it does not implement a Node backend. It reuses the existing Python APIs.
-
-Use Node 22.13+ in the Node 22 line, or a supported newer LTS release.
-The checked-in Cloud Build configuration uses `node:22`.
+Chart.js 4 and SCSS Modules. Tests use Vitest, React Testing Library and MSW.
+Use `package-lock.json` for resolved versions. Use Node **22.13+** in the
+Node 22 line or a supported newer LTS release; Cloud Build uses `node:22`.
 
 ```bash
 npm ci
 ```
 
-Create `.env.local` with:
+For development, create an uncommitted `.env.local`:
 
 ```dotenv
 VITE_API_URL=/api
 ```
 
-Vite exposes `VITE_*` values to the browser: never place credentials there.
-Keep this local file uncommitted; the current `.gitignore` does not ignore
-environment files.
-The demo identity in `src/shared/context/AuthContext.tsx` reads `VITE_PORTAL`
-and defaults to `SI`; this is not authenticated BU selection.
+`.env.local` is **not currently ignored** by the repository. Keep it out of
+commits or add it to your checkout's local Git exclusion rules. All `VITE_*`
+values are public browser configuration, never a place for backend secrets.
 
-**Temporary build workaround:** KMS decryption in `cloudbuild.yaml` is commented
-out because the build service account lacks key-decryption permission. Fresh
-cloud builds use bundled branding/default portal values without Google Slides
-credentials. Once key access is granted, restore the commented `decrypt-config`
-step and add `"decrypt-config"` back to the build step's `waitFor` list.
-
-Start the existing Python backend separately, using its own setup instructions
-and an authorized development identity/session. Then run:
+Start the existing Python API separately using its authorized setup, then:
 
 ```bash
 npm run dev
 ```
 
-Use the local URL printed by Vite. Development requests to `/api` are proxied
-to `http://127.0.0.1:8080`; opening the frontend does not authenticate against or
-start the backend.
+Open the URL Vite prints. `/api` is proxied to `http://127.0.0.1:8080`.
+Starting Vite does not start the backend or authenticate the user. Offline
+tests do not need either service. See [development](docs/development.md) for
+configuration precedence and troubleshooting.
 
 ## Commands and tests
 
-| Command | Purpose / current limitation |
+| Command | Purpose |
 |---|---|
-| `npm run dev` | Development frontend and `/api` proxy |
-| `npm run build` | TypeScript project build, then Vite bundle to `dist/` |
-| `npm run preview` | Preview built frontend; no preview API proxy is configured |
-| `npm test -- --run` | Run the Vitest suite once |
-| `npm run test:coverage` | Run tests with V8 coverage; text summary and HTML report at `coverage/index.html` |
-| `npm test -- --run src/features/quick-facts/utils/periods.test.ts src/features/quick-facts/utils/breakdown.test.ts` | Focused period/axis tests |
-| `npm test -- --run src/shared/api/client.test.ts src/shared/api/forms.http.test.ts src/features/trend/api/trend.http.test.ts src/features/quick-facts/hooks/sqfQueries.test.tsx` | MSW-backed transport, multipart and query integration tests |
-| `npm run lint` | Declared, but no ESLint configuration is tracked at the reviewed commit |
+| `npm run dev` | Frontend development server and API proxy |
+| `npm test -- --run` | Full Vitest suite once |
+| `npm test -- --run <test-paths>` | Targeted tests |
+| `npm run test:coverage` | Full-source V8 coverage and line gate |
+| `npm run build` | Prebuild configuration, TypeScript check and Vite bundle |
+| `npm run docs:check` | Node checker regressions and maintained-document local links/heading anchors |
+| `npm run check:code` | Coverage followed by the production build; fails at the first failed command |
+| `npm run check` | Documentation checks followed by code checks |
+| `npm run preview` | Preview `dist/`; no configured API proxy |
+| `npm run lint` | Declared but no tracked ESLint configuration; not an established passing check |
 
-Tests use Vitest, jsdom and React Testing Library, with native Node web APIs for
-multipart HTTP contract tests. They cover components, hooks, context, API wrappers and
-pure utilities. No configured browser E2E or Angular-versus-React screenshot
-suite is present. The obsolete MetricCard renderer and its five tests were
-removed during cleanup; the active SummaryCard/DetailsCard suites remain.
-The October 20 test expansion adds coverage for SummaryPage/DetailsPage,
-query/API integration, date selection, location search/expansion and HTML
-tooltips. A second pass adds chart data/label/tooltip callbacks, nested tables,
-scroll shadows, tab switching and hierarchy/URL state persistence.
-The fixture-driven application tests now cover routing, provider/query
-integration, period/breakdown selection, location/date changes and query errors.
-The October 30 run passes **604 tests in 72 files**. Coverage is **97.15% lines**,
-95.65% statements, 88.42% branches and 94.98% functions. The October 26
-coverage follow-up passed 556 tests after the initial 500-test integration and
-restored line coverage from 86.19% to 97.01%; those are historical measurements.
-The original smaller baseline's 58.37% and pre-merge 97.88% results are historical,
-not measurements of the combined code. Coverage includes all application
-TS/TSX files, excluding tests, setup and type declarations. It does not measure
-CSS, browser rendering or Angular parity. Generated reports are ignored by Git.
-Chart tests mock the canvas renderer and verify the data/options passed to it,
-including the emitted gauge plugin drawing operations against a mocked canvas,
-not real browser pixels or source gauge parity.
-`npm run test:coverage` enforces **95.01% global line coverage**. Other metrics
-are reported, not gated; branch coverage is not yet above 95%.
+Coverage reports go to ignored `coverage/`. CSS, actual chart/export pixels
+and unimplemented Angular features are outside unit coverage. There is no
+checked-in browser differential test runner. See [testing](docs/testing.md).
+The combined commands do not run lint, browser acceptance or deployments.
 
-`src/test/fixtures/sqf-api.sanitized.json` was derived from successful read-only
-requests to the local API at `http://localhost:8080/api` on October 20.
-It contains pruned hierarchy, card-status, WTD/YDAY summary and detail payloads.
-Locations, identifiers, text, business values and timestamps are synthetic;
-response structure, filter keys and rendering flags are retained. Charts were
-omitted from these fixtures and are tested separately. Provenance and capture
-paths are embedded in the fixture. Tests mock HTTP transport and require no
-running API, credentials or network access; these are not production snapshots.
-MSW setup lives in `src/test/server.ts` and `src/test/handlers.ts`; handlers are
-reset after each test and the server is closed after each suite. Add
-`server.use(...)` overrides to exercise errors or alternate responses. Keep
-SDK/canvas and isolated component mocks where a network interceptor is not
-the relevant boundary.
+## Reviewed checkouts
 
-## Current route coverage
+The historical Angular comparison baseline is
+`dsa-buying-insights/store-insights`, branch
+`feature/smkt-qf-yday-toggle-mobile`, commit
+`02a9cf69889d74fb8542ec26c9ecb57aae041278`. Its Git root is the parent
+`dsa-buying-insights` repository; scope source history to `store-insights/`.
+Do not treat that historical baseline as the latest Angular HEAD without
+rechecking the authorized source checkout.
 
-| React route | Implementation |
-|---|---|
-| `/quick-facts` | Redirects to summary |
-| `/quick-facts/summary` | Summary cards |
-| `/quick-facts/details/:type` | Details, sorting, sidebar and child drill-down |
-| `/quick-facts/weekly` | History/hierarchy, child-peer tables, info/alerts and structured errors; mobile/layout/integrations incomplete |
-| `/quick-facts/myplan` | Shared history/hierarchy, table and dialog behavior; card-level Half Year/mobile/integrations incomplete |
-| `/weekly`, `/trend`, `/dashboards` | Coming Soon |
-| `/pricing-simulator`, `/availability-navigator` | Coming Soon; these names do not replace Angular's routes |
-| Other paths | Redirect to Quick Facts; not source-equivalent application coverage |
-
-`ProtectedRoute` receives an always-authenticated demo user. Logout reloads the
-page. Feedback/download are disabled, recognition simulates loading, and Weekly
-subscriptions have no preferences flow. Metrics Info and header/cell alerts now
-open a Weekly-specific dialog. Consult the
-[gap matrix](docs/migration-status.md#feature-parity-matrix) before declaring a
-feature complete.
-
-The October 23 initial Weekly/MyPlan migration slice adds response-defined
-history keys (including observed `monthNo`/`halfNo`), server variance/KPI
-expansion defaults, selection resets on new responses, source grouping/column
-membership fixes and typed subscription transport. The subscription UI is
-still not implemented. The October 26 continuation adds source-style desktop
-history/hierarchy selection, child/peer projection, original-column header
-association, Weekly information/alert dialogs and structured error details.
-Mobile projection is tested at the utility boundary, not wired to a complete
-mobile experience. Remaining gaps include card-level Half Year, source
-initializer characterization, mobile selection/layout, WFM/goal/sticky layouts and working
-subscriptions/AI/export. The new plan covers source-specific behavior and
-qualification for every enabled BU. Only one local SI profile was probed;
-cross-BU browser parity is **not verified**, and the saved API fixture remains
-SQF-only. Authorized BU configuration/session/theme evidence is an execution
-prerequisite, not something unit coverage can replace.
+The October source/history reviews and progress evidence remain in
+[migration status](docs/migration-status.md) and the
+[Weekly/MyPlan assessment](docs/weekly-facts-myplan-parity.md). Dated plans under
+`docs/superpowers/` retain intent and detailed source references, including
+superseded source paths; they are not current completion reports.
 
 ## Deployment and contribution boundaries
 
-`cloudbuild.yaml` installs/builds the frontend, deploys the App Engine
-`ip-react` service using `app.yaml`, and applies `dispatch.yaml`. Existing
-services handle `/api` requests. Build-time configuration, IAP/session behavior,
-deep links and shared dispatch changes require staging/release approval.
+The checked-in delivery path is Vite static assets on App Engine service
+`ip-react`, with API dispatch to existing services. KMS config decryption is
+currently disabled in `cloudbuild.yaml` pending permission; fresh cloud builds
+use default frontend configuration. Default branding is not BU acceptance.
+See [operations](docs/operations.md) before release work.
 
-Keep migration changes scoped to their feature and accompanying tests/docs.
-Do not overwrite another checkout's local work, copy environment secrets or
-treat wireframes as the source specification. Wireframes are excluded from
-this documentation change; some remain tracked in this branch, so avoid
-indiscriminate staging. The October 23 initial implementation is scoped to the
-Weekly/MyPlan feature branch; no deployment or shared dispatch change was made.
+Read [CONTRIBUTING.md](CONTRIBUTING.md) before making changes. Preserve other
+worktrees, keep secrets/raw business data out of fixtures and documentation,
+and leave **`wireframes/` out of commits**, including tracked files. Runtime
+changes, deployment and branch publication are separate from documentation.
