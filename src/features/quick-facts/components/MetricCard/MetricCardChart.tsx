@@ -15,6 +15,21 @@ import { xAxisLabelHoverPlugin } from '../../chart-plugins/xAxisLabelHover'
 // Angular sqf-layout registers xAxisLabelHoverPlugin globally
 ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, Title, Tooltip, Legend, ChartDataLabels, xAxisLabelHoverPlugin)
 
+/** Shared by every bar chart so bars always grow from their baseline on load */
+export const BAR_ANIMATION = {
+  duration: 800,
+  easing: 'easeOutQuart',
+  // Chart.js 4 also animates x/width from 0 (left→right sweep); Angular only grew bars from the baseline
+  x: { duration: 0 },
+  width: { duration: 0 },
+} as const
+const HORIZONTAL_BAR_ANIMATION = {
+  duration: 800,
+  easing: 'easeOutQuart',
+  y: { duration: 0 },
+  height: { duration: 0 },
+} as const
+
 /** Gauge/pie-only chartOptions keys (not in the shared ISQFChartData type) */
 type PieChartOptions = ISQFChartData['chartOptions'] & {
   labels?: (string | string[])[]
@@ -263,6 +278,7 @@ function buildBarConfig(chartData: ISQFChartData) {
   const baseOptions = {
     responsive: true,
     maintainAspectRatio: false,
+    animation: isHorizontal ? HORIZONTAL_BAR_ANIMATION : BAR_ANIMATION,
     plugins: {
       legend: { display: false },
       datalabels: { display: false } as object,

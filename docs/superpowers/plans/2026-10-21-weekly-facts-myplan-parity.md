@@ -6,11 +6,54 @@
 
 **Architecture:** Keep the Python APIs and server-generated business measures/HTML unchanged. Extend the existing TrendPage, TrendTable, Query hooks and shared shell; isolate selection rules in a small pure utility and keep backend-HTML styles global. Qualify the shared implementation against a per-BU evidence register rather than creating separate hardcoded pages per portal.
 
-**Tech Stack:** React 19, TypeScript 6, React Router 7, TanStack Query 5, Axios, CSS Modules/global CSS, Vitest 4/React Testing Library; add a browser differential runner during the browser acceptance task.
+**Tech Stack:** React 19, TypeScript 6, React Router 7, TanStack Query 5, shared Fetch transport, SCSS Modules/global CSS, Vitest 4/React Testing Library; add a persistent browser differential runner during the browser acceptance task.
 
 ---
 
 ## Scope, authority and execution rules
+
+**Execution update, dropdown/subscription continuation:** The same uncommitted
+main-checkout continuation now replaces native selects with source-style
+view/history/hierarchy overlays and wires actual Store/account responsibility
+into subscriptions. Dialog initialization waits for the profile; National
+pseudo-nodes follow the source portal/account/metric condition. Five available
+live dropdowns match source option/panel geometry and caret states; source
+keyboard quirks are retained. Both metrics' subscription dialog and key
+control bounds match within 1px at 1440/360px using synthetic empty preferences
+on GET only. Dialog mobile sizing, typography, tree clipping and action
+wrapping are corrected. This advances Tasks 4/7/9 but does not close real
+authentication, live mutation, other-BU or export-artifact qualification.
+Final validation passes 631 tests in 74 files, 97.39% line coverage with the
+unchanged gate, and the production build. Eight desktop views, both default
+routes at 360/767/768/769/1024px and ten isolated interaction scenarios remain
+aligned. A bounded review's preview-index concern was checked against live
+Angular and retained as intentional source behavior.
+See the [current evidence and limits](../../weekly-facts-myplan-parity.md#latest-continuation-source-dropdowns-and-subscriptions).
+
+**Execution update, visible-parity continuation:** The user-approved dev
+baseline is merged into the main checkout's `feat/quick-facts-feature-parity`
+at `d23a216`; the latest continuation is uncommitted there, not in the older
+feature worktree. Modernization moved implementation under `src/features`,
+`src/shared` and `src/app`; the original planned file map below is historical.
+Fetched user flags/portal now drive metric/view controls and Trend-specific
+mobile navigation, including the CFC exclusions. Table geometry, header KPI
+control, metadata/breadcrumbs, compact shell/cards and the 767/768px
+selection-versus-visual boundary advance Tasks 3/6/7. This does not close
+Task 3's real-auth/request-gating prerequisite.
+
+Local user details now returns 200. Session-only differential assertions
+compare all eight available desktop views and both default metric views at
+360/767/768/769/1024px against the live Angular application. Specific
+card/table/title/header geometry contracts match within 1px; a separate
+synthetic probe covers ten interactive page/viewport scenarios, including
+the compact menu's stacking above sticky headers and metric-switch
+capture cleanup. No API writes are allowed. The suite passes 615 tests in
+73 files with 97.17% line coverage under the unchanged gate, and the
+production build passes. Task 12 and every all-BU completion gate remain
+open: only the current local SI profile is qualified for these measurements,
+select-overlay qualification is advanced above, and export artifacts/mutating
+workflows have not been compared. See the
+[current evidence and limits](../../weekly-facts-myplan-parity.md#latest-continuation-visible-desktop-and-mobile-parity).
 
 **Execution update, October 26:** The next feature slice adds typed desktop
 selection/hierarchy state, child/peer column controls, source mobile projection

@@ -60,6 +60,11 @@ const baseWfData: WfPageData = {
   ],
 };
 
+function choose(name: string, option: string) {
+  fireEvent.click(screen.getByRole('combobox', { name }));
+  fireEvent.click(screen.getByRole('option', { name: option }));
+}
+
 describe('TrendPage mobile selection', () => {
   const mobileData: WfPageData = {
     refreshTime: '2026-10-21T12:00:00',
@@ -120,13 +125,19 @@ describe('TrendPage mobile selection', () => {
     expect(screen.getByRole('dialog')).toHaveTextContent('Last updated:');
   });
 
-  it('changes between mobile and desktop at the Angular 767/768 boundary', () => {
+  it('keeps desktop table projection at 768px while source CSS shows mobile controls', () => {
     vi.stubGlobal('innerWidth', 768);
+    vi.mocked(useTrendDataModule.useTrendData).mockReturnValue({
+      data: { ...mobileData, cards: [mobileData.cards[1], mobileData.cards[0]] }, isLoading: false, isError: false,
+    } as ReturnType<typeof useTrendDataModule.useTrendData>);
     render(<TrendPage metric="weekly" />);
-    expect(screen.getByRole('combobox', { name: 'Select tab' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Select mobile date' })).toBeInTheDocument();
+    expect(screen.queryByRole('combobox', { name: 'Select tab' })).not.toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: 'Unrelated result' })).toBeInTheDocument();
     vi.stubGlobal('innerWidth', 767);
     fireEvent(window, new Event('resize'));
     expect(screen.getByRole('button', { name: 'Select mobile date' })).toBeInTheDocument();
+    expect(screen.queryByRole('columnheader', { name: 'Unrelated result' })).not.toBeInTheDocument();
     vi.stubGlobal('innerWidth', 769);
     fireEvent(window, new Event('resize'));
     expect(screen.getByRole('combobox', { name: 'Select tab' })).toBeInTheDocument();
@@ -191,7 +202,7 @@ describe('TrendPage mobile selection', () => {
     } as ReturnType<typeof useTrendDataModule.useTrendData>);
     render(<TrendPage metric="weekly" />);
     expect(screen.queryByRole('button', { name: 'Older period' })).not.toBeInTheDocument();
-    fireEvent.change(screen.getByRole('combobox', { name: 'View' }), { target: { value: 'groups' } });
+    choose('View', 'Groups');
     expect(screen.getByText('W2 groups')).toBeInTheDocument();
   });
 });
@@ -272,7 +283,7 @@ describe('TrendPage', () => {
       isError: false,
     });
     render(<TrendPage metric="weekly" />);
-    expect(screen.getByText('Fiscal week: Aug 4, 2026')).toBeInTheDocument();
+    expect(screen.getByText('Fiscal week:').parentElement).toHaveTextContent('Fiscal week: Aug 4, 2026');
   });
 
   it('renders last updated with formatted refreshTime', () => {
@@ -385,7 +396,7 @@ describe('TrendPage', () => {
     const getCards = registerPageCards.mock.calls[0][0];
     expect(getCards()).toEqual([{ title: 'WeeklyFacts', cardType: 'Sales', jsId: `js-${metric}-card` }]);
     expect(container.querySelector(`#js-${metric}-card`)).toHaveTextContent(`${metric === 'weekly' ? 'Weekly Facts' : 'My Plan'} - Sales`);
-    fireEvent.change(screen.getByLabelText('Select tab'), { target: { value: 'inventory' } });
+    choose('Select tab', 'Inventory');
     expect(getCards()).toEqual([{ title: 'WeeklyFacts', cardType: 'Inventory', jsId: `js-${metric}-card` }]);
     expect(container.querySelector(`#js-${metric}-card`)).toHaveTextContent('Inventory');
   });
@@ -441,7 +452,7 @@ describe('TrendPage', () => {
     });
     render(<TrendPage metric="weekly" />);
     expect(screen.getByText('Weekly Facts - Sales')).toBeInTheDocument();
-    fireEvent.change(screen.getByLabelText('Select tab'), { target: { value: 'inventory' } });
+    choose('Select tab', 'Inventory');
     expect(screen.getByText('Weekly Facts - Inventory')).toBeInTheDocument();
   });
 
@@ -473,9 +484,9 @@ describe('TrendPage', () => {
       isError: false,
     });
     render(<TrendPage metric="weekly" />);
-    expect(screen.getByText('Fiscal week: Aug 4, 2026')).toBeInTheDocument();
-    fireEvent.change(screen.getByLabelText('Select date'), { target: { value: '2026-07-28' } });
-    expect(screen.getByText('Fiscal week: Jul 28, 2026')).toBeInTheDocument();
+    expect(screen.getByText('Fiscal week:').parentElement).toHaveTextContent('Fiscal week: Aug 4, 2026');
+    choose('Select date', '2026-07-28');
+    expect(screen.getByText('Fiscal week:').parentElement).toHaveTextContent('Fiscal week: Jul 28, 2026');
   });
 
   it.each(['monthNo', 'halfNo'])('selects Weekly history using the backend %s key', (dateFilterKey) => {
@@ -494,9 +505,9 @@ describe('TrendPage', () => {
       isLoading: false, isError: false,
     } as ReturnType<typeof useTrendDataModule.useTrendData>);
     render(<TrendPage metric="weekly" />);
-    expect(screen.getByText('Fiscal week: Latest period')).toBeInTheDocument();
-    fireEvent.change(screen.getByLabelText('Select date'), { target: { value: 'Previous' } });
-    expect(screen.getByText('Fiscal week: Previous period')).toBeInTheDocument();
+    expect(screen.getByText('Fiscal week:').parentElement).toHaveTextContent('Fiscal week: Latest period');
+    choose('Select date', 'Previous');
+    expect(screen.getByText('Fiscal week:').parentElement).toHaveTextContent('Fiscal week: Previous period');
   });
 
   it.each<WfMetric>(['weekly', 'myPlan'])('applies %s variance and KPI defaults and resets them for a new response', (metric) => {
@@ -535,7 +546,7 @@ describe('TrendPage', () => {
     expect(screen.getByRole('checkbox', { name: 'Show variance' })).toBeChecked();
     expect(screen.queryByText('Other metric')).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('checkbox', { name: 'Show variance' }));
-    fireEvent.click(screen.getByRole('checkbox', { name: 'Show all rows' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Expand all measures' }));
     expect(screen.getByText('Other metric')).toBeInTheDocument();
     mockQuery({ ...page });
     rerender(<TrendPage metric={metric} />);
@@ -560,8 +571,8 @@ describe('TrendPage', () => {
     const query = vi.mocked(useTrendDataModule.useTrendData);
     query.mockReturnValue({ data: first, isLoading: false, isError: false } as ReturnType<typeof query>);
     const { rerender } = render(<TrendPage metric="weekly" />);
-    fireEvent.change(screen.getByLabelText('Select tab'), { target: { value: 'old-view' } });
-    fireEvent.change(screen.getByLabelText('Select date'), { target: { value: 'Old previous' } });
+    choose('Select tab', 'Old view');
+    choose('Select date', 'Old previous');
     const next: WfPageData = {
       ...baseWfData,
       cards: [{
@@ -576,8 +587,8 @@ describe('TrendPage', () => {
     query.mockReturnValue({ data: next, isLoading: false, isError: false } as ReturnType<typeof query>);
     rerender(<TrendPage metric="weekly" />);
     expect(screen.getByText('Weekly Facts - New view')).toBeInTheDocument();
-    expect(screen.getByLabelText('Select date')).toHaveValue('New latest');
-    expect(screen.getByText('Time period: New location period')).toBeInTheDocument();
+    expect(screen.getByRole('combobox', { name: 'Select date' })).toHaveTextContent('New latest');
+    expect(screen.getByText('Time period:').parentElement).toHaveTextContent('Time period: New location period');
   });
 
   it('uses the newly selected table expansion default while retaining the page variance choice', () => {
@@ -610,10 +621,10 @@ describe('TrendPage', () => {
     render(<TrendPage metric="myPlan" />);
     expect(screen.getByText('Detail measure')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('checkbox', { name: 'Show variance' }));
-    fireEvent.change(screen.getByLabelText('Select tab'), { target: { value: 'collapsed' } });
+    choose('Select tab', 'Collapsed');
     expect(screen.queryByText('Detail measure')).not.toBeInTheDocument();
     expect(screen.getByRole('checkbox', { name: 'Show variance' })).not.toBeChecked();
-    fireEvent.change(screen.getByLabelText('Select tab'), { target: { value: 'expanded' } });
+    choose('Select tab', 'Expanded');
     expect(screen.getByText('Detail measure')).toBeInTheDocument();
   });
 
@@ -639,17 +650,17 @@ describe('TrendPage', () => {
       data, isLoading: false, isError: false,
     });
     const { rerender } = render(<TrendPage metric={metric} />);
-    expect(screen.getByLabelText('Breakdown view')).toHaveValue('stores');
-    expect(screen.getByText('Time period: stores period')).toBeInTheDocument();
-    fireEvent.change(screen.getByLabelText('Breakdown view'), { target: { value: 'groups' } });
-    expect(screen.getByText('Time period: groups period')).toBeInTheDocument();
-    fireEvent.change(screen.getByLabelText('Select tab'), { target: { value: 'sales' } });
+    expect(screen.getByRole('combobox', { name: 'Breakdown view' })).toHaveTextContent('Stores');
+    expect(screen.getByText('Time period:').parentElement).toHaveTextContent('Time period: stores period');
+    choose('Breakdown view', 'Groups');
+    expect(screen.getByText('Time period:').parentElement).toHaveTextContent('Time period: groups period');
+    choose('Select tab', 'Sales');
     expect(screen.queryByLabelText('Breakdown view')).not.toBeInTheDocument();
     (useTrendDataModule.useTrendData as ReturnType<typeof vi.fn>).mockReturnValue({
       data: { ...data }, isLoading: false, isError: false,
     });
     rerender(<TrendPage metric={metric} />);
-    expect(screen.getByLabelText('Breakdown view')).toHaveValue('stores');
+    expect(screen.getByRole('combobox', { name: 'Breakdown view' })).toHaveTextContent('Stores');
   });
 
   it('switches desktop peer/child columns only when the active card offers the switch', () => {
@@ -683,7 +694,7 @@ describe('TrendPage', () => {
     fireEvent.click(screen.getByRole('checkbox', { name: 'Show stores' }));
     expect(screen.getByText('Child value')).toBeInTheDocument();
     expect(screen.queryByText('Peer value')).not.toBeInTheDocument();
-    fireEvent.change(screen.getByLabelText('Select tab'), { target: { value: 'sales' } });
+    choose('Select tab', 'Sales');
     expect(screen.queryByRole('checkbox', { name: 'Show stores' })).not.toBeInTheDocument();
   });
 

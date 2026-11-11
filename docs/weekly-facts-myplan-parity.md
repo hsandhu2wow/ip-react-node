@@ -5,7 +5,8 @@ Angular on **every enabled BU**, not a desktop-only approximation.
 The [implementation plan](superpowers/plans/2026-10-21-weekly-facts-myplan-parity.md)
 supersedes Stage 4 of the October 14 roadmap.
 
-**Conclusion:** React has page endpoints and a basic grouped HTML table, but
+**Conclusion:** React now includes the migrated selection/actions and
+source-aligned desktop/mobile table layout described below, but
 Weekly Facts/My Plan are **not parity-complete for any BU**. Source review
 identifies shared behavior and portal-specific branches; it does not certify
 all deployed data/configurations. The October 20 baseline's 97.24% line coverage measures
@@ -13,7 +14,124 @@ existing React code, not missing Angular functionality or browser pixels.
 
 ## Baseline and evidence
 
-### Latest continuation: page integrations
+### Latest continuation: source dropdowns and subscriptions
+
+The main checkout remains on `feat/quick-facts-feature-parity` at `d23a216`;
+the continuation is local and uncommitted. Native view/history/hierarchy
+selects are replaced with source-style, portalled dropdowns. The available
+live comparison covers five overlays: both desktop metric view/history
+menus and Weekly's mobile hierarchy. Panel bounds, option labels, selected
+states, 48px option heights, padding, typography and open-caret rotation
+match Angular within 1px. No default hierarchy menu is available at 768px
+in the current data; that viewport is not evidence for a compared overlay.
+
+Keyboard behavior includes arrow preview, Enter/Tab commit, Escape cancel,
+closed-arrow selection and typeahead. Pointer hover does not alter the
+keyboard-active option. Angular retains its preview index after Escape:
+previewing Month from Week, cancelling and pressing closed ArrowDown selects
+Half. Direct source characterization confirms this behavior, so the review
+suggestion to reset that index was not applied; a regression preserves it.
+Outside dismissal, focus retention, option changes and resize cleanup are
+covered by component tests.
+
+Subscriptions now receive the fetched account's Store role and responsibility.
+Store status comes from `store_insights_role_desc === 'Store'`, not the
+selected location. Additional National hierarchy nodes require the SI portal,
+the account's National responsibility and Weekly metric. Opening waits for
+the profile before mounting the dialog, avoiding non-Store initialization
+during an early click. Mocked save regressions cover both metrics and own-store
+defaults; deferred-profile and National/non-National cases are also covered.
+This does not replace the shared demo authentication provider.
+
+The subscription dialog now reproduces source mobile width, title wrapping,
+body typography/spacing, clipped fixed-width location tree, scrollable content
+and unwrapped action buttons. Paired assertions match dialog bounds and the
+view/location headings and Save/Cancel control bounds within 1px for both
+metrics at 1440px and 360px. These comparisons inject empty saved preferences
+on GET and block all API writes. Existing saved preferences and real save/
+unsubscribe/email workflows are not live-qualified.
+
+The eight desktop view layout comparisons and ten isolated interactive
+page/viewport scenarios still pass after these changes. Default-view geometry
+also remains aligned on both routes at 360/767/768/769/1024px. Final regression
+validation passes 631 tests in 74 files with **97.39% line coverage**, retaining
+the 95.01% gate; the production build passes with the existing large-chunk
+warning. A bounded review raised the cancelled-preview keyboard behavior
+described above; live source verification confirms it is intentional parity,
+not a correction to apply. No other must-fix issue was reported.
+
+The initial rerun
+of dropdown comparison timed out waiting for Angular network-idle; both apps
+responded with HTTP 200 and the unchanged comparison passed on retry.
+There is no full pixel-identical, all-BU or migration-complete claim.
+
+### Latest continuation: visible desktop and mobile parity
+
+Work continues in the main checkout on `feat/quick-facts-feature-parity`,
+after the user-approved merge of the modernized dev baseline at `d23a216`.
+These latest application changes are not committed or pushed. The unrelated
+architecture documents are excluded.
+
+The local user-details endpoint now returns **200**, superseding the access
+blocker recorded in the earlier entries. Paired, read-only browser runs use
+the same local backend and the available SI/National profile in Angular and
+React, with hosted fonts enabled. Every non-GET API request is blocked.
+This is one local profile, not authorization or acceptance for every BU.
+
+The page now includes the source outer heading, enabled metric switch,
+single-metric view buttons, configured view label, location breadcrumbs,
+metadata and header KPI expand/collapse control. Child-level and variance
+switches follow the source visual/keyboard order. Metric and breadcrumb
+navigation retain the existing location/date/query parameters. Actual fetched
+portal details drive the page/table presentation instead of the demo auth
+portal. The table respects hidden continuation headers, explicit column
+widths, first/measure widths, sticky offsets, rotated group labels, source
+value alignment and cell-level variance sizing.
+
+Trend-only mobile shell changes restore the 60px My Insights app bar and
+permission/CFC-filtered Daily/Weekly/Trend navigation without restoring the
+previously removed Summary page bar. The Weekly section targets React's
+existing `/weekly` Quick Assist placeholder; it does not incorrectly route
+to Weekly Facts or imply that Quick Assist has been migrated. Mobile cards,
+metric/date/hierarchy rows, 48px history arrows, variance controls and
+one-line metadata now use the source spacing and widths. The date menu
+renders above sticky table headers. Page capture hides the new metric switch
+and restores it afterward.
+
+The unusual source breakpoint split is preserved: mobile selection and
+column projection apply through **767px**, compact visual controls/card
+styles through **768px**, and section tabs are hidden at 768px. Thus 768px
+has mobile-looking controls with desktop table columns. My Plan's first
+column is 32px in the compact layout, 44px on desktop, and WFM retains its
+84px layout. Separate desktop/mobile selection state is still retained;
+Angular's unconditional dual-initializer behavior is not certified.
+
+**Measured evidence:** session-only differential assertions pass for all
+five Weekly and three My Plan desktop views at 1440x1000: card/table bounds
+and header widths differ by at most 1px, and rendered row counts match.
+Default-view title/card/table bounds also match within 1px on both metrics at
+360, 767, 768, 769 and 1024px (900px height); compact date-trigger bounds are
+checked separately. This establishes those specific geometry contracts,
+not pixel-identical screenshots or every interaction/data combination.
+
+The isolated synthetic browser probe passes ten page/viewport scenarios
+covering banner dismissal, configured links, date/view/hierarchy selection,
+mobile menu preview/cancel/commit, analytics and AI open/resize/close, without
+runtime errors or mutating API calls. It also checks metric-switch visibility
+during/after page-capture styling. Full regression validation passes
+615 tests in 73 files with **97.17% line coverage**, retaining the 95.01%
+gate; production TypeScript/build validation passes with the existing
+large-chunk warning. A bounded read-only review found no must-fix regression.
+
+**Still open after this earlier slice:** select overlay and subscription
+qualification is advanced by the continuation above. Global authentication/
+route permission gating remains a shared prerequisite; other BU/profile
+layouts and all source edge cases need qualification. Live subscription,
+email/feedback writes, actual PDF/slide/print artifact equivalence and
+production deployment were not exercised.
+No all-BU or full migration-completion claim is made.
+
+### Earlier continuation: page integrations
 
 The existing feature worktree now wires response-provided banners into the
 shared layout immediately below the filter bar. Banners retain Angular's

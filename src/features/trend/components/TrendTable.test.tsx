@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { describe, it, expect, vi } from 'vitest';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { TrendTable } from './TrendTable';
 import type { WfTableData, WfTableCell } from '../types/wf.types';
 
@@ -20,6 +20,49 @@ const tableData: WfTableData = {
 };
 
 describe('TrendTable', () => {
+  it('hides zero-span headers and keeps double-goal metric and value columns distinct', () => {
+    const data: WfTableData = {
+      headers: [
+        { text: 'Goals', val: '0', colSpan: 2 },
+        { text: 'Hidden continuation', val: '1', colSpan: 0 },
+        { text: 'Measure', val: '2', columnWidth: '145px' },
+        { text: 'Result', val: '3', columnWidth: '160px' },
+      ],
+      data: [[cell(0, { rowSpan: 1 }), cell(1), cell(2, { displayValue: 'Measure name' }), cell(3, { displayValue: 'Result value' })]],
+    };
+    render(<TrendTable tableData={data} isExpanded showVariance />);
+    expect(screen.queryByRole('columnheader', { name: 'Hidden continuation' })).not.toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: 'Goals' })).toHaveAttribute('colspan', '2');
+    expect(screen.getByRole('columnheader', { name: 'Result' })).toHaveStyle({ width: '160px', minWidth: '160px', maxWidth: '160px' });
+    expect(screen.getByText('Measure name').closest('.metric-name')).not.toBeNull();
+    expect(screen.getByText('Result value').closest('td')).toHaveClass('right-align');
+    expect(screen.getByText('v1').closest('td')).toHaveClass('wf-table__goals');
+  });
+
+  it('places the KPI expand control in the measure header and exposes its state', () => {
+    const toggle = vi.fn();
+    const { rerender } = render(
+      <TrendTable tableData={{ ...tableData, kpiFilterEnabled: true }} isExpanded={false} showVariance={false} onToggleExpanded={toggle} />
+    );
+    const expand = screen.getByRole('button', { name: 'Expand all measures' });
+    expect(expand.closest('th')).toHaveTextContent('Metric');
+    expect(expand).toHaveAttribute('aria-expanded', 'false');
+    fireEvent.click(expand);
+    expect(toggle).toHaveBeenCalledOnce();
+    rerender(<TrendTable tableData={{ ...tableData, kpiFilterEnabled: true }} isExpanded showVariance={false} onToggleExpanded={toggle} />);
+    expect(screen.getByRole('button', { name: 'Collapse to KPI only' })).toHaveAttribute('aria-expanded', 'true');
+  });
+
+  it('uses the three-column and WFM source layout conditions without rotating WFM groups', () => {
+    const { rerender } = render(<TrendTable tableData={tableData} isExpanded showVariance />);
+    expect(screen.getByRole('table')).toHaveClass('wf-table-three-col', 'wf-table-fixed');
+    expect(screen.getByText('$100').closest('td')).toHaveClass('left-align');
+    expect(screen.getByText('Group A').closest('.transform-text')).not.toBeNull();
+    rerender(<TrendTable tableData={tableData} isExpanded showVariance displayContext={{ isWfmPortal: true, isStore: true }} />);
+    expect(screen.getByRole('table')).toHaveClass('wf-table-wfm', 'wf-table-wfm__store');
+    expect(screen.getByText('Group A').closest('.transform-text')).toBeNull();
+  });
+
   it('renders headers and cell values', () => {
     render(<TrendTable tableData={tableData} isExpanded={true} showVariance={false} />);
     expect(screen.getByText('Group')).toBeInTheDocument();

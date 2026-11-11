@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 720" role="img" aria-labelledby="title desc">
+  <title id="title">NEW target: React and FastAPI on separate Google Cloud Run services</title>
+  <desc id="desc">Proposed HTTPS ingress routes users to a React frontend container and API traffic to a separate FastAPI backend container on Cloud Run. Existing Cloud SQL, Cloud Storage and integrations are retained subject to validation. Cloud Build, a container registry and infrastructure as code deliver the target. Identity, ingress and IaC tooling remain decisions. This target is not yet implemented.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="9" markerHeight="9" refX="8" refY="4" orient="auto"><path d="M0 0L8 4L0 8" fill="none" stroke="#64748b" stroke-width="1.5"/></marker>
+    <style>
+      text{font-family:Arial,Helvetica,sans-serif;fill:#172b46}
+      .title{font-size:23px;font-weight:700}.label{font-size:18px;font-weight:700}.body{font-size:16px}.small{font-size:14px}
+      .box{fill:#fff;stroke:#94a3b8;stroke-width:1.5}.changed{fill:#eff6ff;stroke:#2563eb;stroke-width:1.5}
+      .retained{fill:#eefbf4;stroke:#15803d;stroke-width:1.5}.pending{fill:#fffbeb;stroke:#b45309;stroke-width:1.5}
+      .boundary{fill:#f8fafc;stroke:#cbd5e1;stroke-width:1.5;stroke-dasharray:6 4}
+      .line{fill:none;stroke:#64748b;stroke-width:2;marker-end:url(#arrow)}
+    </style>
+  </defs>
+  <rect width="1440" height="720" fill="#fff"/>
+  <rect class="box" x="24" y="22" width="248" height="82" rx="12"/>
+  <text class="label" x="44" y="54">Users / browser</text>
+  <text class="body" x="44" y="81">React executes in the browser</text>
+  <path class="line" d="M148 104V148"/>
+  <text class="small" x="164" y="132">HTTPS</text>
+  <rect class="pending" x="24" y="154" width="280" height="160" rx="10"/>
+  <text class="label" x="44" y="184">Production entry / identity</text>
+  <text class="body" x="44" y="214">Frontend and /api routing</text>
+  <text class="body" x="44" y="242">Trusted identity + permissions</text>
+  <text class="small" x="44" y="271">Ingress and SSO design to confirm;</text>
+  <text class="small" x="44" y="293">not automatic App Engine parity.</text>
+  <rect class="boundary" x="332" y="12" width="700" height="516" rx="14"/>
+  <text class="title" x="354" y="45">Google Cloud Run - two services</text>
+  <text class="small" x="354" y="69">Target: independently deployable frontend and backend containers</text>
+  <rect class="changed" x="354" y="92" width="654" height="174" rx="10"/>
+  <text class="label" x="374" y="121">React 19 / TypeScript - frontend service</text>
+  <text class="body" x="374" y="151">Static web server container serves Vite-built assets</text>
+  <text class="body" x="374" y="179">React Router / hooks + Context / TanStack Query + Axios</text>
+  <text class="body" x="374" y="207">CSS Modules / Chart.js + react-chartjs-2 / PDF tools</text>
+  <text class="body" x="374" y="235">WIQ-aligned frontend patterns and reuse opportunities</text>
+  <path class="line" d="M304 206H354"/>
+  <path class="line" d="M304 270H320V354H354"/>
+  <text class="small" x="340" y="294">Browser API calls routed to backend; no direct database access</text>
+  <rect class="changed" x="354" y="314" width="654" height="188" rx="10"/>
+  <text class="label" x="374" y="345">FastAPI / Python - backend service (planned)</text>
+  <text class="body" x="374" y="374">ASGI server / typed models / validation / OpenAPI</text>
+  <text class="body" x="374" y="402">Migrate Flask routes, business rules and authorisation</text>
+  <text class="body" x="374" y="430">SQLAlchemy + MySQL access retained where compatible</text>
+  <text class="body" x="374" y="458">Preserve JSON, multipart and integration contracts</text>
+  <text class="small" x="374" y="485">Server, driver and dependency versions need target implementation</text>
+  <rect class="retained" x="1090" y="92" width="326" height="112" rx="10"/>
+  <text class="label" x="1110" y="124">Existing Cloud SQL / MySQL</text>
+  <text class="body" x="1110" y="153">Retain data / validate connectivity</text>
+  <text class="body" x="1110" y="181">Bound concurrency + connections</text>
+  <rect class="retained" x="1090" y="230" width="326" height="112" rx="10"/>
+  <text class="label" x="1110" y="262">Existing Cloud Storage</text>
+  <text class="body" x="1110" y="291">Retain assets / themes / uploads</text>
+  <text class="body" x="1110" y="319">Use least-privilege service identities</text>
+  <rect class="retained" x="1090" y="368" width="326" height="134" rx="10"/>
+  <text class="label" x="1110" y="400">Existing integrations</text>
+  <text class="body" x="1110" y="429">Employee search / SendGrid</text>
+  <text class="body" x="1110" y="457">Tableau / Google / BU services</text>
+  <text class="small" x="1110" y="484">Validate compatibility; rehosting is separate</text>
+  <path class="line" d="M1008 380H1050V148H1090"/>
+  <path class="line" d="M1050 380V286H1090"/>
+  <path class="line" d="M1008 435H1090"/>
+  <path class="line" d="M1008 207H1068V435H1090"/>
+  <rect class="pending" x="24" y="350" width="280" height="152" rx="10"/>
+  <text class="label" x="44" y="380">Cross-cutting migration</text>
+  <text class="body" x="44" y="410">Secrets / IAM / logs / alerts</text>
+  <text class="body" x="44" y="438">Cron / App Engine API migration</text>
+  <text class="small" x="44" y="466">Scheduler / task execution approach</text>
+  <text class="small" x="44" y="488">and operational ownership to confirm</text>
+  <rect class="changed" x="24" y="568" width="1392" height="128" rx="12"/>
+  <text class="label" x="44" y="600">Target delivery and infrastructure as code - planned</text>
+  <text class="body" x="44" y="632">Source &#8594; CI tests + builds &#8594; container registry &#8594; Cloud Run revisions / controlled traffic and rollback</text>
+  <text class="body" x="44" y="663">IaC: versioned infrastructure + review / plan / apply. Tool undecided; Terraform is a candidate, not a selected dependency.</text>
+  <path class="line" d="M681 568V528"/>
+</svg>

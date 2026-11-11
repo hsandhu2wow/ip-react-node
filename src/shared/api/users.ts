@@ -22,6 +22,20 @@ export interface IUserDetails {
   employee_number?: string
   Store_Insights_Role?: string
   portal?: string
+  sqf?: number
+  sqf_enabled?: boolean
+  sqa?: number
+  quick_assist_enabled?: boolean | 0 | 1
+  sqf_area_of_responsibility?: string
+  store_insights_role_desc?: string
+  wf?: number
+  weekly_facts_enabled?: boolean | 0 | 1
+  my_plan_enabled?: boolean | 0 | 1
+  bqf?: number
+  admin?: number
+  psf?: number
+  psf_enabled?: boolean | 0 | 1
+  act?: number
   [key: string]: unknown
 }
 

@@ -16,6 +16,9 @@ import { useRegisterTrendActions } from '../context/TrendActionsContext';
 import { useOptionalFilter } from '../../../shared/context/FilterContext';
 import type { PreviewCard } from '../../../shared/components/RecognizeDialog/recognize';
 import { sendQFDataToAnalytics } from '../../../shared/utils/analytics';
+import { getUserDetails, type IUserDetails } from '../../../shared/api/users';
+import { TrendMetricTabs } from '../components/TrendMetricTabs';
+import { TrendSelect } from '../components/TrendSelect';
 import styles from './TrendPage.module.scss';
 
 const METRIC_DISPLAY_NAMES: Record<WfMetric, string> = {
@@ -40,9 +43,11 @@ function formatLastUpdated(refreshTime: string): string {
 export function TrendPage({ metric }: TrendPageProps) {
   const { user } = useAuth();
   const { data: wfData, isLoading, isError, error } = useTrendData(metric);
-  const [isMobile, setIsMobile] = useState(() => window.innerWidth <= 767);
+  const [viewportWidth, setViewportWidth] = useState(() => window.innerWidth);
+  const isMobile = viewportWidth <= 767;
+  const isCompact = viewportWidth <= 768;
   useEffect(() => {
-    const resize = () => setIsMobile(window.innerWidth <= 767);
+    const resize = () => setViewportWidth(window.innerWidth);
     window.addEventListener('resize', resize);
     return () => window.removeEventListener('resize', resize);
   }, []);
@@ -114,6 +119,12 @@ export function TrendPage({ metric }: TrendPageProps) {
     setDeepLinkHandled(true);
   }, []);
   const filter = useOptionalFilter();
+  const breadcrumbs = [];
+  let breadcrumbNode = filter?.selectedNode;
+  while (breadcrumbNode) {
+    if (!breadcrumbNode.hidden) breadcrumbs.unshift(breadcrumbNode);
+    breadcrumbNode = breadcrumbNode.parent;
+  }
   const locationCode = filter?.selectedNode?.code;
   const track = useCallback((event: string, cardName: string | undefined) => {
     if (!locationCode) return;
@@ -130,9 +141,23 @@ export function TrendPage({ metric }: TrendPageProps) {
     const first = createTrendSelection(wfData);
     if (first.contents) track('TabChanged', wfData.cards[0]?.displayName);
   }, [wfData, metric, isLoading, isError, filter?.isLoaded, locationCode, track]);
+  const [userDetails, setUserDetails] = useState<IUserDetails | null>(null);
+  useEffect(() => {
+    if (!filter?.isLoaded) return;
+    let active = true;
+    void getUserDetails().then(details => {
+      if (active) setUserDetails(details);
+    }).catch(error => console.error('Unable to load Weekly Facts/My Plan feature controls', error));
+    return () => { active = false; };
+  }, [filter?.isLoaded]);
+  const availableMetrics: WfMetric[] = [
+    ...(userDetails?.weekly_facts_enabled ? ['weekly' as const] : []),
+    ...(userDetails?.my_plan_enabled ? ['myPlan' as const] : []),
+  ];
   const availableViews = useMemo(() => buildAvailableViews(wfData), [wfData]);
+  const portal = userDetails?.portal || user.portal;
   const addAdditionalHierarchyNode =
-    user.portal === 'SI' && filter?.treeNodes[0]?.code === 'National' && metric === 'weekly';
+    portal === 'SI' && userDetails?.sqf_area_of_responsibility === 'National' && metric === 'weekly';
 
   if (isLoading) {
     return (
@@ -159,6 +184,9 @@ export function TrendPage({ metric }: TrendPageProps) {
   }
 
   const metricDisplayName = METRIC_DISPLAY_NAMES[metric];
+  const isTrendPortal = ['SI', 'METRO'].includes(portal);
+  const pageTitle = isTrendPortal ? 'Trend' : availableMetrics.length === 1 && availableMetrics[0] === 'myPlan' ? 'My Plan' : 'Weekly Facts';
+  const poweredBy = availableMetrics.map(value => METRIC_DISPLAY_NAMES[value]).join(' and ');
   const durationLabel = activeCard?.durationLabel || 'Time period';
   const showVarianceToggleEnabled = !!wfData.varianceFlag;
   const showVarianceLabel = wfData.varianceFlag?.text || 'Show variance';
@@ -166,27 +194,27 @@ export function TrendPage({ metric }: TrendPageProps) {
   const hierarchyDropdown = wfData.hierarchyDropdown;
   const showHierarchy = hierarchyDropdown?.allowedViews?.includes(isMobile ? 'mobile' : selection.cardKey) === true;
   const hierarchyControl = showHierarchy && hierarchyDropdown ? (
-    <label className={styles.selectLabel}>
-      {!isMobile && `${hierarchyDropdown.label || 'View'}:`}
-      <select
-        className={styles.select}
-        aria-label={hierarchyDropdown.label || 'View'}
+    <div className={styles.selectLabel}>
+      {!isCompact && `${hierarchyDropdown.label || 'View'}:`}
+      <TrendSelect
+        ariaLabel={hierarchyDropdown.label || 'View'}
         value={selection.hierarchy}
-        onChange={event => {
-          const value = event.target.value;
+        onChange={value => {
           const next = updateTrendSelection(wfData, selection, { type: 'hierarchy', value });
           setSelection(next);
           if (next.contents?.filterKey === value) track('HierarchyDropdownChanged', activeCard?.displayName);
         }}
-      >
-        {hierarchyDropdown.filterDropdown.map(option => (
-          <option key={option.filterKey} value={option.filterKey}>{option.displayValue}</option>
-        ))}
-      </select>
-    </label>
+        options={hierarchyDropdown.filterDropdown.map(option => ({ value: option.filterKey, label: option.displayValue }))}
+      />
+    </div>
   ) : undefined;
 
   return (
+    <>
+    <h1 className={styles.pageTitle}>
+      {pageTitle}
+      {isTrendPortal && poweredBy && <><span className={styles.titleDot}>·</span><span className={styles.poweredBy}>powered by {poweredBy}</span></>}
+    </h1>
     <AiInsightsSidenav
       open={trendActions.aiInsightsOpen}
       onClose={() => setAiInsightsOpen(false)}
@@ -201,48 +229,71 @@ export function TrendPage({ metric }: TrendPageProps) {
           { title: 'WeeklyFacts', cardType: activeCard?.displayName, jsId: `js-${metric}-card` } as PreviewCard,
         ]}
       />
-    <div className={styles.wrapperContent}>
+    <div className={`${styles.wrapperContent} ${metric === 'weekly' ? styles.weeklyWrapper : ''}`}>
       <div className={`${styles.wfHome} wf-home`} id={`js-${metric}-card`}>
-        {!isMobile && <div className={styles.toolbar}>
-          {tabs.length > 1 && (
-            <select
-              className={styles.select}
-              aria-label="Select tab"
-              value={activeCard?.key}
-              onChange={(e) => {
-                const next = updateTrendSelection(wfData, selection, { type: 'view', value: e.target.value });
+        <div className={styles.topControls}>
+        <div className={styles.controlGroup}>
+        {availableMetrics.length > 1 && <div className={styles.metricTabs}>
+          <TrendMetricTabs metric={metric} available={availableMetrics} />
+        </div>}
+        {!isCompact && <div className={styles.toolbar}>
+          {tabs.length > 1 && availableMetrics.length === 1 ? (
+            <div className={styles.viewTabs} role="group" aria-label="Select view">
+              {tabs.map(tab => <button key={tab.key} type="button" aria-pressed={tab.key === selection.cardKey}
+                onClick={() => {
+                  const next = updateTrendSelection(wfData, selection, { type: 'view', value: tab.key });
+                  setSelection(next);
+                  if (next.contents) track('TabChanged', tab.displayName);
+                }}>{tab.displayName}</button>)}
+            </div>
+          ) : tabs.length > 1 && (
+            <div className={styles.selectLabel}>
+            {wfData.label && <span>{wfData.label}</span>}
+            <TrendSelect
+              ariaLabel="Select tab"
+              value={activeCard?.key || ''}
+              onChange={value => {
+                const next = updateTrendSelection(wfData, selection, { type: 'view', value });
                 setSelection(next);
                 if (next.contents) track('TabChanged', tabs.find(card => card.key === next.cardKey)?.displayName);
               }}
-            >
-              {tabs.map((tab) => (
-                <option key={tab.key} value={tab.key}>
-                  {tab.displayName}
-                </option>
-              ))}
-            </select>
+              options={tabs.map(tab => ({ value: tab.key, label: tab.displayName }))}
+            />
+            </div>
           )}
           {activeCard?.hasHistoryData && (activeCard.dateFilterValues?.length ?? 0) > 0 && (
-            <label className={styles.selectLabel}>
-              {activeCard.dateFilterLabel || 'Fiscal week'}:
-              <select
-                className={styles.select}
-                aria-label="Select date"
+            <div className={styles.selectLabel}>
+              {activeCard.dateFilterLabel || 'Fiscal week'}
+              <TrendSelect
+                ariaLabel="Select date"
                 value={selection.date}
-                onChange={(e) => {
-                  setSelection(updateTrendSelection(wfData, selection, { type: 'date', value: e.target.value }));
-                  track('DateFilterChanged', `${activeCard.displayName} - ${e.target.value}`);
+                onChange={value => {
+                  setSelection(updateTrendSelection(wfData, selection, { type: 'date', value }));
+                  track('DateFilterChanged', `${activeCard.displayName} - ${value}`);
                 }}
-              >
-                {activeCard.dateFilterValues?.map((value) => (
-                  <option key={value} value={value}>
-                    {value}
-                  </option>
-                ))}
-              </select>
-            </label>
+                options={(activeCard.dateFilterValues || []).map(value => ({ value, label: value }))}
+              />
+            </div>
           )}
           {hierarchyControl}
+          {!showHierarchy && <span className={styles.mobileFilterSpacer} aria-hidden="true" />}
+          {activeCard?.toggleChildLevelKey && (
+            <label className={styles.toggleLabel}>
+              <span className={[styles.toggleSwitch, showChildLevel ? styles.toggleSwitchOn : ''].filter(Boolean).join(' ')}>
+                <input
+                  type="checkbox"
+                  className={styles.toggleInput}
+                  checked={showChildLevel}
+                  onChange={(event) => {
+                    setShowChildLevel(event.target.checked);
+                    setIsExpanded(defaultExpanded);
+                  }}
+                />
+                <span className={styles.toggleThumb} />
+              </span>
+              {activeCard.toggleChildLevelKey}
+            </label>
+          )}
           {showVarianceToggleEnabled && (
             <label className={styles.toggleLabel}>
               <span
@@ -261,42 +312,9 @@ export function TrendPage({ metric }: TrendPageProps) {
               {showVarianceLabel}
             </label>
           )}
-          {activeCard?.toggleChildLevelKey && (
-            <label className={styles.toggleLabel}>
-              <span className={[styles.toggleSwitch, showChildLevel ? styles.toggleSwitchOn : ''].filter(Boolean).join(' ')}>
-                <input
-                  type="checkbox"
-                  className={styles.toggleInput}
-                  checked={showChildLevel}
-                  onChange={(event) => {
-                    setShowChildLevel(event.target.checked);
-                    setIsExpanded(defaultExpanded);
-                  }}
-                />
-                <span className={styles.toggleThumb} />
-              </span>
-              {activeCard.toggleChildLevelKey}
-            </label>
-          )}
-          {kpiFilterEnabled && (
-            <label className={styles.toggleLabel}>
-              <span
-                className={[styles.toggleSwitch, isExpanded ? styles.toggleSwitchOn : '']
-                  .filter(Boolean)
-                  .join(' ')}
-              >
-                <input
-                  type="checkbox"
-                  className={styles.toggleInput}
-                  checked={isExpanded}
-                  onChange={(e) => setIsExpanded(e.target.checked)}
-                />
-                <span className={styles.toggleThumb} />
-              </span>
-              Show all rows
-            </label>
-          )}
-          {(wfData.toolkit_link || wfData.usage_dashboard_link) && (
+        </div>}
+        </div>
+          {!isCompact && (
             <div className={styles.resourceLinks}>
               {[wfData.toolkit_link, wfData.usage_dashboard_link].map((link, index) => link && (
                 <a key={index} href={link.link} target="_blank" rel="noopener noreferrer">
@@ -305,9 +323,9 @@ export function TrendPage({ metric }: TrendPageProps) {
               ))}
             </div>
           )}
-        </div>}
+        </div>
 
-        {isMobile ? (
+        {isCompact ? (
           <>
             {activeCard && (
               <TrendMobileFilters
@@ -336,6 +354,7 @@ export function TrendPage({ metric }: TrendPageProps) {
               </button>
             )}
             <div className={styles.mobileHeader}>
+              <div className={styles.mobileHeading}>
               <strong>{activeCard ? activeCard.mobileDisplayName ?? activeCard.displayName : 'No Mobile details available'}</strong>
               {activeCard?.mobileInfo && (
                 <button type="button" className={styles.metricsInfo} aria-label="Mobile metrics info" onClick={() => setPopup({
@@ -343,6 +362,7 @@ export function TrendPage({ metric }: TrendPageProps) {
                   text: `${activeCard.mobileInfo}<div><strong>Last updated:</strong> ${formatLastUpdated(wfData.refreshTime)}</div><hr />${wfData.metricsInfo?.body || ''}`,
                 })}><span className="material-icons" aria-hidden="true">info_outlined</span></button>
               )}
+              </div>
               <span className={styles.mobileTime}>{selectedTab?.timePeriod}</span>
             </div>
           </>
@@ -351,10 +371,21 @@ export function TrendPage({ metric }: TrendPageProps) {
             {metricDisplayName} - {activeCard?.displayName}
           </div>
           <div className={styles.subHeaderRow}>
-            <span>
-              {durationLabel}: {selectedTab?.timePeriod}
-            </span>
-            <span>
+            <div className={styles.breadcrumbRow}>
+              <span><strong>{durationLabel}:</strong> {selectedTab?.timePeriod}</span>
+              {breadcrumbs.length > 1 && <>
+                <span className={styles.divider} />
+                <nav aria-label="Location breadcrumbs" className={styles.breadcrumbs}>
+                  {breadcrumbs.map((node, index) => <span key={node.code}>
+                    {index > 0 && <span className={styles.breadcrumbSeparator} aria-hidden="true">›</span>}
+                    {index === breadcrumbs.length - 1
+                      ? <strong aria-current="location">{node.name}</strong>
+                      : <button type="button" onClick={() => filter?.setSelectedNode(node)}>{node.name}</button>}
+                  </span>)}
+                </nav>
+              </>}
+            </div>
+            <div className={styles.metadata}>
               {wfData.metricsInfo && (
                 <button
                   type="button"
@@ -364,19 +395,21 @@ export function TrendPage({ metric }: TrendPageProps) {
                     text: wfData.metricsInfo?.body || '',
                   })}
                 >
+                  <span className="material-icons" aria-hidden="true">info_outlined</span>
                   {wfData.metricsInfo.label || 'Metrics Info'}
                 </button>
               )}
-              {' '}
-              {wfData.refreshFiscalPeriod
-                ? `Last updated: ${wfData.refreshFiscalPeriod} (${formatLastUpdated(wfData.refreshTime)})`
-                : `Last updated: ${formatLastUpdated(wfData.refreshTime)}`}
-            </span>
+              {wfData.metricsInfo && <span className={styles.divider} />}
+              <span className={styles.updated}><strong>Last updated:</strong>{' '}
+                {wfData.refreshFiscalPeriod
+                  ? `${wfData.refreshFiscalPeriod} (${formatLastUpdated(wfData.refreshTime)})`
+                  : formatLastUpdated(wfData.refreshTime)}
+              </span>
+              {selectedTab?.infoMessage && <span className={styles.infoMessage}>
+                <span className="material-icons" aria-hidden="true">info_outlined</span>{selectedTab.infoMessage}
+              </span>}
+            </div>
           </div>
-          {selectedTab?.infoMessage && <div className={styles.infoMessage}>{selectedTab.infoMessage}</div>}
-          {wfData.is_web_subscription_enabled && (
-            <div className={styles.subscriptionLink}>Subscription preferences</div>
-          )}
         </div>}
 
         {tableData && (
@@ -384,16 +417,20 @@ export function TrendPage({ metric }: TrendPageProps) {
             tableData={tableData}
             isExpanded={isExpanded}
             showVariance={showVariance}
+            metric={metric}
+            onToggleExpanded={kpiFilterEnabled ? () => setIsExpanded(expanded => !expanded) : undefined}
             onAlert={setPopup}
             displayContext={{
               isMobile,
+              isCompact,
               parentCode: wfData.parentCode,
               childCode: wfData.childCode,
               hierarchyNode: selection.hierarchy,
               selectedDateFilter: selection.date,
               toggleChildLevelKey: activeCard?.toggleChildLevelKey,
               showChildLevel,
-              isWfmPortal: user.portal === '360FM',
+              isWfmPortal: portal === '360FM',
+              isStore: filter?.selectedNode?.level === '5',
             }}
           />
         )}
@@ -402,14 +439,17 @@ export function TrendPage({ metric }: TrendPageProps) {
     </div>
       {subscriptionEnabled && (
         <SubscriptionDialog
-          open={isSubscriptionDialogOpen}
+          open={isSubscriptionDialogOpen && (!filter || userDetails !== null)}
           onClose={closeSubscription}
           subscriptionKey={getSubscriptionKey(metric)}
           displayName={getSubscriptionDisplayName(metric)}
           availableViews={availableViews}
+          isStoreUser={userDetails?.store_insights_role_desc === 'Store'}
+          areaOfResponsibility={userDetails?.sqf_area_of_responsibility}
           addAdditionalHierarchyNode={addAdditionalHierarchyNode}
         />
       )}
     </AiInsightsSidenav>
+    </>
   );
 }

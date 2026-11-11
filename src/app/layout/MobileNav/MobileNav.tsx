@@ -1,8 +1,10 @@
 // src/components/layout/MobileNav/MobileNav.tsx
 import { useState, useEffect } from 'react'
-import { NavLink, useLocation } from 'react-router-dom'
+import { Link, NavLink, useLocation } from 'react-router-dom'
 import { useAuth } from '../../../shared/context/AuthContext'
 import { getActivePrefix } from '../navActiveMatch'
+import { isNavItemActive, navPrefixes, type NavItem } from '../navItems'
+import { useNavGroups } from '../useNavGroups'
 import { BUCKET_URL, logoLabelForPortal } from '../../config/theme'
 import styles from './MobileNav.module.scss'
 
@@ -13,35 +15,12 @@ const ROUTE_TITLES: Record<string, { title: string; tagline?: string }> = {
   '/quick-facts/weekly': { title: 'Trend', tagline: 'powered by Weekly Facts and My Plan' },
   '/quick-facts/myplan': { title: 'Trend', tagline: 'powered by Weekly Facts and My Plan' },
   '/dashboards':  { title: 'Dashboards' },
-  '/pricing-simulator':     { title: 'Pricing Simulator' },
-  '/availability-navigator':{ title: 'Availability Navigator' },
+  '/bqf':         { title: 'Quick Facts' },
+  '/price-simulator':       { title: 'Pricing Simulator' },
+  '/act':                   { title: 'Availability Navigator' },
+  '/admin':                 { title: 'Admin' },
+  '/help':                  { title: 'Help' },
 }
-
-interface NavItem {
-  icon: string
-  label: string
-  to: string
-  altPrefixes?: string[]
-  isSymbol?: boolean
-}
-
-const BUYING_ITEMS: NavItem[] = [
-  { icon: 'calendar_today', label: 'Quick Facts',       to: '/quick-facts' },
-  { icon: 'dashboard',      label: 'Dashboards',        to: '/dashboards' },
-  { icon: 'attach_money',   label: 'Pricing Simulator', to: '/pricing-simulator' },
-]
-
-const STORE_ITEMS: NavItem[] = [
-  { icon: 'today',        label: 'Daily',      to: '/quick-facts' },
-  { icon: 'date_range',   label: 'Weekly',     to: '/weekly' },
-  { icon: 'view_week',    label: 'Trend',      to: '/quick-facts/weekly', altPrefixes: ['/quick-facts/myplan'] },
-  { icon: 'dashboard',    label: 'Dashboards', to: '/dashboards' },
-]
-
-const STANDALONE_ITEMS: NavItem[] = [
-  { icon: 'shelves', label: 'Availability Navigator', to: '/availability-navigator', isSymbol: true },
-]
-
 
 function getRouteInfo(pathname: string) {
   const keys = Object.keys(ROUTE_TITLES).sort((a, b) => b.length - a.length)
@@ -50,9 +29,9 @@ function getRouteInfo(pathname: string) {
 }
 
 function DrawerItem({
-  icon, label, to, isActive, isSymbol, onClick,
+  icon, label, to, isActive, isSymbol, live, onClick,
 }: {
-  icon: string; label: string; to: string; isActive: boolean; isSymbol?: boolean; onClick: () => void
+  icon: string; label: string; to: string; isActive: boolean; isSymbol?: boolean; live?: boolean; onClick: () => void
 }) {
   const iconClass = isSymbol ? 'material-symbols-outlined' : 'material-icons-outlined'
   return (
@@ -63,6 +42,7 @@ function DrawerItem({
     >
       <span className={`${iconClass} ${styles.drawerItemIcon}`}>{icon}</span>
       <span>{label}</span>
+      {live === false && <span className={styles.soon}>Soon</span>}
     </NavLink>
   )
 }
@@ -70,6 +50,7 @@ function DrawerItem({
 export function MobileNav() {
   const { user } = useAuth()
   const location = useLocation()
+  const isTrend = /^\/quick-facts\/(weekly|myplan)\/?$/.test(location.pathname)
   const [drawerOpen, setDrawerOpen] = useState(false)
   const { title, tagline } = getRouteInfo(location.pathname)
   const initials = user.name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2)
@@ -84,19 +65,17 @@ export function MobileNav() {
     return () => document.removeEventListener('keydown', handleKeyDown)
   }, [drawerOpen])
 
-  const activePrefix = getActivePrefix(
-    location.pathname,
-    [...BUYING_ITEMS, ...STORE_ITEMS, ...STANDALONE_ITEMS].flatMap((item) => [item.to, ...(item.altPrefixes ?? [])])
-  )
+  const groups = useNavGroups()
+  const activePrefix = getActivePrefix(location.pathname, navPrefixes(groups.flatMap(g => g.items)))
 
   function isItemActive(item: NavItem) {
-    return item.to === activePrefix || (item.altPrefixes?.includes(activePrefix) ?? false)
+    return isNavItemActive(item, activePrefix)
   }
 
   return (
     <>
       {/* App bar */}
-      <header className={styles.appbar} data-testid="mobile-appbar">
+      <header className={`${styles.appbar} ${isTrend ? styles.trendAppbar : ''}`} data-testid="mobile-appbar">
         <button
           className={styles.iconBtn}
           onClick={() => setDrawerOpen(true)}
@@ -106,14 +85,14 @@ export function MobileNav() {
           <span className="material-icons">menu</span>
         </button>
         <div className={styles.title}>
-          <span className={styles.titleLabel} data-testid="mobile-title">{title}</span>
-          {tagline && <span className={styles.titleTagline}>{tagline}</span>}
+          <span className={styles.titleLabel} data-testid="mobile-title">{isTrend ? 'My Insights' : title}</span>
+          {!isTrend && tagline && <span className={styles.titleTagline}>{tagline}</span>}
         </div>
-        <button className={styles.iconBtn} aria-label="Help">
+        {!isTrend && <button className={styles.iconBtn} aria-label="Help">
           <span className="material-icons-outlined">help_outline</span>
-        </button>
-        <button className={styles.avatar} aria-label="User menu">
-          {initials}
+        </button>}
+        <button className={isTrend ? styles.account : styles.avatar} aria-label="User menu">
+          {isTrend ? <><span className="material-icons">account_circle</span><span className="material-icons">arrow_drop_down</span></> : initials}
         </button>
       </header>
 
@@ -150,44 +129,34 @@ export function MobileNav() {
         </div>
 
         <div className={styles.drawerNav}>
-          {/* Buying group */}
-          <div>
-            <div className={styles.groupLabel}>
-              <div className={styles.groupLabelLine} />
-              <span className={styles.groupLabelText}>Buying</span>
+          {groups.filter(group => group.items.length > 0).map(group => (
+            <div key={group.key}>
+              <div className={styles.groupLabel}>
+                <div className={styles.groupLabelLine} />
+                {group.label && <span className={styles.groupLabelText}>{group.label}</span>}
+              </div>
+              {group.items.map(item => (
+                <DrawerItem
+                  key={item.key}
+                  icon={item.icon}
+                  label={item.label}
+                  to={item.to}
+                  isSymbol={item.isSymbol}
+                  live={item.live}
+                  isActive={isItemActive(item)}
+                  onClick={close}
+                />
+              ))}
             </div>
-            {BUYING_ITEMS.map(item => (
-              <DrawerItem key={item.to + item.label} {...item} isActive={isItemActive(item)} onClick={close} />
-            ))}
-          </div>
-
-          {/* Store group */}
-          <div>
-            <div className={styles.groupLabel}>
-              <div className={styles.groupLabelLine} />
-              <span className={styles.groupLabelText}>Store</span>
-            </div>
-            {STORE_ITEMS.map(item => (
-              <DrawerItem key={item.to + item.label} {...item} isActive={isItemActive(item)} onClick={close} />
-            ))}
-          </div>
-
-          {/* Standalone group */}
-          <div>
-            <div className={styles.groupLabel}>
-              <div className={styles.groupLabelLine} />
-            </div>
-            {STANDALONE_ITEMS.map(item => (
-              <DrawerItem key={item.to} {...item} isActive={isItemActive(item)} onClick={close} />
-            ))}
-          </div>
+          ))}
         </div>
 
         <div className={styles.drawerFooter}>
-          <button className={styles.drawerItem}>
+          <Link to="/help" className={styles.drawerItem} onClick={close}>
             <span className={`material-icons-outlined ${styles.drawerItemIcon}`}>help_outline</span>
             <span>Help</span>
-          </button>
+            <span className={styles.soon}>Soon</span>
+          </Link>
         </div>
       </nav>
     </>
