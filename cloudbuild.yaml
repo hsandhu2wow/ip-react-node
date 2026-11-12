@@ -1,9 +1,10 @@
 steps:
   # Temporarily disabled: the build service account lacks KMS useToDecrypt permission.
-  # Builds use bundled theme defaults without the per-BU config or Google Slides credentials.
-  # Restore this step and the build's decrypt-config dependency after granting key access.
+  # Builds use bundled theme defaults without per-BU config or Google Slides credentials.
+  # Restore this step and add decrypt-config to build.waitFor after granting key access.
   # - name: "gcr.io/cloud-builders/gcloud"
   #   id: decrypt-config
+  #   dir: projects/wiq-si-portal
   #   entrypoint: bash
   #   args:
   #     - "-c"
@@ -11,7 +12,7 @@ steps:
   #       if [ -f "configs/env-config-$PROJECT_ID.json.enc" ]; then
   #         gcloud kms decrypt \
   #           --ciphertext-file="configs/env-config-$PROJECT_ID.json.enc" \
-  #           --plaintext-file=env-config.json \
+  #           --plaintext-file=frontend/env-config.json \
   #           --location=australia-southeast1 \
   #           --keyring="$PROJECT_ID" \
   #           --key=si-cicd
@@ -19,25 +20,23 @@ steps:
   #         echo "No configs/env-config-$PROJECT_ID.json.enc found, using default theme config"
   #       fi
 
-  # Install dependencies (Vite 7 / rolldown require Node 20.19+ or 22.12+;
-  # gcr.io/cloud-builders/npm ships an old Node 19, so use an official Node image instead)
   - name: "node:22"
     id: install
+    dir: projects/wiq-si-portal/frontend
     entrypoint: npm
     args: ["ci"]
     waitFor: ["-"]
 
-  # Build the React app (tsc -b && vite build) -> outputs to dist/
   - name: "node:22"
     id: build
+    dir: projects/wiq-si-portal/frontend
     entrypoint: npm
     args: ["run", "build"]
-    # "prebuild" uses bundled defaults while config decryption is disabled.
     waitFor: ["install"]
 
-  # Deploy the built app to the App Engine "ip-react" service
   - name: "gcr.io/google.com/cloudsdktool/cloud-sdk"
     id: deploy-service
+    dir: projects/wiq-si-portal/frontend
     entrypoint: gcloud
     args:
       - "app"
@@ -47,9 +46,9 @@ steps:
       - "--quiet"
     waitFor: ["build"]
 
-  # Update dispatch routing rules
   - name: "gcr.io/google.com/cloudsdktool/cloud-sdk"
     id: deploy-dispatch
+    dir: projects/wiq-si-portal
     entrypoint: gcloud
     args:
       - "app"

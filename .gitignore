@@ -1,9 +1,16 @@
-node_modules
-dist
+node_modules/
 dist/
 coverage/
-/wireframes/
+*.tsbuildinfo
 
-# Per-BU config decrypted at build time (contains secrets) and generated Vite env
+.env
+.env.*
+!.env.example
+# Public, non-secret API prefix shared by dev and production builds.
+!/projects/wiq-si-portal/frontend/.env
 env-config.json
-.env.production.local
+
+.DS_Store
+.superpowers/
+.worktrees/
+wireframes/
