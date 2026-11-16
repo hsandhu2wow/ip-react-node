@@ -1,0 +1,37 @@
+/* src/components/cards/CardSidebar/CardSidebar.module.css */
+/* Mirrors Angular .qf-details-home__summary: a 392px column of full-size summary
+   cards (.qf-summary-card--small is reset to transform:none; margin:8px 0 on desktop).
+   Hidden below desktop-sm (hide-md ≤1200px, tablet-lg display:none). */
+.sidebar {
+  width: 392px;
+  max-width: 392px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  opacity: 1;
+  transition: opacity 0.2s ease, max-width 0.3s ease;
+}
+
+/* .qf-details-home__summary--collapsed: makes room for the Stella panel */
+.collapsed {
+  opacity: 0;
+  max-width: 0;
+  pointer-events: none;
+}
+
+.item {
+  width: 100%;
+  margin: 8px 0;
+}
+
+/* .qf-summary-card_grayed */
+.itemGrayed {
+  opacity: 0.5;
+}
+
+@media (max-width: 1439px) {
+  .sidebar {
+    display: none;
+  }
+}

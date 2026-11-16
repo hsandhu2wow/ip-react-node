@@ -1,0 +1,13 @@
+.gcloudignore
+.git
+.gitignore
+
+# Ignore everything by default. Only the built output (dist/) and app.yaml
+# are needed at runtime — source files, configs, node_modules, and tests
+# should not be uploaded to App Engine.
+*
+
+# Un-ignore what's actually needed for deployment.
+!app.yaml
+!dist/
+!dist/**

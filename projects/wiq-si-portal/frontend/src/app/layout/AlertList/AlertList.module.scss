@@ -1,0 +1,73 @@
+/* Port of alert-list.component.scss (ViewEncapsulation.None) plus the globals it relies on:
+   Bootstrap 5.3 .alert-* backgrounds, styles.scss .alert-new and .matSmallIcon. */
+
+/* slideInOut :enter — translateY(-100%) → 0 over 200ms ease-in */
+@keyframes slideIn {
+  from { transform: translateY(-100%); }
+  to { transform: translateY(0); }
+}
+
+.alert {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 48px;
+  padding: 3px 12px;
+  color: #333;
+  animation: slideIn 200ms ease-in;
+
+  &-info { background: #edf5fa; }
+  &-new { background: #fedaed; }
+  &-success { background: #d1e7dd; }
+  &-warning { background: #fff3cd; }
+  &-danger { background: #f8d7da; }
+}
+
+/* mat-icon (24px box) with .matSmallIcon's 21px glyph */
+.icon {
+  flex: 0 0 24px;
+  width: 24px;
+  height: 24px;
+  overflow: hidden;
+  font-size: 21px;
+  vertical-align: middle;
+}
+
+.alert-new .icon { color: #e6007e; }
+.alert-info .icon { color: #3f69ae; }
+.alert-success .icon { color: #146a30; }
+.alert-warning .icon { color: #7a640c; }
+.alert-danger .icon { color: #b10200; }
+
+.text {
+  flex-grow: 1;
+  margin-left: 8px;
+}
+
+.link {
+  a {
+    color: #333;
+    text-decoration: underline;
+  }
+
+  a:hover {
+    text-decoration: none;
+  }
+}
+
+/* mat-icon-button */
+.close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  padding: 8px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: #676d70;
+  cursor: pointer;
+}

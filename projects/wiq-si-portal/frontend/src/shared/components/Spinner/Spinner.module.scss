@@ -1,0 +1,25 @@
+/* mat-spinner (indeterminate): rotating arc that grows and shrinks; r = 45 → circumference ≈ 283 */
+.spinner {
+  display: block;
+  flex-shrink: 0;
+  animation: spinnerRotate 2s linear infinite;
+}
+
+.circle {
+  fill: none;
+  stroke: var(--main-bg-color, #0d5127);
+  stroke-width: 10;
+  stroke-dasharray: 1, 283;
+  stroke-dashoffset: 0;
+  animation: spinnerDash 1.5s ease-in-out infinite;
+}
+
+@keyframes spinnerRotate {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes spinnerDash {
+  0% { stroke-dasharray: 1, 283; stroke-dashoffset: 0; }
+  50% { stroke-dasharray: 212, 283; stroke-dashoffset: -35; }
+  100% { stroke-dasharray: 212, 283; stroke-dashoffset: -282; }
+}
