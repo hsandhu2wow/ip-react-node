@@ -15,11 +15,14 @@ Browser
         AppShell: navigation and route content
           /quick-facts -> QuickFactsLayout
             FilterProvider
-              TrendActionsProvider
-                CardsPreviewProvider
-                  FilterBar + TrendBanner + Outlet + Footer
-                    Quick Facts Summary / Details
-                    or TrendPage(metric=weekly | myPlan)
+              StellaProvider (getUserdetails is_stella_enabled)
+                PageLoadedProvider
+                  TrendActionsProvider
+                    CardsPreviewProvider
+                      FilterBar + AlertList + Outlet + Footer
+                        Quick Facts Summary / Details
+                        or TrendPage(metric=weekly | myPlan)
+                        each wrapped in StellaPanel
 
 Query hook / action -> typed endpoint function -> shared Fetch transport
   /api -> Vite development proxy or deployed dispatch -> existing Python APIs
@@ -205,7 +208,8 @@ Scoped layout uses SCSS Modules; `src/styles/globals.css` and injected
 selectors and DOM IDs are behavioral contracts as well as styling details.
 
 Backend tables, tooltip and information-dialog HTML are not uniformly
-sanitized. `TrendBanner` specifically uses DOMPurify; that does not make
+sanitized. `AlertList` (admin alerts and the Weekly/My Plan banner) and
+`AlertDialog` (pop-up alerts) specifically use DOMPurify; that does not make
 every `dangerouslySetInnerHTML` surface safe for arbitrary content.
 Preserve the documented source boundary, inspect each surface and do not
 introduce user-controlled HTML without an explicit trust/sanitization design.

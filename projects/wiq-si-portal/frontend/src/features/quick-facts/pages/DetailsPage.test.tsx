@@ -12,6 +12,8 @@ import { mapSeasonalCards } from '../api/seasonal'
 import { seasonalAPI } from '../../../test/fixtures/seasonal'
 import { CardsPreviewContext, type CardsPreviewContextValue } from '../../../shared/components/PreviewDialog/cardsPreviewContext'
 import { processFilterResponse, addParents, flattenTree } from '../../../shared/utils/tree'
+import { StellaProvider } from '../../../shared/context/StellaContext'
+import { PageLoadedProvider, usePageLoaded } from '../../../shared/context/PageLoadedContext'
 
 vi.mock('../../../shared/context/FilterContext', () => {
   const useFilter = vi.fn()
@@ -74,6 +76,24 @@ describe('DetailsPage', () => {
     fireEvent.click(screen.getByRole('button', { expanded: false }))
     fireEvent.click(screen.getByRole('option', { name: label }))
   }
+
+  it.each([
+    ['are loading', { isLoading: true, isError: false, isSuccess: false }, 'false'],
+    ['failed', { isLoading: false, isError: true, isSuccess: false }, 'false'],
+    ['loaded', { isLoading: false, isError: false, isSuccess: true }, 'true'],
+  ])('sets the alert-list page-loaded signal when details %s (Angular notifyPageLoaded)', (_state, result, expected) => {
+    vi.mocked(useDetailsCard).mockReturnValue({ data: [], ...result } as unknown as ReturnType<typeof useDetailsCard>)
+    function Probe() { return <span data-testid="page-loaded">{String(usePageLoaded())}</span> }
+    render(
+      <MemoryRouter initialEntries={['/quick-facts/details/sales']}>
+        <PageLoadedProvider>
+          <Routes><Route path="/quick-facts/details/:type" element={<DetailsPage />} /></Routes>
+          <Probe />
+        </PageLoadedProvider>
+      </MemoryRouter>
+    )
+    expect(screen.getByTestId('page-loaded')).toHaveTextContent(expected)
+  })
 
   it('sorts location names numerically and moves closed locations last', () => {
     show()
@@ -208,7 +228,7 @@ const card = (title: string, code: string): ISQFMetricCard => ({
   tabs: [{ label: 'First', richText: `${title} first` }, { label: 'Second', richText: `${title} second` }],
 })
 
-function renderPage(type = 'sales', registerPageCards = vi.fn<CardsPreviewContextValue['registerPageCards']>(() => () => {})) {
+function renderPage(type = 'sales', registerPageCards = vi.fn<CardsPreviewContextValue['registerPageCards']>(() => () => {}), stella = false) {
   vi.mocked(useFilter).mockImplementation(() => ({
     isLoaded: true, selectedNode: state.node, treeNodes: state.nodes,
     selectedDate: '2026-10-17', selectedPeriod: 'WTD', selectedBreakdownAxis: 'childLevel',
@@ -230,9 +250,11 @@ function renderPage(type = 'sales', registerPageCards = vi.fn<CardsPreviewContex
   return render(
     <MemoryRouter initialEntries={[`/quick-facts/details/${type}?code=Area&period=WTD&axis=childLevel`]}>
       <CardsPreviewContext.Provider value={{ preview: () => Promise.resolve(), registerPageCards }}>
-        <Routes>
-          <Route path="/quick-facts/details/:type" element={<DetailsPage />} />
-        </Routes>
+        <StellaProvider enabled={stella}>
+          <Routes>
+            <Route path="/quick-facts/details/:type" element={<DetailsPage />} />
+          </Routes>
+        </StellaProvider>
       </CardsPreviewContext.Provider>
     </MemoryRouter>,
   )
@@ -253,6 +275,12 @@ describe('DetailsPage', () => {
     }
     state.nodes = [state.node, ...state.node.children!]
     state.data = [card('Zulu', 'Z'), card('Alpha', 'A')]
+  })
+
+  it('wraps the sidebar and detail column in the Stella panel (Angular sqf-details-home)', () => {
+    renderPage('sales', undefined, true)
+    expect(screen.getByTestId('stella-panel').parentElement)
+      .toContainElement(screen.getByRole('link', { name: /Back to all cards/ }))
   })
 
   it('renders the Angular qf-card-divider once, after the last details card', () => {

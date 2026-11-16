@@ -33,7 +33,8 @@ describe('getFeedbackPage', () => {
     ['/quick-facts/summary', undefined, 'Quick Facts Summary', 'quickfacts'],
     ['/quick-facts/details/sales', 'Sales', 'Quick Facts - Sales', 'quickfacts'],
     ['/quick-facts/weekly', undefined, 'Weekly Facts', 'weeklyfacts'],
-    ['/quick-facts/weekly', 'WFAIPanel', 'Weekly Facts AI Insights', 'weeklyfacts'],
+    // Angular master dropped the old AI Insights panel's 'WFAIPanel' header mapping
+    ['/quick-facts/weekly', 'WFAIPanel', 'Weekly Facts', 'weeklyfacts'],
     // Angular parity: /myplan doesn't include 'weekly', so it falls through to the summary label.
     ['/quick-facts/myplan', undefined, 'Quick Facts Summary', 'quickfacts'],
   ])('%s (header %s) → %s / %s', (path, header, currentPage, pageSection) => {

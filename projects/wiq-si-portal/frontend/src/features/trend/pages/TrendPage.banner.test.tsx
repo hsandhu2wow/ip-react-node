@@ -1,6 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import { MemoryRouter, Outlet, Route, Routes, useNavigate } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { http, HttpResponse } from 'msw';
+import { server } from '../../../test/server';
 import { QuickFactsLayout } from '../../../app/layout/QuickFactsLayout/QuickFactsLayout';
 import { TrendPage } from './TrendPage';
 import { useTrendData } from '../hooks/useTrendData';
@@ -21,8 +24,11 @@ function Navigation() {
   return <><button onClick={() => navigate('/summary')}>Summary</button><Outlet /></>;
 }
 
+let queryClient: QueryClient;
+
 function Page({ metric = 'weekly' }: { metric?: WfMetric }) {
   return (
+    <QueryClientProvider client={queryClient}>
     <MemoryRouter initialEntries={['/trend']}>
       <Routes>
         <Route element={<Navigation />}>
@@ -33,6 +39,7 @@ function Page({ metric = 'weekly' }: { metric?: WfMetric }) {
         </Route>
       </Routes>
     </MemoryRouter>
+    </QueryClientProvider>
   );
 }
 
@@ -40,7 +47,15 @@ function response(nextData = data, isLoading = false, isError = false) {
   vi.mocked(useTrendData).mockReturnValue({ data: nextData, isLoading, isError } as ReturnType<typeof useTrendData>);
 }
 
-beforeEach(() => response());
+beforeEach(() => {
+  queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  server.use(
+    http.get('*/api/getUserdetails', () => HttpResponse.json({})),
+    http.get('*/api/alerts', () => HttpResponse.json([])),
+    http.get('*/api/popUpAlerts', () => HttpResponse.json([])),
+  );
+  response();
+});
 
 describe('Weekly/My Plan layout banners', () => {
   it('renders rich text below the shared filter and dismisses until the next response', () => {

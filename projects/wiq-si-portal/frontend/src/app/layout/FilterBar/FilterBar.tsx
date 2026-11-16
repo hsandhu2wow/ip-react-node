@@ -20,6 +20,9 @@ import { useCardsPreview } from '../../../shared/components/PreviewDialog/cardsP
 import { FeedbackDialog } from '../../../shared/components/FeedbackDialog/FeedbackDialog'
 import { useTrendActions } from '../../../features/trend/context/TrendActionsContext'
 import { useCardStatus } from '../../../features/quick-facts/hooks/useCardStatus'
+import { useStella } from '../../../shared/context/StellaContext'
+import { HEADER_NAV_ATTR } from '../../../shared/components/StellaPanel/StellaPanel'
+import { MemberProfile, useMemberProfile } from './MemberProfile'
 import styles from './FilterBar.module.scss'
 import { sendQFDataToAnalytics } from '../../../shared/utils/analytics'
 
@@ -41,6 +44,10 @@ export function FilterBar() {
     setSelectedPeriod, selectedBreakdownAxis, setSelectedBreakdownAxis,
   } = useFilter()
   const { user } = useAuth()
+  // Angular SqfFilterComponent.showProfileInActionBar: UTIL.responsive.xsm() checked once at init
+  const [showProfileInActionBar] = useState(() => window.screen.width <= 768)
+  const memberProfile = useMemberProfile(selectedDate ? selectedNode : null, user.portal)
+  const showProfileInMenu = showProfileInActionBar && user.portal !== 'PEL' && !!memberProfile
 
   const { pathname } = useLocation()
   const { preview } = useCardsPreview()
@@ -84,6 +91,9 @@ export function FilterBar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const mobileMenuRef = useRef<HTMLDivElement>(null)
   const trendActions = useTrendActions()
+  const stella = useStella()
+  const stellaOpenRef = useRef(stella.open)
+  stellaOpenRef.current = stella.open
   const { data: cardStatus } = useCardStatus()
   // Angular sqf-filter selectedCardType — passed to the feedback popup as `header`
   const selectedCardType = detailsType ? cardStatus?.[detailsType]?.titleText || detailsType : undefined
@@ -112,7 +122,8 @@ export function FilterBar() {
   // Angular SqfLayoutComponent.onScroll → SqfCardsService.makeFilterSticky: while scrolling
   // down the sticky bar drops behind the content; scrolling up brings it back. DOM is
   // mutated directly so scrolling never re-renders. Also mirrors SqfFilterComponent.onScroll
-  // closing the kebab menu.
+  // closing the kebab menu. The Stella drawer sits directly below the bar, so the bar
+  // stays showing while it is open.
   const filterBarRef = useRef<HTMLDivElement>(null)
   useEffect(() => {
     let prevScrollPos = window.pageYOffset
@@ -125,7 +136,7 @@ export function FilterBar() {
         const isMobile = window.innerWidth <= 768
         const canScroll = document.documentElement.scrollHeight > document.documentElement.clientHeight
         const step = isMobile ? 0 : bar.getBoundingClientRect().height
-        if (canScroll && currentScrollPos > step && prevScrollPos <= currentScrollPos) {
+        if (!stellaOpenRef.current && canScroll && currentScrollPos > step && prevScrollPos <= currentScrollPos) {
           bar.style.zIndex = '-1'
         } else {
           bar.style.removeProperty('z-index')
@@ -137,6 +148,12 @@ export function FilterBar() {
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
+  // Angular AiInsightsPanelComponent.showFilterBar: makeFilterSticky only re-evaluates on
+  // scroll, so a bar hidden by an earlier scroll-down comes back when Stella opens
+  useEffect(() => {
+    if (stella.open) filterBarRef.current?.style.removeProperty('z-index')
+  }, [stella.open])
+
   const yesterday = getYesterdayDate()
   const minDate = formatDate(new Date(Date.now() - THIRTY_DAYS_MS))
   const maxDate = formatDate(yesterday)
@@ -147,7 +164,7 @@ export function FilterBar() {
   }
 
   return (
-    <div ref={filterBarRef} className={styles.filterBar} data-testid="filter-bar">
+    <div ref={filterBarRef} className={styles.filterBar} data-testid="filter-bar" {...{ [HEADER_NAV_ATTR]: '' }}>
       {/* Location selector */}
       <div className={styles.left}>
         <div className={styles.dropdown} ref={dropdownRef}>
@@ -258,22 +275,24 @@ export function FilterBar() {
             className={styles.hideXsm}
           />
         )}
+
+        {!showProfileInActionBar && memberProfile && <MemberProfile profile={memberProfile} className={styles.hideXsm} />}
       </div>
 
-      {/* Angular .qf-filter__right-section (hide-xsm): AI insights, subscription, feedback, download, print */}
+      {/* Angular .qf-filter__right-section (hide-xsm): Stella, subscription, feedback, download, print */}
       <div className={`${styles.right} ${styles.hideXsm}`}>
-        {trendActions.aiInsightsEnabled && (
+        {stella.enabled && (
           <>
             <button
               type="button"
-              className={`${styles.aiInsightsBtn} ${trendActions.aiInsightsOpen ? styles.aiInsightsBtnSelected : ''}`}
-              onClick={trendActions.toggleAiInsights}
-              aria-pressed={trendActions.aiInsightsOpen}
+              className={`${styles.stellaBtn} ${stella.open ? styles.stellaBtnSelected : ''}`}
+              onClick={stella.toggle}
+              aria-pressed={stella.open}
             >
-              <span className={`material-icons ${styles.aiInsightsIcon}`}>auto_awesome</span>
-              {trendActions.aiButtonText || 'AI Insights'}
+              <span className={`material-icons ${styles.stellaIcon}`}>auto_awesome</span>
+              Stella
             </button>
-            <span className={styles.aiInsightsDivider} />
+            <span className={styles.stellaDivider} />
           </>
         )}
         {trendActions.subscriptionEnabled && (
@@ -334,6 +353,11 @@ export function FilterBar() {
         </button>
         {mobileMenuOpen && (
           <div className={styles.mobileMenu} role="menu">
+            {showProfileInMenu && (
+              <div role="menuitem" className={styles.mobileMenuItem}>
+                <MemberProfile profile={memberProfile} />
+              </div>
+            )}
             {trendActions.subscriptionEnabled && (
               <button
                 type="button"

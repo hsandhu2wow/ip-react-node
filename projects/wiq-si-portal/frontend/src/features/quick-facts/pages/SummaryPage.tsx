@@ -15,6 +15,8 @@ import { NpsSurvey } from '../../../shared/components/NpsSurvey/NpsSurvey'
 import { useQuery } from '@tanstack/react-query'
 import { getStoreProfileCard } from '../api/storeProfile'
 import { ProfileCard } from '../components/ProfileCard/ProfileCard'
+import { StellaPanel } from '../../../shared/components/StellaPanel/StellaPanel'
+import { useNotifyPageLoaded } from '../../../shared/context/PageLoadedContext'
 
 export function SummaryPage() {
   const { isLoaded, selectedBreakdownAxis, selectedNode } = useFilter()
@@ -29,7 +31,11 @@ export function SummaryPage() {
   const isLoading = !isLoaded || enrichedQuery.isLoading
   const cardStatus = enrichedQuery.cardStatus
   const cards: ISQFMetricCard[] = enrichedQuery.data
-  const seasonalCard = useSeasonalCard(cardStatus.seasonal).data?.[0]
+  const seasonalQuery = useSeasonalCard(cardStatus.seasonal)
+  const seasonalCard = seasonalQuery.data?.[0]
+  // Angular sqf-summary-home notifies once the summary request settles (success or error)
+  // and the seasonal matrix, when configured, has loaded
+  useNotifyPageLoaded(!isLoading && !seasonalQuery.isLoading)
   const showSeasonalCard = !!cardStatus.seasonal?.summary && !!seasonalCard && !seasonalCard.hidden
   const seasonalSeq = cardStatus.seasonal?.sequence || 100
 
@@ -93,6 +99,8 @@ export function SummaryPage() {
         )}
       </h1>
 
+      {/* Angular sqf-summary-home: app-ai-insights-panel wraps .qf-home */}
+      <StellaPanel>
       <div className={styles.content}>
         {enrichedQuery.isError && (
           <div className={styles.errorBanner}>
@@ -114,6 +122,7 @@ export function SummaryPage() {
               ]}
         </div>
       </div>
+      </StellaPanel>
     </main>
   )
 }

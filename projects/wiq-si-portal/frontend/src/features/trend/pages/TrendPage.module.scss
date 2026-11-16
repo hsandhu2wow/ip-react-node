@@ -274,8 +274,17 @@
 .errorMessage a { color: #333333; text-decoration: underline; }
 .errorSupport { font-size: 12px; margin: 1rem 0; }
 
-.loading {
-  padding: 16px;
+/* Angular .wf_wrapper__content centres the mat-spinner while loading */
+.loadingWrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Angular styles.scss .spinnerStyle */
+.spinner {
+  position: relative;
+  left: 10px;
 }
 
 .mobileHeader {

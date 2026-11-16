@@ -26,7 +26,7 @@ the alert inside the source flex-content wrapper restores all eight desktop
 view comparisons while retaining popup activation. Ten synthetic interaction
 scenarios pass. API writes remain blocked; full Task 8/9/12, identity, all-BU
 and export gates are not closed.
-See the [current evidence](../../weekly-facts-myplan-parity.md#latest-continuation-november-4-error-and-subscription-lifecycle).
+See the [current evidence](../../weekly-facts-myplan-parity.md#continuation-november-4-error-and-subscription-lifecycle).
 
 **Execution update, dropdown/subscription continuation:** The same uncommitted
 main-checkout continuation now replaces native selects with source-style

@@ -5,6 +5,7 @@ import { server } from '../../test/server'
 import { getFeedbackIssueTypes, submitFeedback } from './feedback'
 import { getNPSSurveyFlag, submitNPSSurvey } from './nps'
 import { submitRecognize } from './recognition'
+import { getAlerts, getPopUpAlerts, markPopUpAlertsRead } from './alerts'
 
 beforeAll(() => vi.stubGlobal('window', { location: { origin: 'http://localhost:3000' } }))
 afterAll(() => vi.unstubAllGlobals())
@@ -63,5 +64,50 @@ describe('shared submission HTTP contracts', () => {
     await expect(submitRecognize(form)).rejects.toMatchObject({
       response: { status: 403, data: { status: 'NoQfAccess' } },
     })
+  })
+
+  it('keeps the Quick Facts alert filter quirk and maps alert icons', async () => {
+    const alert = (id: number, type: string, flags: Record<string, number | null>) =>
+      ({ id, type, active: 1, sqf: 0, sqa: 0, wf: 0, myplan: 0, bi: 0, bqf: 0, psf: 0, removable: 1, text: `Alert ${id}`, ...flags })
+    const served = [
+      alert(1, 'new', { sqf: 1 }),
+      alert(2, 'warning', { sqf: 1, active: 0 }),
+      alert(3, 'danger', { wf: 1, active: 0 }),
+      alert(4, 'success', { myplan: 1 }),
+      alert(5, 'info', { sqa: 1 }),
+      alert(6, 'info', { bi: 1 }),
+    ]
+    server.use(
+      http.get('*/api/alerts', () => HttpResponse.json(served)),
+      http.get('*/api/popUpAlerts', () => HttpResponse.json(served)),
+    )
+    const expected = [
+      { id: 1, icon: 'new_releases' },
+      { id: 3, icon: 'priority_high' },
+      { id: 4, icon: 'done' },
+      { id: 5, icon: 'info' },
+    ]
+    expect((await getAlerts()).map(({ id, icon }) => ({ id, icon }))).toEqual(expected)
+    expect((await getPopUpAlerts()).map(({ id, icon }) => ({ id, icon }))).toEqual(expected)
+  })
+
+  it('treats empty alert responses as no alerts', async () => {
+    server.use(
+      http.get('*/api/alerts', () => new HttpResponse(null, { status: 204 })),
+      http.get('*/api/popUpAlerts', () => HttpResponse.json([])),
+    )
+    await expect(getAlerts()).resolves.toEqual([])
+    await expect(getPopUpAlerts()).resolves.toEqual([])
+  })
+
+  it('posts acknowledged pop-up alerts as a JSON payload field', async () => {
+    const popups = [{ id: 7, type: 'info', icon: 'info', active: 1, sqf: 1, removable: 0, text: 'Fixture' }]
+    server.use(http.post('*/api/popUpAlerts/read', async ({ request }) => {
+      const form = await request.formData()
+      expect([...form.keys()]).toEqual(['payload'])
+      expect(JSON.parse(String(form.get('payload')))).toEqual(popups)
+      return HttpResponse.json({ status: 'ok' })
+    }))
+    await expect(markPopUpAlertsRead(popups)).resolves.toEqual({ status: 'ok' })
   })
 })

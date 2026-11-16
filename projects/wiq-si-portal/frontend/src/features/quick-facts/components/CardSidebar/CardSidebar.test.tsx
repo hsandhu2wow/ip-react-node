@@ -1,10 +1,11 @@
 import { describe, it, expect, vi } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { CardSidebar } from './CardSidebar'
 import { mapSeasonalCards } from '../../api/seasonal'
 import { seasonalAPI } from '../../../../test/fixtures/seasonal'
 import type { ISQFMetricCard } from '../../../../shared/types/sqf.types'
+import { StellaProvider, useStella } from '../../../../shared/context/StellaContext'
 
 vi.mock('../SeasonalCard/SeasonalBarChart', () => ({ SeasonalBarChart: () => null }))
 
@@ -43,6 +44,24 @@ function render$(selectedType: string) {
 }
 
 describe('CardSidebar', () => {
+  it('collapses while the Stella panel is open (Angular qf-details-home__summary--collapsed)', () => {
+    function StellaToggle() {
+      return <button onClick={useStella().toggle}>Stella</button>
+    }
+    render(
+      <MemoryRouter>
+        <StellaProvider enabled>
+          <StellaToggle />
+          <CardSidebar cards={cards} selectedType="sales" />
+        </StellaProvider>
+      </MemoryRouter>
+    )
+    const sidebar = screen.getByRole('navigation', { name: 'Card types' })
+    expect(sidebar.className).not.toContain('collapsed')
+    fireEvent.click(screen.getByRole('button', { name: 'Stella' }))
+    expect(sidebar.className).toContain('collapsed')
+  })
+
   it('inserts the seasonal legacy summary by sequence and marks its active type', () => {
     const seasonalCard = mapSeasonalCards([seasonalAPI], { node: { apiDepth: 0, code: '', level_desc: '' }, date: '',
       config: { titleText: 'Summer Event', sequence: 2, details: 1, summary: 1, details_last_level: 6 } })[0]

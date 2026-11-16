@@ -179,8 +179,8 @@
   .hideSm { display: none !important; }
 }
 
-/* Angular sqf-filter .ai-insights-button */
-.aiInsightsBtn {
+/* Angular sqf-filter .ai-insights-button (Stella) */
+.stellaBtn {
   display: flex;
   flex-direction: row;
   justify-content: center;
@@ -200,10 +200,10 @@
   cursor: pointer;
   white-space: nowrap;
 }
-.aiInsightsBtn:hover,
-.aiInsightsBtnSelected { background: #e8edf5; }
+.stellaBtn:hover,
+.stellaBtnSelected { background: #e8edf5; }
 
-.aiInsightsIcon {
+.stellaIcon {
   background: linear-gradient(90deg, #0091f8 0%, #ab65fb 50%, #e24dc5 75%, #f0416b 87.5%, #f45406 100%);
   -webkit-background-clip: text;
   background-clip: text;
@@ -215,7 +215,7 @@
   margin-right: 4px;
 }
 
-.aiInsightsDivider {
+.stellaDivider {
   width: 0;
   height: 16px;
   border: 1px solid #e0e0e0;

@@ -8,8 +8,9 @@ import { TrendMobileFilters } from '../components/TrendMobileFilters';
 import { useAuth } from '../../../shared/context/AuthContext';
 import { TrendInfoDialog } from '../components/TrendInfoDialog';
 import { SubscriptionDialog } from '../components/SubscriptionDialog';
-import { AiInsightsSidenav } from '../components/AiInsightsSidenav';
-import { FeedbackDialog } from '../../../shared/components/FeedbackDialog/FeedbackDialog';
+import { StellaPanel } from '../../../shared/components/StellaPanel/StellaPanel';
+import { useNotifyPageLoaded } from '../../../shared/context/PageLoadedContext';
+import { Spinner } from '../../../shared/components/Spinner/Spinner';
 import { PreviewPageCards } from '../../../shared/components/PreviewDialog/cardsPreviewContext';
 import { buildAvailableViews, getSubscriptionDisplayName, getSubscriptionKey } from '../components/subscription';
 import { useRegisterTrendActions } from '../context/TrendActionsContext';
@@ -62,9 +63,7 @@ export function TrendPage({ metric }: TrendPageProps) {
   const [showChildLevel, setShowChildLevel] = useState(false);
   const [popup, setPopup] = useState<WfAlert | null>(null);
   const closePopup = useCallback(() => setPopup(null), []);
-  const [aiFeedbackOpen, setAiFeedbackOpen] = useState(false);
   const [subscriptionOpen, setSubscriptionOpen] = useState(false);
-  const [aiInsightsOpen, setAiInsightsOpen] = useState(false);
   const [bannerDismissed, setBannerDismissed] = useState(false);
   const dismissBanner = useCallback(() => setBannerDismissed(true), []);
 
@@ -76,8 +75,6 @@ export function TrendPage({ metric }: TrendPageProps) {
     setMobileSelection(createTrendSelection(wfData, true));
     setShowVariance(wfData?.varianceFlag?.value ?? false);
     setPopup(null);
-    setAiInsightsOpen(false);
-    setAiFeedbackOpen(false);
     setSubscriptionOpen(false);
     setBannerDismissed(false);
   }
@@ -100,18 +97,15 @@ export function TrendPage({ metric }: TrendPageProps) {
   }
 
   const subscriptionEnabled = !isError && !!wfData?.is_web_subscription_enabled;
-  const aiInsightsEnabled = !isError && !!wfData?.config?.ai_insights_enabled;
   const openSubscription = useCallback(() => setSubscriptionOpen(true), []);
-  const toggleAiInsights = useCallback(() => setAiInsightsOpen(open => !open), []);
   const trendActions = useMemo(() => ({
-    banner: !isLoading && !isError && !bannerDismissed ? wfData?.banner : undefined,
-    dismissBanner,
-    subscriptionEnabled, openSubscription, aiInsightsEnabled,
-    aiButtonText: wfData?.ai_insights?.button_text || 'AI Insights',
-    aiInsightsOpen: aiInsightsEnabled && aiInsightsOpen, toggleAiInsights,
-  }), [isLoading, isError, bannerDismissed, wfData?.banner, dismissBanner, subscriptionEnabled,
-    openSubscription, aiInsightsEnabled, wfData?.ai_insights?.button_text, aiInsightsOpen, toggleAiInsights]);
+    banner: !isLoading && !isError ? wfData?.banner : undefined,
+    bannerDismissed, dismissBanner,
+    subscriptionEnabled, openSubscription,
+  }), [isLoading, isError, bannerDismissed, wfData?.banner, dismissBanner, subscriptionEnabled, openSubscription]);
   useRegisterTrendActions(trendActions);
+  // Angular weekly-facts-home notifies after a successful page response
+  useNotifyPageLoaded(!isLoading && !isError && !!wfData);
   const [deepLinkHandled, setDeepLinkHandled] = useState(() => window.location.hash !== '#EmailSubscription');
   const isSubscriptionDialogOpen = subscriptionOpen || (!deepLinkHandled && !!wfData);
   const closeSubscription = useCallback(() => {
@@ -173,11 +167,19 @@ export function TrendPage({ metric }: TrendPageProps) {
     </div>
   );
 
+  // Angular weekly-facts-home: app-ai-insights-panel wraps the page in every state. The
+  // key recreates it between Weekly Facts and My Plan, as Angular recreates the component.
+  const weeklyWrapper = metric === 'weekly' ? styles.weeklyWrapper : '';
   if (isLoading) {
     return (
-      <div className={styles.loading} data-testid="trend-page-loading">
-        Loading…
-      </div>
+      <>
+      {heading}
+      <StellaPanel key={metric}>
+        <div className={`${styles.wrapperContent} ${weeklyWrapper} ${styles.loadingWrapper}`} data-testid="trend-page-loading">
+          <Spinner diameter={64} label="Loading" className={styles.spinner} />
+        </div>
+      </StellaPanel>
+      </>
     );
   }
 
@@ -186,8 +188,8 @@ export function TrendPage({ metric }: TrendPageProps) {
     return (
       <>
       {heading}
-      <AiInsightsSidenav open={false} onClose={() => setAiInsightsOpen(false)}>
-      <div className={`${styles.wrapperContent} ${styles.errorWrapper} ${metric === 'weekly' ? styles.weeklyWrapper : ''}`}>
+      <StellaPanel key={metric}>
+      <div className={`${styles.wrapperContent} ${styles.errorWrapper} ${weeklyWrapper}`}>
         <div className={`${styles.wfHome} wf-home`}>
           <div className={styles.topControls}>{metricTabs}</div>
           <div className={styles.errorRow} data-testid="trend-page-error" role="alert">
@@ -203,7 +205,7 @@ export function TrendPage({ metric }: TrendPageProps) {
           </div>
         </div>
       </div>
-      </AiInsightsSidenav>
+      </StellaPanel>
       </>
     );
   }
@@ -234,21 +236,14 @@ export function TrendPage({ metric }: TrendPageProps) {
   return (
     <>
     {heading}
-    <AiInsightsSidenav
-      open={trendActions.aiInsightsOpen}
-      onClose={() => setAiInsightsOpen(false)}
-      header={wfData.ai_insights?.header}
-      insightsHtml={wfData.ai_insights?.insights}
-      onHelpUsImprove={() => setAiFeedbackOpen(true)}
-    >
-      <FeedbackDialog open={aiFeedbackOpen} onClose={() => setAiFeedbackOpen(false)} header="WFAIPanel" />
+    <StellaPanel key={metric}>
       <PreviewPageCards
         pageData
         getCards={() => [
           { title: 'WeeklyFacts', cardType: activeCard?.displayName, jsId: `js-${metric}-card` } as PreviewCard,
         ]}
       />
-    <div className={`${styles.wrapperContent} ${metric === 'weekly' ? styles.weeklyWrapper : ''}`}>
+    <div className={`${styles.wrapperContent} ${weeklyWrapper}`}>
       <div className={`${styles.wfHome} wf-home`} id={`js-${metric}-card`}>
         <div className={styles.topControls}>
         <div className={styles.controlGroup}>
@@ -466,7 +461,7 @@ export function TrendPage({ metric }: TrendPageProps) {
           addAdditionalHierarchyNode={addAdditionalHierarchyNode}
         />
       )}
-    </AiInsightsSidenav>
+    </StellaPanel>
     </>
   );
 }

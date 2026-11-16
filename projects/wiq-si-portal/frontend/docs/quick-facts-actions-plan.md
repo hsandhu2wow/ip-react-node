@@ -31,6 +31,8 @@ Goal: port Angular SQF actions one-to-one (UI text, flows, endpoints, file names
 - Dialog: views + locations selection, validation messages, `GET /{wf|myplan}/userSubscriptions`, `POST /{key}/updateUserSubscriptions` (locations, selected_views JSON strings), success/error snackbars.
 
 ## Phase 5 — AI Insights panel (Weekly / My Plan)
+> **Superseded November 16:** Angular master replaced this panel with the Stella drawer; see the [parity register](weekly-facts-myplan-parity.md#latest-continuation-november-16-angular-master-alignment).
+
 - Header button (`auto_awesome`, `button_text || 'AI Insights'`) when `config.ai_insights_enabled`; right side panel rendering `ai_insights.insights` sanitized HTML; no extra endpoint.
 
 ## Phase 6 — Google Slides export

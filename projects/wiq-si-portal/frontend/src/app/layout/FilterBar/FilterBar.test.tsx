@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen, fireEvent, act } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 
@@ -17,6 +17,14 @@ vi.mock('../../../features/trend/context/TrendActionsContext', async importOrigi
   ...(await importOriginal<typeof import('../../../features/trend/context/TrendActionsContext')>()),
   useTrendActions: vi.fn(),
 }))
+vi.mock('./MemberProfile', async importOriginal => ({
+  ...(await importOriginal<typeof import('./MemberProfile')>()),
+  useMemberProfile: vi.fn(() => null),
+}))
+vi.mock('../../../shared/context/AuthContext', async importOriginal => ({
+  ...(await importOriginal<typeof import('../../../shared/context/AuthContext')>()),
+  useAuth: vi.fn(() => ({ user: { name: 'Demo User', portal: 'SI' }, isAuthenticated: true, logout: vi.fn() })),
+}))
 vi.mock('../../../features/quick-facts/hooks/useCFCChildCodes', () => ({ useCFCChildCodes: () => ({ data: undefined }) }))
 vi.mock('../../../features/quick-facts/hooks/useCardStatus', () => ({
   useCardStatus: () => ({
@@ -34,17 +42,22 @@ import { useFilter } from '../../../shared/context/FilterContext'
 import { useSummaryCards } from '../../../features/quick-facts/hooks/useSummaryCards'
 import { useDetailsCard } from '../../../features/quick-facts/hooks/useDetailsCard'
 import { useTrendActions, DEFAULT_TREND_ACTIONS } from '../../../features/trend/context/TrendActionsContext'
+import { StellaProvider } from '../../../shared/context/StellaContext'
+import { useMemberProfile } from './MemberProfile'
+import { useAuth } from '../../../shared/context/AuthContext'
 
 const mockFilter = useFilter as ReturnType<typeof vi.fn>
 const mockSummary = useSummaryCards as ReturnType<typeof vi.fn>
 const mockDetails = useDetailsCard as ReturnType<typeof vi.fn>
 const mockTrendActions = useTrendActions as ReturnType<typeof vi.fn>
+const mockMemberProfile = vi.mocked(useMemberProfile)
+const mockAuth = vi.mocked(useAuth)
 
 const setPeriod = vi.fn()
 const setAxis = vi.fn()
 const card = { cardName: 'a', cardType: 'summary' }
 
-function setup(opts: { path?: string; levelDesc?: string; summary?: unknown } = {}) {
+function setup(opts: { path?: string; levelDesc?: string; summary?: unknown; stella?: boolean } = {}) {
   mockFilter.mockReturnValue({
     selectedNode: { name: 'N', code: '1', level_desc: opts.levelDesc ?? 'National', children: [{ level_desc: 'Zone' }] },
     selectedDate: '2026-10-01',
@@ -61,7 +74,9 @@ function setup(opts: { path?: string; levelDesc?: string; summary?: unknown } = 
   if (!mockTrendActions.getMockImplementation()) mockTrendActions.mockReturnValue(DEFAULT_TREND_ACTIONS)
   return render(
     <MemoryRouter initialEntries={[opts.path ?? '/quick-facts/summary']}>
-      <FilterBar />
+      <StellaProvider enabled={!!opts.stella}>
+        <FilterBar />
+      </StellaProvider>
     </MemoryRouter>
   )
 }
@@ -159,28 +174,31 @@ describe('FilterBar header actions (Angular sqf-filter right section)', () => {
     expect(screen.getByTestId('feedback-dialog').textContent).toBe('Sales')
   })
 
-  it('hides AI insights and subscription buttons when not enabled', () => {
+  it('hides the Stella and subscription buttons when not enabled', () => {
     setup({ path: '/quick-facts/weekly' })
-    expect(screen.queryByText('AI Insights')).toBeNull()
+    expect(screen.queryByRole('button', { name: /Stella/ })).toBeNull()
     expect(screen.queryByLabelText('Subscription preferences')).toBeNull()
   })
 
-  it('shows AI insights and subscription buttons from trend actions', () => {
-    const toggleAiInsights = vi.fn()
+  it('shows the subscription button from trend actions', () => {
     const openSubscription = vi.fn()
-    mockTrendActions.mockReturnValue({
-      ...DEFAULT_TREND_ACTIONS,
-      aiInsightsEnabled: true,
-      aiButtonText: 'Ask AI',
-      subscriptionEnabled: true,
-      toggleAiInsights,
-      openSubscription,
-    })
+    mockTrendActions.mockReturnValue({ ...DEFAULT_TREND_ACTIONS, subscriptionEnabled: true, openSubscription })
     setup({ path: '/quick-facts/weekly' })
-    fireEvent.click(screen.getByText('Ask AI'))
     fireEvent.click(screen.getByLabelText('Subscription preferences'))
-    expect(toggleAiInsights).toHaveBeenCalledOnce()
     expect(openSubscription).toHaveBeenCalledOnce()
+  })
+
+  it('toggles the Stella panel from the first right-hand button on every Quick Facts page', () => {
+    setup({ path: '/quick-facts/summary', stella: true })
+    const stella = screen.getByRole('button', { name: /Stella/ })
+    expect(stella.textContent).toBe('auto_awesomeStella')
+    expect(stella).toHaveAttribute('aria-pressed', 'false')
+    expect(stella.compareDocumentPosition(screen.getByLabelText('Send feedback')) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    fireEvent.click(stella)
+    expect(stella).toHaveAttribute('aria-pressed', 'true')
+    expect(stella.className).toContain('stellaBtnSelected')
+    fireEvent.click(stella)
+    expect(stella).toHaveAttribute('aria-pressed', 'false')
   })
 
   it('mobile menu offers subscription (when enabled) and feedback', () => {
@@ -193,6 +211,76 @@ describe('FilterBar header actions (Angular sqf-filter right section)', () => {
     fireEvent.click(screen.getByLabelText('More options'))
     fireEvent.click(screen.getByRole('menuitem', { name: /Give Feedback/ }))
     expect(screen.getByTestId('feedback-dialog')).toBeDefined()
+  })
+})
+
+// Angular sqf-filter: <app-member-profile class="hide-xsm"> ends the left section unless
+// UTIL.responsive.xsm() (screen.width <= 768) at init moved it into the mobile menu (not on PEL).
+describe('FilterBar member profile', () => {
+  const profile = {
+    email: '', first_name: 'Fixture', last_name: 'Manager', phone_number: '',
+    profile_photo: 'photo.png', success_factors_role: 'Zone Manager',
+  }
+  function withScreenWidth(width: number) {
+    vi.spyOn(window.screen, 'width', 'get').mockReturnValue(width)
+  }
+  function withPortal(portal: string) {
+    mockAuth.mockReturnValue({ user: { name: 'Demo User', portal }, isAuthenticated: true, logout: vi.fn() })
+  }
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+    mockTrendActions.mockReset()
+    mockMemberProfile.mockReturnValue(profile)
+    withPortal('SI')
+  })
+  afterEach(() => vi.restoreAllMocks())
+
+  it('requests the profile for the selected area and portal', () => {
+    withScreenWidth(1280)
+    setup()
+    expect(mockMemberProfile).toHaveBeenCalledWith(expect.objectContaining({ code: '1' }), 'SI')
+  })
+
+  it('ends the left section with the profile on desktop', () => {
+    withScreenWidth(1280)
+    setup({ path: '/quick-facts/details/sales' })
+    const shown = screen.getByTestId('member-profile')
+    expect(shown.className).toContain('hideXsm')
+    expect(screen.getByLabelText('Card type').compareDocumentPosition(shown) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(screen.getByText('Fixture Manager')).toBeInTheDocument()
+    fireEvent.click(screen.getByLabelText('More options'))
+    expect(screen.getAllByTestId('member-profile')).toHaveLength(1)
+  })
+
+  it('hides the profile when none was found', () => {
+    withScreenWidth(1280)
+    mockMemberProfile.mockReturnValue(null)
+    setup()
+    expect(screen.queryByTestId('member-profile')).toBeNull()
+  })
+
+  it('moves the profile to the top of the mobile menu on small screens', () => {
+    withScreenWidth(768)
+    setup()
+    expect(screen.queryByTestId('member-profile')).toBeNull()
+    fireEvent.click(screen.getByLabelText('More options'))
+    const [first] = screen.getAllByRole('menuitem')
+    expect(first).toContainElement(screen.getByTestId('member-profile'))
+  })
+
+  it('leaves the profile out of the mobile menu on PEL or when none was found', () => {
+    withScreenWidth(768)
+    withPortal('PEL')
+    const { unmount } = setup()
+    fireEvent.click(screen.getByLabelText('More options'))
+    expect(screen.queryByTestId('member-profile')).toBeNull()
+    unmount()
+    withPortal('SI')
+    mockMemberProfile.mockReturnValue(null)
+    setup()
+    fireEvent.click(screen.getByLabelText('More options'))
+    expect(screen.getAllByRole('menuitem').map(i => i.textContent)).toEqual(['forumGive Feedback'])
   })
 })
 
@@ -241,6 +329,26 @@ describe('FilterBar scroll behaviour (Angular makeFilterSticky)', () => {
     setup()
     scrollTo(30)
     expect(bar().style.zIndex).toBe('')
+  })
+
+  it('keeps the bar showing while Stella is open and brings a hidden bar back when it opens', () => {
+    setPageSize(1440)
+    setup({ stella: true })
+    vi.spyOn(bar(), 'getBoundingClientRect').mockReturnValue({ height: 49 } as DOMRect)
+    scrollTo(400)
+    expect(bar().style.zIndex).toBe('-1')
+    fireEvent.click(screen.getByRole('button', { name: /Stella/ }))
+    expect(bar().style.zIndex).toBe('')
+    scrollTo(800)
+    expect(bar().style.zIndex).toBe('')
+    fireEvent.click(screen.getByRole('button', { name: /Stella/ }))
+    scrollTo(1200)
+    expect(bar().style.zIndex).toBe('-1')
+  })
+
+  it('marks the bar as part of the header the Stella drawer sits below', () => {
+    setup()
+    expect(bar()).toHaveAttribute('data-header-nav')
   })
 
   it('closes the mobile kebab menu on scroll', () => {

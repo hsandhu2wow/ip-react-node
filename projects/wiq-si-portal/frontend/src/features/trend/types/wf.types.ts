@@ -103,18 +103,7 @@ export interface WfCardData {
   half_year?: string;
 }
 
-export interface WfPageConfig {
-  ai_insights_enabled?: boolean;
-}
-
-export interface WfAiInsights {
-  header?: string;
-  insights?: string;
-  button_text?: string;
-}
-
 export interface WfPageData {
-  config?: WfPageConfig;
   cards: WfCardData[];
   label?: string;
   level?: string;
@@ -135,7 +124,6 @@ export interface WfPageData {
   available_views?: string[];
   metricsInfo?: WfMetricsInfo;
   varianceFlag?: WfVarianceFlag;
-  ai_insights?: WfAiInsights;
 }
 
 /** Response of GET /{wf|myplan}/userSubscriptions */

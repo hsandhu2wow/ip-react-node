@@ -167,6 +167,26 @@ describe('TrendTable', () => {
     expect(tags[1].getAttribute('data-tag')).toBe('NEW');
   });
 
+  it('marks tags on the 360FM portal with the Angular wf-home__tag-WFM hook', () => {
+    const tagData: WfTableData = {
+      headers: tableData.headers,
+      data: [[cell(0, { rowSpan: 1 }), cell(1), cell(2, { tags: 'KPI' })]],
+    };
+    const { container, rerender } = render(<TrendTable tableData={tagData} isExpanded showVariance={false} />);
+    expect(container.querySelector('.wf-home__tag-WFM')).toBeNull();
+    rerender(<TrendTable tableData={tagData} isExpanded showVariance={false} displayContext={{ isWfmPortal: true }} />);
+    expect(container.querySelector('.wf-home__tag')).toHaveClass('wf-home__tag-WFM');
+  });
+
+  it('marks the first header with the Angular per-metric hook class', () => {
+    const { rerender } = render(<TrendTable tableData={tableData} isExpanded showVariance={false} />);
+    expect(screen.getByRole('columnheader', { name: 'Group' })).toHaveClass('wf-table__wf-first');
+    expect(screen.getByRole('columnheader', { name: 'Metric' })).not.toHaveClass('wf-table__wf-first');
+    rerender(<TrendTable tableData={tableData} isExpanded showVariance={false} metric="myPlan" />);
+    expect(screen.getByRole('columnheader', { name: 'Group' })).toHaveClass('wf-table__myplan-first');
+    expect(screen.getByRole('columnheader', { name: 'Group' })).not.toHaveClass('wf-table__wf-first');
+  });
+
   it('forwards displayContext to column filtering', () => {
     const contextData: WfTableData = {
       headers: [

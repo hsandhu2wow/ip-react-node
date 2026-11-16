@@ -60,7 +60,6 @@ describe('trend API', () => {
 
     it('returns WfPageData with full structure', async () => {
       const mockData: WfPageData = {
-        config: { ai_insights_enabled: true },
         cards: [
           {
             key: 'card1',
@@ -106,7 +105,6 @@ describe('trend API', () => {
 
     it('returns WfPageData with full structure', async () => {
       const mockData: WfPageData = {
-        config: { ai_insights_enabled: false },
         cards: [
           {
             key: 'plan1',

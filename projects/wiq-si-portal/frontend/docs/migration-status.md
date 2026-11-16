@@ -29,9 +29,20 @@ error card with retained metric navigation and support layout. Subscription
 reads have visible loading/error states and cannot overwrite unread
 preferences. Cell alert icons are inline with their values, correcting a
 live Weekly Trend row-height mismatch. The
-[Weekly/My Plan register](weekly-facts-myplan-parity.md#latest-continuation-november-4-error-and-subscription-lifecycle)
+[Weekly/My Plan register](weekly-facts-myplan-parity.md#continuation-november-4-error-and-subscription-lifecycle)
 records the source comparisons, intentional error-handling deviation and
 remaining qualification gaps.
+
+**November 16 Angular `master` alignment (`000573d97`):** the obsolete
+payload-driven AI Insights drawer is removed and replaced by master's Stella
+drawer (header button, resizable iframe panel, per-page lifecycle), gated by
+`getUserdetails` `is_stella_enabled`. Feature alerts are now migrated:
+admin alerts and the pop-up acknowledgment dialog load once after the first
+page settles, the Weekly/My Plan banner moved into the same alert list, and
+Trend loading uses master's spinner. The filter bar gains the area team-member
+profile. The
+[Weekly/My Plan register](weekly-facts-myplan-parity.md#latest-continuation-november-16-angular-master-alignment)
+lists the intentional deviations. No live-BU qualification is added.
 
 ## Frontend modernisation: October 30
 
@@ -229,8 +240,9 @@ not an invented scrolling guarantee.
 
 Confirming the alert marks selected notices read and removes them from the
 in-session cache; close/remind-later/Escape return false. Notices are filtered
-by the active feature route. This workflow is absent in React and is distinct
-from its existing Metrics Info modal.
+by the active feature route. React ports this workflow in
+[AlertList](../src/app/layout/AlertList/AlertList.tsx) (November 16); it stays
+distinct from the Metrics Info modal.
 
 ## Feature parity matrix
 
@@ -248,10 +260,10 @@ Angular paths below are relative to `store-insights/src/app/` unless stated.
 | ETA/error/updated time | SQF filter/card service and backend metric response code | **Partial:** card error UI exists; unused ETA scaffold removed, source enrichment/timezone cases incomplete |
 | Analytics | SQF card service and filter/calendar event callers | **Missing:** no matching analytics adapter/events found |
 | Metrics Info dialogs | Source SQF/Weekly popup callers | **Partial:** generic card InfoModal exists; Weekly label is inert; verify each popup contract separately |
-| Feature alerts/acknowledgment | `components/alert-list/`, `components/alert-dialog/`, Oct 13 diffs | **Missing:** notice feed, read/session behavior and source responsive alert panel |
+| Feature alerts/acknowledgment | `components/alert-list/`, `components/alert-dialog/`, Oct 13 diffs | **Partial (Nov 16):** [AlertList/AlertDialog](../src/app/layout/AlertList/AlertList.tsx) port the notice feed, page filtering, dismissal, read/session behavior and portal-themed panel; live alert content unqualified |
 | Recognition/feedback/export | SQF backend registry and core QF preview/export service | **Missing:** recognition timer, disabled feedback/download; only browser print works |
 | Weekly/MyPlan core | `sqf/components/weekly-facts/`, `IWF.d.ts` | **Partial, unqualified:** generic history/defaults incorrect for observed SI payloads; hierarchy/mobile, grouping, WFM/goal/sticky layouts open; see dedicated assessment |
-| Weekly/MyPlan integrations | Weekly home/service and shared filter/actions | **Missing/partial:** no working Weekly info/alert/subscription flow, AI drawer, analytics or full banner/link/export integration; per-BU acceptance required |
+| Weekly/MyPlan integrations | Weekly home/service and shared filter/actions | **Partial:** info/alert/subscription flows, Stella drawer, analytics, banner, links and export are wired (Nov 16); live Stella/export artifacts and per-BU acceptance required |
 | Quick Assist | `sqf/components/quick-assist/`, QA service/typings | **Missing:** route and dedicated cards/charts/tables |
 | Dashboards | Root dashboard routes/components/services | **Missing; inventory only:** catalog/search/favourites/bookmarks/detail/embeds/mobile chrome |
 | BQF | `bqf/`, backend BQF URL registry | **Missing; inventory only:** distinct product/state/time/supplier/cluster filters, metrics and notifications |

@@ -9,6 +9,8 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { mapSeasonalCards } from '../api/seasonal'
 import { seasonalAPI } from '../../../test/fixtures/seasonal'
 import { CardsPreviewContext, type CardsPreviewContextValue } from '../../../shared/components/PreviewDialog/cardsPreviewContext'
+import { StellaProvider } from '../../../shared/context/StellaContext'
+import { PageLoadedProvider, usePageLoaded } from '../../../shared/context/PageLoadedContext'
 
 vi.mock('../../../shared/context/FilterContext', () => ({
   useFilter: vi.fn(),
@@ -40,6 +42,30 @@ describe('SummaryPage', () => {
   function show() {
     return render(<MemoryRouter><QueryClientProvider client={new QueryClient()}><SummaryPage /></QueryClientProvider></MemoryRouter>)
   }
+
+  it.each([
+    ['is still loading', { isLoading: true, isError: false }, 'false'],
+    ['failed', { isLoading: false, isError: true }, 'true'],
+    ['loaded', { isLoading: false, isError: false }, 'true'],
+  ])('sets the alert-list page-loaded signal when summary data %s (Angular notifyPageLoaded)', (_state, result, expected) => {
+    vi.mocked(useEnrichedSummaryCards).mockReturnValue({ data: [], cardStatus: {}, ...result })
+    function Probe() { return <span data-testid="page-loaded">{String(usePageLoaded())}</span> }
+    render(<MemoryRouter><QueryClientProvider client={new QueryClient()}>
+      <PageLoadedProvider><SummaryPage /><Probe /></PageLoadedProvider>
+    </QueryClientProvider></MemoryRouter>)
+    expect(screen.getByTestId('page-loaded')).toHaveTextContent(expected)
+  })
+
+  it('wraps the cards, not the title, in the Stella panel (Angular sqf-summary-home)', () => {
+    const { container } = render(
+      <MemoryRouter><QueryClientProvider client={new QueryClient()}>
+        <StellaProvider enabled><SummaryPage /></StellaProvider>
+      </QueryClientProvider></MemoryRouter>
+    )
+    const panelContainer = screen.getByTestId('stella-panel').parentElement
+    expect(panelContainer).toContainElement(container.querySelector('.card-grid') as HTMLElement)
+    expect(panelContainer).not.toContainElement(screen.getByRole('heading', { level: 1 }))
+  })
 
   it('shows six placeholders until the hierarchy is ready', () => {
     vi.mocked(useFilter).mockReturnValue({

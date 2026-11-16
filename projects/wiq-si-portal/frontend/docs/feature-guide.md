@@ -57,7 +57,9 @@ Angular layout matching.
 | Shell action registration | [TrendActionsContext](../src/features/trend/context/TrendActionsContext.tsx) |
 | Information/alert dialog | [TrendInfoDialog](../src/features/trend/components/TrendInfoDialog.tsx) |
 | Preferences and hierarchy | [SubscriptionDialog](../src/features/trend/components/SubscriptionDialog.tsx), [helpers](../src/features/trend/components/subscription.ts) |
-| AI drawer and banner | [AiInsightsSidenav](../src/features/trend/components/AiInsightsSidenav.tsx), [TrendBanner](../src/features/trend/components/TrendBanner.tsx) |
+| Stella drawer | [StellaPanel](../src/shared/components/StellaPanel/StellaPanel.tsx), [StellaContext](../src/shared/context/StellaContext.tsx) |
+| Banner and admin/pop-up alerts | [AlertList](../src/app/layout/AlertList/AlertList.tsx), [AlertDialog](../src/app/layout/AlertList/AlertDialog.tsx), [PageLoadedContext](../src/shared/context/PageLoadedContext.tsx) |
+| Loading state | [Spinner](../src/shared/components/Spinner/Spinner.tsx) |
 
 Both routes use one renderer with metric-specific endpoints. Page data supplies
 cards/views, dates, hierarchy, HTML and settings; do not hardcode a global list
@@ -90,7 +92,9 @@ boundaries without source evidence.
 |---|---|
 | Information and alerts | Dedicated dialog with focus/scroll lifecycle; composed mobile info includes refresh/metric content |
 | Variance / all rows | Server defaults and table KPI/filter state drive controls |
-| Banner | Shared shell registration, dismissal/reset, DOMPurify for banner HTML |
+| Banner | Registered with the shell and rendered by the layout AlertList in place of admin alerts; dismissal/reset, DOMPurify for banner HTML |
+| Stella | Header button when `is_stella_enabled`; end-side resizable iframe drawer below the header, closed on page unmount; Summary/Details sidebar collapses while open |
+| Loading | Master's centred spinner (`Spinner`) inside the Stella wrapper while page data loads |
 | Resource links | Response text/URL, safe new-tab opener handling, hidden at 768px and below |
 | Analytics | Source-named events through shared dataLayer adapter, including committed mobile actions |
 | Subscriptions | Header action/deep link opens preferences; multipart save, hierarchy/view controls and notifications exist |

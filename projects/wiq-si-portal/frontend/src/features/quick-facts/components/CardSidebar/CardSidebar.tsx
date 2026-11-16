@@ -2,6 +2,7 @@
 import type { BreakdownAxis, IAvailableMetricCards, ISQFMetricCard, ISeasonalCard } from '../../../../shared/types/sqf.types'
 import { SeasonalSummaryCard } from '../SeasonalCard/SeasonalCard'
 import { SummaryCard } from '../SummaryCard/SummaryCard'
+import { useStella } from '../../../../shared/context/StellaContext'
 import styles from './CardSidebar.module.scss'
 
 interface Props {
@@ -17,6 +18,7 @@ interface Props {
 }
 
 export function CardSidebar({ cards, seasonalCard, selectedType, cardStatus, axis, supportEmail }: Props) {
+  const stellaOpen = useStella().open
   const seq = (c: ISQFMetricCard) => cardStatus?.[c.cardName]?.sequence ?? 100
   // Angular filterGenericAvailableCards('summary', true) hides cards without a details page
   const hasDetails = (c: ISQFMetricCard) =>
@@ -31,7 +33,7 @@ export function CardSidebar({ cards, seasonalCard, selectedType, cardStatus, axi
   if (visible.length === 0) return null
 
   return (
-    <nav className={styles.sidebar} aria-label="Card types">
+    <nav className={`${styles.sidebar} ${stellaOpen ? styles.collapsed : ''}`} aria-label="Card types">
       {visible.map(card => {
         const isSelected = card.cardName === selectedType
         return (

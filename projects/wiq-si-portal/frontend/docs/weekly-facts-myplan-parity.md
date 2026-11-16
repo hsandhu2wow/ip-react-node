@@ -23,7 +23,45 @@ existing React code, not missing Angular functionality or browser pixels.
 
 ## Baseline and evidence
 
-### Latest continuation: November 4 error and subscription lifecycle
+### Latest continuation: November 16 Angular master alignment
+
+Compared against Angular `origin/master` at `000573d97` (November 16).
+`wf-trend-map` and `wf-one-up` exist only on unreleased branches and are
+out of scope. Master changes ported to React:
+
+| Angular master | React |
+|---|---|
+| `ai-insights-panel` + `resizable-drawer` (Stella) replace the payload-driven AI Insights drawer | [StellaPanel](../src/shared/components/StellaPanel/StellaPanel.tsx) wraps Summary, Details and Trend; [StellaContext](../src/shared/context/StellaContext.tsx) holds open state, gated by `getUserdetails` `is_stella_enabled`; filter-bar `auto_awesome` "Stella" toggle. The old `config.ai_insights_enabled`/`ai_insights` types, drawer and feedback mapping are removed |
+| Drawer sizing | Default 500px, minimum 410px, at least 400px of page content kept visible; drag handle; Summary/Details sidebar collapses while open; closes on page unmount |
+| `.spinnerStyle` mat-spinner while Weekly/My Plan loads | [Spinner](../src/shared/components/Spinner/Spinner.tsx) inside the Stella wrapper, replacing the text loader |
+| `app-member-profile` | [MemberProfile](../src/app/layout/FilterBar/MemberProfile.tsx) via `GET /sqf/getTeamMemberArea`, zone/state/group levels by portal; desktop filter bar or first mobile-menu item (portal ≠ PEL) |
+| `app-alert-list` / `app-alert-dialog` | [AlertList](../src/app/layout/AlertList/AlertList.tsx) below the filter bar and [AlertDialog](../src/app/layout/AlertList/AlertDialog.tsx); fetched once after the first page settles ([PageLoadedContext](../src/shared/context/PageLoadedContext.tsx)); the Weekly/My Plan banner replaces admin alerts; pop-ups reopen on each navigation until "I understand" posts `/popUpAlerts/read` |
+| `wf-table` class hooks | Table header/row/cell class names used by master's styles |
+
+`app-feedback-banner` is not ported: on master `getFeedbackBannerFlag()` has
+no caller and `canShowBanner` is only called with `false`, so it never shows.
+
+Intentional deviations, each covered by tests:
+
+- **Stella header gap:** Angular uses the sticky `#header-nav` height; React
+  uses the lowest visible `[data-header-nav]` edge (filter bar and alerts).
+- **Stella dragging:** the iframe ignores pointer events while resizing so the
+  drag is not lost over it. The drawer is per page and keyed by metric.
+- **Banner precedence:** a Weekly/My Plan banner always replaces admin alerts,
+  avoiding Angular's first-load race; once dismissed, nothing shows.
+- **Alert HTML:** pop-up bodies are sanitised with DOMPurify instead of
+  `bypassSecurityTrustHtml`; a missing body renders empty, not `undefined`.
+- **Page-loaded signal:** Summary signals even when the seasonal request fails
+  (Angular then never loads alerts). The 50ms alert leave animation is skipped.
+- **Member profile:** Angular's mobile menu re-creates the component and shows
+  a blank item; not replicated. Portal comes from the auth context.
+- **Focus:** the shared `Dialog` has no focus trap or `cdkFocusInitial` equivalent.
+
+Unverified: live Stella iframe authentication and whitelisting, real alert
+content, all-BU qualification and the mobile-menu kebab styling at
+Angular `styles.scss:825`. Quick Assist is not migrated.
+
+### Continuation: November 4 error and subscription lifecycle
 
 Work continues in the new repository's
 `projects/wiq-si-portal/frontend` on `feat/frontend-monorepo-migration`;
@@ -633,9 +671,10 @@ and My Plan Monthly Overview every second fiscal-month Tuesday; the backend's
 delivery schedule is not a new frontend scheduler. Match the source's
 conditional note visibility, three-column location list and 130px scroll area.
 
-**AI/banner/links:** actions are gated by source flags, not content presence
-alone. AI is an end-side, resizable, no-backdrop drawer with Beta/feedback/close
-and source reset behavior; whitelisting belongs to the backend.
+**Stella/banner/links:** actions are gated by source flags, not content presence
+alone. Master replaces the AI Insights drawer with Stella: an end-side,
+resizable, no-backdrop iframe drawer gated by the user's `is_stella_enabled`;
+whitelisting belongs to the backend.
 Toolkit/usage links are `{displayText, link}` and open in a new tab.
 The banner is broadcast through shared alert/layout integration, not appended
 as an unrelated table row.

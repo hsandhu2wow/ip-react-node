@@ -1,0 +1,49 @@
+/* Mirrors Angular shared/components/member-profile/member-profile.component.scss */
+.memberProfile {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 8px;
+  height: 100%;
+  gap: 8px;
+  font-weight: 500;
+
+  img {
+    height: 32px;
+    border-radius: 50%;
+  }
+}
+
+.details {
+  display: flex;
+  padding: 2px 0;
+  gap: 8px;
+
+  span {
+    line-height: 16px;
+  }
+}
+
+.name {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 16px;
+  letter-spacing: 0.25px;
+  text-align: left;
+}
+
+.others {
+  font-size: 14px;
+  line-height: 16px;
+  letter-spacing: 0.4px;
+  text-align: left;
+}
+
+@media (max-width: 768px) {
+  .memberProfile { padding: 0; }
+  .details {
+    flex-direction: column;
+    gap: 4px;
+  }
+  .hideXsm { display: none !important; }
+}

@@ -2,21 +2,19 @@
 //
 // Bridges the Weekly Facts / My Plan page (TrendPage) and the header actions in
 // FilterBar — the React equivalent of the flags/triggers Angular keeps on
-// SqfFilterService (isEmailSubscriptionEnabled, triggerOpenSubscriptionPopup,
-// aiInsightsEnabled, isSidenavOpen, toggleSidenav).
+// SqfFilterService (isEmailSubscriptionEnabled, triggerOpenSubscriptionPopup) and the
+// Weekly Facts response banner. Stella lives in shared/context/StellaContext.
 import { createContext, useContext, useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
 import type { WfBanner } from '../types/wf.types'
 
 export interface TrendActions {
   banner?: WfBanner
+  /** The banner stays registered once dismissed: it still replaces admin alerts (Angular AlertList shows nothing) */
+  bannerDismissed?: boolean
   dismissBanner?: () => void
   subscriptionEnabled: boolean
   openSubscription: () => void
-  aiInsightsEnabled: boolean
-  aiButtonText: string
-  aiInsightsOpen: boolean
-  toggleAiInsights: () => void
 }
 
 const noop = () => {}
@@ -24,10 +22,6 @@ const noop = () => {}
 export const DEFAULT_TREND_ACTIONS: TrendActions = {
   subscriptionEnabled: false,
   openSubscription: noop,
-  aiInsightsEnabled: false,
-  aiButtonText: 'AI Insights',
-  aiInsightsOpen: false,
-  toggleAiInsights: noop,
 }
 
 const TrendActionsContext = createContext<TrendActions>(DEFAULT_TREND_ACTIONS)
@@ -49,7 +43,7 @@ export function useTrendActions(): TrendActions {
 
 /**
  * Page-side registration. `actions` should be memoised; it is published whenever it
- * changes and cleared on unmount (Angular resetAIInsightsData in ngOnDestroy).
+ * changes and cleared on unmount (Angular WeeklyFactsHomeComponent.resetAIInsightsData in ngOnDestroy).
  */
 export function useRegisterTrendActions(actions: TrendActions): void {
   const register = useContext(RegisterTrendActionsContext)

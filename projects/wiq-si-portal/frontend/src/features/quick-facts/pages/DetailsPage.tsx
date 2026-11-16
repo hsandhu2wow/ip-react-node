@@ -20,6 +20,8 @@ import { PreviewPageCards } from '../../../shared/components/PreviewDialog/cards
 import styles from './DetailsPage.module.scss'
 import { sendQFDataToAnalytics } from '../../../shared/utils/analytics'
 import { NpsSurvey } from '../../../shared/components/NpsSurvey/NpsSurvey'
+import { StellaPanel } from '../../../shared/components/StellaPanel/StellaPanel'
+import { useNotifyPageLoaded } from '../../../shared/context/PageLoadedContext'
 
 type SortType = 'az' | 'za' | 'lowhigh' | 'highlow'
 
@@ -114,6 +116,8 @@ export function DetailsPage() {
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
+  // Angular sqf-details-home notifies after the details (or seasonal details) response succeeds
+  useNotifyPageLoaded(isLoaded && (seasonal ? seasonalDetailsQuery.isSuccess : detailsQuery.isSuccess))
 
   // Mirrors Angular sqf-details-home: redirect to summary when the card isn't in the ordered
   // details dropdown (unknown card, details disabled, or depth beyond details_last_level)
@@ -179,6 +183,8 @@ export function DetailsPage() {
       {/* Angular sqf-summary/details-home ngOnInit: qfCardsService.showNPSSurvey() */}
       <NpsSurvey />
       <PreviewPageCards getCards={() => cards} />
+      {/* Angular sqf-details-home: app-ai-insights-panel wraps .qf-details-home */}
+      <StellaPanel>
       <div className={styles.layout}>
         {/* Left sidebar — card type navigation */}
         <CardSidebar
@@ -294,6 +300,7 @@ export function DetailsPage() {
           </div>
         </div>
       </div>
+      </StellaPanel>
     </main>
   )
 }

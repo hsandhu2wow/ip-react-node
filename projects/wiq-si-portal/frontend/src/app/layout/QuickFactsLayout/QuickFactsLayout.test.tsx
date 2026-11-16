@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { QuickFactsLayout } from './QuickFactsLayout';
 import { getUserDetails } from '../../../shared/api/users';
 import { getCFCChildCodes } from '../../../features/quick-facts/api/sqf';
+import { useStella } from '../../../shared/context/StellaContext';
 
 vi.mock('../../../shared/api/users');
 vi.mock('../../../features/quick-facts/api/sqf', () => ({ getCFCChildCodes: vi.fn() }));
@@ -15,6 +16,9 @@ function Location() {
   const { pathname, search } = useLocation();
   return <output data-testid="route">{pathname}{search}</output>;
 }
+function StellaProbe() {
+  return <output data-testid="stella">{useStella().enabled ? 'enabled' : 'disabled'}</output>;
+}
 function renderLayout(path = '/quick-facts/myplan?code=fixture-state') {
   render(
     <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>
@@ -23,6 +27,7 @@ function renderLayout(path = '/quick-facts/myplan?code=fixture-state') {
           <Route path="/quick-facts" element={<QuickFactsLayout />}>
             <Route path="myplan" element={<div>My Plan page</div>} />
             <Route path="summary" element={<div>Daily page</div>} />
+            <Route path="details/:type" element={<StellaProbe />} />
           </Route>
         </Routes>
         <Location />
@@ -65,5 +70,20 @@ describe('Trend mobile page navigation', () => {
     expect(await screen.findByRole('link', { name: 'Weekly Facts' })).toBeInTheDocument();
     expect(screen.queryByRole('link', { name: 'Daily' })).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: 'Quick Assist' })).not.toBeInTheDocument();
+  });
+});
+
+describe('Stella availability (Angular SqfFilterService.is_stella_enabled_for_user)', () => {
+  it('enables Stella for users whose details flag it', async () => {
+    vi.mocked(getUserDetails).mockResolvedValue({ portal: 'SI', is_stella_enabled: true });
+    renderLayout('/quick-facts/details/sales');
+    expect(await screen.findByText('enabled')).toBeInTheDocument();
+  });
+
+  it('keeps Stella disabled without the flag', async () => {
+    vi.mocked(getUserDetails).mockResolvedValue({ portal: 'SI' });
+    renderLayout('/quick-facts/details/sales');
+    await vi.waitFor(() => expect(getUserDetails).toHaveBeenCalled());
+    expect(screen.getByTestId('stella')).toHaveTextContent('disabled');
   });
 });

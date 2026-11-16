@@ -46,6 +46,7 @@ Owner: [sqf.ts](../src/features/quick-facts/api/sqf.ts), except where noted.
 | GET `/sqf/seasonalMetricDetails/<depth>/<date>[/code]` | `getSeasonalMetric` with details flag | Seasonal raw details |
 | GET `/sqf/storeProfileDetails/<code>` | `getStoreProfileCard` | Profile/address model; owner is storeProfile.ts |
 | GET `/sqf/storeProfileRoleDetails/<code>` | `getStoreProfileRoleNames` | Profile role names |
+| GET `/sqf/getTeamMemberArea/<apiDepth>/<code>` | `getTeamMemberArea` | Area team-member profile shown in the filter bar |
 
 Summary/details include depth and code only when both are truthy; otherwise
 the wrapper requests national depth zero without a code. Seasonal omits the
@@ -92,7 +93,8 @@ The subscription dialog's save/no-op rules are separate from transport
 serialization; see the [feature guide](feature-guide.md).
 
 Trend responses can provide object or array `cardContents`, history keys,
-hierarchy, KPI/variance settings, HTML, alerts, banners and AI content.
+hierarchy, KPI/variance settings, HTML, alerts and banners. Master removed
+the payload `config`/`ai_insights` AI content; Stella is gated by user details.
 The shared [wire types](../src/features/trend/types/wf.types.ts) and source
 assessment are the shape reference, not a single response fixture.
 
@@ -106,7 +108,10 @@ assessment are the shape reference, not a single response fixture.
 | POST `/npsSurvey/` | nps.ts: `submitNPSSurvey` | FormData campaign, URL and optional answers |
 | POST `/sqf/recognize` | [recognition.ts](../src/shared/api/recognition.ts): `submitRecognize` | FormData prepared by recognition helpers |
 | GET `/users/userSearch/<name>` | [users.ts](../src/shared/api/users.ts): `searchUsers` | Employee search model |
-| GET `/getUserdetails` | users.ts: `getUserDetails` | Module-cached user metadata for analytics |
+| GET `/getUserdetails` | users.ts: `getUserDetails` | Module-cached user metadata for analytics; `is_stella_enabled` gates Stella |
+| GET `/alerts` | [alerts.ts](../src/shared/api/alerts.ts): `getAlerts` | Admin alerts; keeps Angular's `active && sqf \|\| sqa \|\| wf \|\| myplan` filter and icon mapping |
+| GET `/popUpAlerts` | alerts.ts: `getPopUpAlerts` | Pop-up alerts, same filter and icon mapping |
+| POST `/popUpAlerts/read` | alerts.ts: `markPopUpAlertsRead` | FormData `payload` = JSON of the acknowledged alerts |
 | POST `/uploadImageForSlide` | [gcpSlides.ts](../src/shared/utils/gcpSlides.ts) | Image FormData; returns upload status/URL |
 | POST `/deleteImageForSlide` | gcpSlides.ts | FormData URL for temporary-image cleanup |
 

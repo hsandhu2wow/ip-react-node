@@ -36,6 +36,8 @@ export interface IUserDetails {
   psf?: number
   psf_enabled?: boolean | 0 | 1
   act?: number
+  /** Server-derived: global Stella setting plus ai_insights_whitelisted_users */
+  is_stella_enabled?: boolean
   [key: string]: unknown
 }
 

@@ -26,11 +26,13 @@ interface DialogProps {
   disableClose?: boolean
   ariaLabel?: string
   className?: string
+  /** MatDialog backdropClass */
+  backdropClassName?: string
   children: ReactNode
 }
 
 /** Minimal MatDialog equivalent: portal, dark backdrop, centred panel, Escape to close. */
-export function Dialog({ open, onClose, size = 'auto', disableClose, ariaLabel, className, children }: DialogProps) {
+export function Dialog({ open, onClose, size = 'auto', disableClose, ariaLabel, className, backdropClassName, children }: DialogProps) {
   useEffect(() => {
     if (!open || disableClose) return
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
@@ -41,7 +43,7 @@ export function Dialog({ open, onClose, size = 'auto', disableClose, ariaLabel, 
   if (!open) return null
   return createPortal(
     <div
-      className={styles.backdrop}
+      className={`${styles.backdrop} ${backdropClassName ?? ''}`}
       data-testid="dialog-backdrop"
       onClick={disableClose ? undefined : onClose}
     >

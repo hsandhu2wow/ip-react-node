@@ -29,7 +29,6 @@ export function getFeedbackPage(pathname: string, header?: string): { currentPag
       if (currentRoute.includes('quick-assist')) return { currentPage: 'Quick Assist', pageSection: 'quickassist' }
       if (currentRoute.includes('details')) return { currentPage: `Quick Facts - ${header ?? ''}`, pageSection }
       if (currentRoute.includes('weekly')) {
-        if (header === 'WFAIPanel') return { currentPage: 'Weekly Facts AI Insights', pageSection: 'weeklyfacts' }
         // Angular's `wfService.selectedMetric === 'myPlan'` → 'My Plan' branch is unreachable on
         // /weekly (the metric is derived from the URL), and /myplan doesn't contain 'weekly',
         // so My Plan falls through to 'Quick Facts Summary' exactly like Angular.

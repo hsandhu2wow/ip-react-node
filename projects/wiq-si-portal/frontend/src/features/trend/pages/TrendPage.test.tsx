@@ -6,6 +6,8 @@ import type { WfCardData, WfMetric, WfPageData } from '../types/wf.types';
 import { TrendActionsProvider, useTrendActions } from '../context/TrendActionsContext';
 import { CardsPreviewContext, type CardsPreviewContextValue } from '../../../shared/components/PreviewDialog/cardsPreviewContext';
 import { HttpError } from '../../../shared/api/client';
+import { StellaProvider, useStella } from '../../../shared/context/StellaContext';
+import { PageLoadedProvider, usePageLoaded } from '../../../shared/context/PageLoadedContext';
 
 vi.mock('../hooks/useTrendData');
 vi.mock('../api/trend', () => ({
@@ -19,11 +21,6 @@ function HeaderActions() {
   return (
     <div>
       {actions.subscriptionEnabled && <button onClick={actions.openSubscription}>Subscription preferences</button>}
-      {actions.aiInsightsEnabled && (
-        <button aria-pressed={actions.aiInsightsOpen} onClick={actions.toggleAiInsights}>
-          {actions.aiButtonText}
-        </button>
-      )}
     </div>
   );
 }
@@ -212,14 +209,67 @@ describe('TrendPage', () => {
     vi.clearAllMocks();
   });
 
-  it('shows loading state while fetching', () => {
+  it('shows the page title and a 64px spinner while fetching (Angular mat-spinner.spinnerStyle)', () => {
     (useTrendDataModule.useTrendData as ReturnType<typeof vi.fn>).mockReturnValue({
       data: undefined,
       isLoading: true,
       isError: false,
     });
     render(<TrendPage metric="weekly" />);
-    expect(screen.getByTestId('trend-page-loading')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Trend');
+    const loading = screen.getByTestId('trend-page-loading');
+    expect(loading.className).toContain('loadingWrapper');
+    expect(loading.className).toContain('weeklyWrapper');
+    const spinner = screen.getByRole('progressbar', { name: 'Loading' });
+    expect(loading).toContainElement(spinner);
+    expect(spinner).toHaveStyle({ width: '64px', height: '64px' });
+    expect(loading).not.toHaveTextContent('Loading…');
+  });
+
+  it.each([
+    ['is loading', { data: undefined, isLoading: true, isError: false }, 'false'],
+    ['failed', { data: undefined, isLoading: false, isError: true }, 'false'],
+    ['loaded', { data: baseWfData, isLoading: false, isError: false }, 'true'],
+  ])('sets the alert-list page-loaded signal when data %s (Angular notifyPageLoaded)', (_state, result, expected) => {
+    vi.mocked(useTrendDataModule.useTrendData).mockReturnValue(result as ReturnType<typeof useTrendDataModule.useTrendData>);
+    function Probe() { return <span data-testid="page-loaded">{String(usePageLoaded())}</span>; }
+    render(<PageLoadedProvider><TrendPage metric="weekly" /><Probe /></PageLoadedProvider>);
+    expect(screen.getByTestId('page-loaded')).toHaveTextContent(expected);
+  });
+
+  describe('Stella panel (Angular app-ai-insights-panel wraps weekly-facts-home)', () => {
+    function StellaToggle() {
+      const { open, toggle } = useStella();
+      return <button aria-pressed={open} onClick={toggle}>Stella</button>;
+    }
+    const page = (metric: WfMetric) => (
+      <StellaProvider enabled><StellaToggle /><TrendPage metric={metric} /></StellaProvider>
+    );
+    const query = () => vi.mocked(useTrendDataModule.useTrendData);
+
+    it.each([
+      ['loading', { data: undefined, isLoading: true, isError: false }, 'trend-page-loading'],
+      ['error', { data: undefined, isLoading: false, isError: true }, 'trend-page-error'],
+      ['loaded', { data: baseWfData, isLoading: false, isError: false }, 'js-weekly-card'],
+    ])('wraps the %s content below the title', (_state, result, contentId) => {
+      query().mockReturnValue(result as ReturnType<typeof useTrendDataModule.useTrendData>);
+      const { container } = render(page('weekly'));
+      const panel = screen.getByTestId('stella-panel');
+      const content = screen.queryByTestId(contentId) ?? container.querySelector(`#${contentId}`);
+      expect(panel.parentElement).toContainElement(content as HTMLElement);
+      expect(panel.parentElement).not.toContainElement(screen.getByRole('heading', { level: 1 }));
+    });
+
+    it('closes Stella when switching between Weekly Facts and My Plan (Angular recreates the page)', () => {
+      query().mockReturnValue({ data: baseWfData, isLoading: false, isError: false } as ReturnType<typeof useTrendDataModule.useTrendData>);
+      const { rerender } = render(page('weekly'));
+      fireEvent.click(screen.getByRole('button', { name: 'Stella' }));
+      expect(screen.getByRole('button', { name: 'Stella' })).toHaveAttribute('aria-pressed', 'true');
+      rerender(page('weekly'));
+      expect(screen.getByRole('button', { name: 'Stella' })).toHaveAttribute('aria-pressed', 'true');
+      rerender(page('myPlan'));
+      expect(screen.getByRole('button', { name: 'Stella' })).toHaveAttribute('aria-pressed', 'false');
+    });
   });
 
   it('shows error state on fetch failure', () => {
@@ -325,61 +375,6 @@ describe('TrendPage', () => {
     expect(screen.queryByText('My Plan subscription preferences')).not.toBeInTheDocument();
   });
 
-  it('toggles the AI Insights panel with ai_insights content when enabled', () => {
-    (useTrendDataModule.useTrendData as ReturnType<typeof vi.fn>).mockReturnValue({
-      data: {
-        ...baseWfData,
-        config: { ai_insights_enabled: true },
-        ai_insights: { button_text: 'Smart Insights', insights: '<p>Sales are up</p>' },
-      },
-      isLoading: false,
-      isError: false,
-    });
-    renderWithActions();
-    const button = screen.getByRole('button', { name: 'Smart Insights' });
-    expect(screen.queryByTestId('ai-insights-sidenav')).not.toBeInTheDocument();
-
-    fireEvent.click(button);
-    expect(button).toHaveAttribute('aria-pressed', 'true');
-    expect(screen.getByTestId('ai-insights-sidenav')).toHaveTextContent('AI Insights');
-    expect(screen.getByText('Sales are up')).toBeInTheDocument();
-
-    fireEvent.click(button);
-    expect(screen.queryByTestId('ai-insights-sidenav')).not.toBeInTheDocument();
-  });
-
-  it('does not expose AI Insights when config.ai_insights_enabled is off', () => {
-    (useTrendDataModule.useTrendData as ReturnType<typeof vi.fn>).mockReturnValue({
-      data: { ...baseWfData, ai_insights: { insights: '<p>x</p>' } },
-      isLoading: false,
-      isError: false,
-    });
-    renderWithActions();
-    expect(screen.queryByRole('button', { name: 'AI Insights' })).not.toBeInTheDocument();
-  });
-
-  it('keeps the enabled AI drawer available without content and resets on response/metric transitions', () => {
-    const query = vi.mocked(useTrendDataModule.useTrendData);
-    const data: WfPageData = { ...baseWfData, config: { ai_insights_enabled: true } };
-    query.mockReturnValue({ data, isLoading: false, isError: false } as ReturnType<typeof query>);
-    const { rerender } = renderWithActions();
-    fireEvent.click(screen.getByRole('button', { name: 'AI Insights' }));
-    expect(screen.getByTestId('ai-insights-sidenav')).toHaveTextContent('Beta');
-    fireEvent.click(screen.getByRole('button', { name: 'Close AI Insights' }));
-    expect(screen.getByRole('button', { name: 'AI Insights' })).toHaveAttribute('aria-pressed', 'false');
-    fireEvent.click(screen.getByRole('button', { name: 'AI Insights' }));
-    query.mockReturnValue({ data: { ...data }, isLoading: false, isError: false } as ReturnType<typeof query>);
-    const page = (metric: WfMetric) => (
-      <TrendActionsProvider><HeaderActions /><TrendPage metric={metric} /></TrendActionsProvider>
-    );
-    rerender(page('weekly'));
-    expect(screen.queryByTestId('ai-insights-sidenav')).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'AI Insights' }));
-    rerender(page('myPlan'));
-    expect(screen.queryByTestId('ai-insights-sidenav')).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'AI Insights' })).toHaveAttribute('aria-pressed', 'false');
-  });
-
   it.each<WfMetric>(['weekly', 'myPlan'])('registers the selected %s view for whole-page preview', (metric) => {
     vi.mocked(useTrendDataModule.useTrendData).mockReturnValue({
       data: {
@@ -406,17 +401,12 @@ describe('TrendPage', () => {
     expect(container.querySelector(`#js-${metric}-card`)).toHaveTextContent('Inventory');
   });
 
-  it('removes stale header actions and closes AI Insights when a response fails', () => {
+  it('removes stale header actions when a response fails', () => {
     const query = vi.mocked(useTrendDataModule.useTrendData);
-    const data = {
-      ...baseWfData, is_web_subscription_enabled: true,
-      config: { ai_insights_enabled: true },
-      ai_insights: { button_text: 'Smart Insights', insights: '<p>Sales are up</p>' },
-    };
+    const data = { ...baseWfData, is_web_subscription_enabled: true };
     query.mockReturnValue({ data, isLoading: false, isError: false } as ReturnType<typeof query>);
     const { rerender } = renderWithActions();
-    fireEvent.click(screen.getByRole('button', { name: 'Smart Insights' }));
-    expect(screen.getByTestId('ai-insights-sidenav')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Subscription preferences' })).toBeInTheDocument();
     query.mockReturnValue({ data, isLoading: false, isError: true } as ReturnType<typeof query>);
     rerender(
       <TrendActionsProvider>
@@ -426,8 +416,6 @@ describe('TrendPage', () => {
     );
     expect(screen.getByTestId('trend-page-error')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Subscription preferences' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Smart Insights' })).not.toBeInTheDocument();
-    expect(screen.queryByTestId('ai-insights-sidenav')).not.toBeInTheDocument();
   });
 
   it('switches tabs when a different tab is selected', () => {

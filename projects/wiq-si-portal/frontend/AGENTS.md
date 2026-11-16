@@ -81,7 +81,7 @@ concrete reuse need.
   slashes such as `/feedbackPopup/` and `/npsSurvey/`.
 - **Backend HTML:** API-supplied cells, headers, rich text and dialogs render
   through `dangerouslySetInnerHTML` and rely on global classes; only
-  `TrendBanner` sanitizes with DOMPurify. Do not route user-entered or
+  `AlertList` and `AlertDialog` sanitize with DOMPurify. Do not route user-entered or
   non-API HTML through these paths without sanitizing it.
 - **Testing:** use MSW for HTTP/query integration. Keep isolated component,
   canvas and external SDK mocks when those are the boundary under test.

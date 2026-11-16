@@ -69,6 +69,7 @@ export function TrendTable({ tableData, isExpanded, showVariance, displayContext
                     'wf-table__header',
                     styles.headerCell,
                     header.cssClass,
+                    headerIdx === 0 ? metric === 'myPlan' ? 'wf-table__myplan-first' : 'wf-table__wf-first' : '',
                     isMetric ? 'wf-table__metric-name-header' : '',
                     headerIdx > metricIndex ? threeColumns ? 'left-align' : 'right-align' : '',
                   ]
@@ -183,7 +184,7 @@ export function TrendTable({ tableData, isExpanded, showVariance, displayContext
                             {tags.length > 0 && (
                               <div className="wf-table__tags">
                                 {tags.map((tag) => (
-                                  <span key={tag} className="wf-home__tag" data-tag={tag}>
+                                  <span key={tag} className={isWfm ? 'wf-home__tag wf-home__tag-WFM' : 'wf-home__tag'} data-tag={tag}>
                                     {tag}
                                   </span>
                                 ))}

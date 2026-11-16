@@ -13,26 +13,21 @@ function Consumer() {
   const actions = useTrendActions()
   return (
     <div>
-      <span data-testid="state">
-        {`${actions.subscriptionEnabled}|${actions.aiInsightsEnabled}|${actions.aiButtonText}|${actions.aiInsightsOpen}`}
-      </span>
-      <button onClick={actions.toggleAiInsights}>toggle</button>
+      <span data-testid="state">{`${actions.subscriptionEnabled}|${actions.banner?.text ?? ''}`}</span>
+      <button onClick={actions.openSubscription}>subscribe</button>
     </div>
   )
 }
 
 function Page() {
-  const [open, setOpen] = useState(false)
+  const [opened, setOpened] = useState(false)
   const actions = useMemo<TrendActions>(
     () => ({
       subscriptionEnabled: true,
-      openSubscription: () => {},
-      aiInsightsEnabled: true,
-      aiButtonText: 'Smart Insights',
-      aiInsightsOpen: open,
-      toggleAiInsights: () => setOpen(o => !o),
+      openSubscription: () => setOpened(true),
+      banner: opened ? { text: 'Subscribed', type: 'info' } : undefined,
     }),
-    [open]
+    [opened]
   )
   useRegisterTrendActions(actions)
   return null
@@ -41,9 +36,9 @@ function Page() {
 describe('TrendActionsContext', () => {
   it('returns safe defaults outside the provider', () => {
     render(<Consumer />)
-    expect(screen.getByTestId('state')).toHaveTextContent('false|false|AI Insights|false')
+    expect(screen.getByTestId('state')).toHaveTextContent('false|')
     expect(() => DEFAULT_TREND_ACTIONS.openSubscription()).not.toThrow()
-    expect(() => fireEvent.click(screen.getByText('toggle'))).not.toThrow()
+    expect(() => fireEvent.click(screen.getByText('subscribe'))).not.toThrow()
   })
 
   it('returns defaults inside the provider until a page registers', () => {
@@ -52,7 +47,7 @@ describe('TrendActionsContext', () => {
         <Consumer />
       </TrendActionsProvider>
     )
-    expect(screen.getByTestId('state')).toHaveTextContent('false|false|AI Insights|false')
+    expect(screen.getByTestId('state')).toHaveTextContent('false|')
   })
 
   it('publishes registered actions and clears them when the page unmounts', async () => {
@@ -62,15 +57,15 @@ describe('TrendActionsContext', () => {
         <Page />
       </TrendActionsProvider>
     )
-    expect(screen.getByTestId('state')).toHaveTextContent('true|true|Smart Insights|false')
-    fireEvent.click(screen.getByText('toggle'))
-    expect(await screen.findByText('true|true|Smart Insights|true')).toBeInTheDocument()
+    expect(screen.getByTestId('state')).toHaveTextContent('true|')
+    fireEvent.click(screen.getByText('subscribe'))
+    expect(await screen.findByText('true|Subscribed')).toBeInTheDocument()
 
     rerender(
       <TrendActionsProvider>
         <Consumer />
       </TrendActionsProvider>
     )
-    expect(screen.getByTestId('state')).toHaveTextContent('false|false|AI Insights|false')
+    expect(screen.getByTestId('state')).toHaveTextContent('false|')
   })
 })

@@ -79,6 +79,23 @@ export async function getCFCChildCodes(): Promise<string[]> {
   return res.data.cfc_codes
 }
 
+/** Angular IMemberProfile (core-qf/typings/IQFMemberProfile.d.ts) */
+export interface IMemberProfile {
+  email: string
+  first_name: string
+  last_name: string
+  phone_number: string
+  profile_photo: string
+  success_factors_role: string
+  full_name?: string
+}
+
+/** Angular SqfFilterService.getMemberProfile — the team member responsible for an area. */
+export async function getTeamMemberArea(apiDepth: number, code: string): Promise<IMemberProfile> {
+  const res = await client.get<IMemberProfile>(`/sqf/getTeamMemberArea/${apiDepth}/${code}`)
+  return res.data
+}
+
 /** Returns which cards are available and their configuration */
 export async function getSQFCardStatus(): Promise<IAvailableMetricCards> {
   const res = await client.get<IAvailableMetricCards>('/sqf/getSQFMetricCardsStatus')
