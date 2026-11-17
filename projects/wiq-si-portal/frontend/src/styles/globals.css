@@ -149,6 +149,79 @@ body {
 .text-green { color: #146A30; }
 .text-red { color: #B10200; }
 
+/* ── Summary card API HTML (richText, expandable_list) — ported from store-insights
+   app.scss "QF Summary Card InnerHTML styles" and "Expandable List style". ── */
+.qf-summary-card__richText-header {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 12px;
+  margin: 0 8px;
+}
+.qf-summary-card__richText-header .boldText {
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 14px;
+  text-align: left;
+}
+.qf-summary-card__richText-header .italicsText { line-height: 130%; }
+
+.qf-summary-card__richText-details {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 12px;
+  background: #F7F7F7;
+  border-radius: 4px;
+  margin: 16px 12px;
+}
+.qf-summary-card__richText-details .heading {
+  font-weight: 700;
+  font-size: 14px;
+  line-height: 150%;
+}
+.qf-summary-card__richText-details .content {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 4px;
+  width: 100%;
+  font-weight: 400;
+  font-size: 12px;
+  line-height: 14px;
+  font-style: normal;
+  margin: 20px 0;
+}
+.qf-summary-card__richText-details .content-item {
+  display: flex;
+  gap: 4px;
+  width: 50%;
+  flex-direction: column;
+}
+.qf-summary-card__richText-details .content-item .key { color: #646464; }
+
+.el-card__header-title-icon {
+  color: var(--main-bg-color, #0d5127);
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
+}
+.el-card__task-li {
+  font-size: 14px;
+  line-height: 21px;
+  color: #333;
+  display: flex;
+  gap: 10px;
+}
+.el-card__task-li-icon {
+  font-size: 14px;
+  width: 14px;
+  height: 14px;
+  padding-top: 3px;
+  color: var(--main-bg-color, #0d5127);
+}
+
 /* Trend (Weekly Facts / My Plan) table styles — ported from store-insights app.scss */
 .wf-primary-val {
   font-size: 14px;

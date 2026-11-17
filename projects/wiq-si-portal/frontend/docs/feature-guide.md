@@ -21,9 +21,16 @@ IDs to current implementation, regression entry points and acceptance gaps.
 | Shared chart/table inside this feature | [MetricCardChart](../src/features/quick-facts/components/MetricCard/MetricCardChart.tsx), [MetricCardTable](../src/features/quick-facts/components/MetricCard/MetricCardTable.tsx) |
 
 Summary derives active-period cards, detail availability and expected-refresh
-metadata. It filters hidden cards and orders by card/config sequence.
-Configured seasonal content is inserted by sequence. METRO/PEL Store-level
+metadata. It filters hidden cards and orders them with
+[cardOrder](../src/features/quick-facts/utils/cardOrder.ts), Angular's
+`getCardSequence`: configured sequence only (API `seq` is ignored, 0 or missing
+becomes 100), ties in config-key order, then seasonal, then profile. Unlike
+Angular, cards missing from the configuration still render, last.
+METRO/PEL Store-level
 selection enables profile-card composition; SI/METRO use Daily branding.
+Backend HTML sections (Ready to Trade, Nightfill) use Angular's `el-card`
+layout: left-aligned title, arrow toggle, keyboard support and the API
+`cssClass` on the card root. Unlike Angular, `isExpanded` sections start open.
 These code branches are not proof those BUs have been qualified.
 
 Details uses route metric, shared location/date/axis, configuration levels and

@@ -75,19 +75,18 @@ describe('SummaryPage', () => {
     expect(screen.getAllByTestId('metric-card-skeleton')).toHaveLength(6)
   })
 
-  it('orders visible cards using explicit sequence before configured sequence', () => {
+  it('orders cards by configured sequence only, like Angular getCardSequence', () => {
     vi.mocked(useEnrichedSummaryCards).mockReturnValue({
-      data: [card('Fallback'), card('Configured'), card('Explicit', 1), { ...card('Hidden', 0), hidden: true }],
-      cardStatus: { Configured: { sequence: 2 }, Explicit: { sequence: 10 } },
+      data: [card('Unconfigured'), card('Zero'), card('TieB'), card('TieA'), card('Explicit', 1), { ...card('Hidden', 0), hidden: true }],
+      cardStatus: { TieA: { sequence: 5 }, TieB: { sequence: 5 }, Explicit: { sequence: 10 }, Zero: { sequence: 0 } },
       isLoading: false, isError: false,
     })
     const { container } = show()
     expect(screen.getByRole('heading', { name: /Daily.*powered by Quick Facts/ })).toBeInTheDocument()
     const slots = [...container.querySelectorAll('.metric-card-slot')]
-    expect(slots.map(slot => slot.textContent)).toEqual([
-      expect.stringContaining('Explicit'),
-      expect.stringContaining('Configured'),
-      expect.stringContaining('Fallback'),
+    // API seq is ignored; 0 or missing sequence → 100; ties keep config-key order, unconfigured cards last
+    expect(slots.map(slot => slot.querySelector('[class*="cardTitle"]')?.textContent)).toEqual([
+      'TieA', 'TieB', 'Explicit', 'Zero', 'Unconfigured',
     ])
     expect(screen.queryByText('Hidden')).not.toBeInTheDocument()
   })
@@ -162,11 +161,11 @@ describe('SummaryPage Seasonal', () => {
   it('inserts seasonal by sequence among generic cards and registers the same page print order', () => {
     portal = 'SI'
     genericCards = [
-      { cardName: 'later', cardType: 'summary', cardTitle: 'Later', jsId: 'js-later', seq: 3 },
-      { cardName: 'earlier', cardType: 'summary', cardTitle: 'Earlier', jsId: 'js-earlier', seq: 1 },
+      { cardName: 'later', cardType: 'summary', cardTitle: 'Later', jsId: 'js-later', seq: 1 },
+      { cardName: 'earlier', cardType: 'summary', cardTitle: 'Earlier', jsId: 'js-earlier', seq: 3 },
     ]
     seasonal = seasonalFixture
-    cardStatus = { seasonal: { sequence: 2, summary: 1 } }
+    cardStatus = { later: { sequence: 3 }, earlier: { sequence: 1 }, seasonal: { sequence: 2, summary: 1 } }
     const register = vi.fn<CardsPreviewContextValue['registerPageCards']>(() => () => {})
     renderPage(register)
     expect(screen.getByText('SUMMER EVENT')).toBeInTheDocument()
@@ -188,8 +187,8 @@ describe('SummaryPage Seasonal', () => {
     portal = 'METRO'
     levelDesc = 'Store'
     seasonal = seasonalFixture
-    genericCards = [{ cardName: 'earlier', cardType: 'summary', cardTitle: 'Earlier', jsId: 'js-earlier', seq: 99 }]
-    cardStatus = { seasonal: { summary: 1, sequence: 0 }, profileCard: { sequence: 100 } }
+    genericCards = [{ cardName: 'earlier', cardType: 'summary', cardTitle: 'Earlier', jsId: 'js-earlier' }]
+    cardStatus = { earlier: { sequence: 99 }, seasonal: { summary: 1, sequence: 0 }, profileCard: { sequence: 100 } }
     renderPage()
     await waitFor(() => expect(screen.getByText('STORE PROFILE')).toBeInTheDocument())
     expect([...document.querySelectorAll('.metric-card-slot > [id]')].map(el => el.id)).toEqual(['js-earlier', seasonal.jsId, 'js-profile-card'])

@@ -168,6 +168,8 @@ export interface ISQFMetricCard {
   cardCode?: string
   children?: Array<{ code: string; label: string }>
   jsId?: string
+  /** Extra root class from the API, e.g. 'header-highlight' for the green header band */
+  cssClass?: string
   // Tabbed/filtered card variant
   cards?: ISQFMetricCard[]
   filterKeys?: Record<string, string>   // { cardKeysColKey → dropdownKey }
