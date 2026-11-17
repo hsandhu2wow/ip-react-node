@@ -46,7 +46,7 @@ Owner: [sqf.ts](../src/features/quick-facts/api/sqf.ts), except where noted.
 | GET `/sqf/seasonalMetricDetails/<depth>/<date>[/code]` | `getSeasonalMetric` with details flag | Seasonal raw details |
 | GET `/sqf/storeProfileDetails/<code>` | `getStoreProfileCard` | Profile/address model; owner is storeProfile.ts |
 | GET `/sqf/storeProfileRoleDetails/<code>` | `getStoreProfileRoleNames` | Profile role names |
-| GET `/sqf/getTeamMemberArea/<apiDepth>/<code>` | `getTeamMemberArea` | Area team-member profile shown in the filter bar |
+| GET `/sqf/getTeamMemberArea/<apiDepth>/<code>` | `getTeamMemberArea` | Selected manager shown in the top filter header; includes Store level (SI 4, METRO/PEL/BIGW 3), independently of the profile card |
 
 Summary/details include depth and code only when both are truthy; otherwise
 the wrapper requests national depth zero without a code. Seasonal omits the

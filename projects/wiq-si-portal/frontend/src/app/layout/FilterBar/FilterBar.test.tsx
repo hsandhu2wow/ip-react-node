@@ -214,15 +214,14 @@ describe('FilterBar header actions (Angular sqf-filter right section)', () => {
   })
 })
 
-// Angular sqf-filter: <app-member-profile class="hide-xsm"> ends the left section unless
-// UTIL.responsive.xsm() (screen.width <= 768) at init moved it into the mobile menu (not on PEL).
+// The manager ends the desktop left section or appears in the mobile menu (not on PEL).
 describe('FilterBar member profile', () => {
   const profile = {
     email: '', first_name: 'Fixture', last_name: 'Manager', phone_number: '',
     profile_photo: 'photo.png', success_factors_role: 'Zone Manager',
   }
-  function withScreenWidth(width: number) {
-    vi.spyOn(window.screen, 'width', 'get').mockReturnValue(width)
+  function withViewportWidth(width: number) {
+    vi.stubGlobal('innerWidth', width)
   }
   function withPortal(portal: string) {
     mockAuth.mockReturnValue({ user: { name: 'Demo User', portal }, isAuthenticated: true, logout: vi.fn() })
@@ -234,16 +233,19 @@ describe('FilterBar member profile', () => {
     mockMemberProfile.mockReturnValue(profile)
     withPortal('SI')
   })
-  afterEach(() => vi.restoreAllMocks())
+  afterEach(() => {
+    vi.restoreAllMocks()
+    vi.unstubAllGlobals()
+  })
 
   it('requests the profile for the selected area and portal', () => {
-    withScreenWidth(1280)
+    withViewportWidth(1280)
     setup()
     expect(mockMemberProfile).toHaveBeenCalledWith(expect.objectContaining({ code: '1' }), 'SI')
   })
 
   it('ends the left section with the profile on desktop', () => {
-    withScreenWidth(1280)
+    withViewportWidth(1280)
     setup({ path: '/quick-facts/details/sales' })
     const shown = screen.getByTestId('member-profile')
     expect(shown.className).toContain('hideXsm')
@@ -254,14 +256,14 @@ describe('FilterBar member profile', () => {
   })
 
   it('hides the profile when none was found', () => {
-    withScreenWidth(1280)
+    withViewportWidth(1280)
     mockMemberProfile.mockReturnValue(null)
     setup()
     expect(screen.queryByTestId('member-profile')).toBeNull()
   })
 
   it('moves the profile to the top of the mobile menu on small screens', () => {
-    withScreenWidth(768)
+    withViewportWidth(768)
     setup()
     expect(screen.queryByTestId('member-profile')).toBeNull()
     fireEvent.click(screen.getByLabelText('More options'))
@@ -270,7 +272,7 @@ describe('FilterBar member profile', () => {
   })
 
   it('leaves the profile out of the mobile menu on PEL or when none was found', () => {
-    withScreenWidth(768)
+    withViewportWidth(768)
     withPortal('PEL')
     const { unmount } = setup()
     fireEvent.click(screen.getByLabelText('More options'))

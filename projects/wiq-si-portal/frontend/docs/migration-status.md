@@ -56,11 +56,28 @@ Several styles are ported:
 - the Material tab metrics;
 - the plain-table and richText spacing.
 
-The style ports are CSS-only and need a visual retest. Store Manager in the
-header was already present from the November 16 work.
+The style ports need a paired production visual retest. Observation 12 was
+incorrectly described as already resolved: the header used physical screen
+width at mount rather than the CSS viewport, which could leave the manager
+hidden after resizing or device rotation. It now follows the current viewport:
+desktop filter header above 768px, mobile More options at or below 768px
+(the source PEL mobile exclusion is retained).
 
-SFPPOOS% variance is not a frontend issue: React displays the API value as
-returned. Deviations kept:
+The existing `/sqf/getTeamMemberArea/<depth>/<code>` endpoint supplies the
+header, independently of the Store Profile card. Store is depth 4 for SI and
+3 for METRO/PEL/BIGW; the earlier claim that it is excluded was incorrect.
+[Real-header integration tests](../src/app/layout/QuickFactsLayout/QuickFactsLayout.profile.test.tsx)
+cover Store-level data in Summary/Weekly/MyPlan headers, screen/viewport
+mismatch, the 768/769px transition, store changes and failed lookups.
+A synthetic Chrome check also confirms visible header/menu placement at
+390/768/769/1440px with the actual React layout and CSS. This is not live
+manager-data or production pixel-parity qualification.
+
+SFPPOOS% is displayed from the API's `displayValue`, without a client-side
+recalculation. A difference between environments is not enough to establish
+its cause: compare the same store, date, period and API response/load timestamp
+before attributing it to backend data or timing. No numeric adjustment is made
+in the frontend. Deviations kept:
 
 - React honours `isExpanded`, so sections can start open.
 - React still renders cards missing from the configuration.
