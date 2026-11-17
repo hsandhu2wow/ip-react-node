@@ -152,8 +152,9 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.table:not(.basicTable) tbody tr:not(.childRow):hover { background: #f4f9fc; }
-.table:not(.basicTable) tbody tr:not(.childRow):hover td { font-weight: 700; }
+/* sqf-nested-table row hover (not basic or comments tables) */
+.table:not(.basicTable):not(.commentsTable) tbody tr:not(.childRow):hover { background: #f4f9fc; }
+.table:not(.basicTable):not(.commentsTable) tbody tr:not(.childRow):hover td { font-weight: 700; }
 .table tr:last-child td { border-bottom: none; }
 .childRow td { background: #fafafa; font-size: 12px; padding-left: 20px; color: #797979; font-weight: 400; }
 .firstCol { display: flex; align-items: center; gap: 2px; }
@@ -215,10 +216,37 @@
 .stickyCol .childRow td:first-child { background: #fafafa; }
 .stickyCol .footerRow td:first-child { background: var(--color-surface); }
 
-/* ── Tabs ── */
-.tabs { display: flex; border-bottom: 1px solid var(--color-border); }
-.tab { padding: 6px 12px; font-size: 13px; cursor: pointer; border: none; background: none; border-bottom: 2px solid transparent; color: var(--color-text-secondary); font-family: var(--font-family); }
-.tabActive { border-bottom-color: var(--color-primary); color: var(--color-primary); font-weight: 600; }
+/* ── Tabs (sqf-tabs stretched mat-tab-group + app.scss .sqf-tab overrides) ── */
+.tabs { display: flex; border-bottom: 1px solid #d3d3d3; overflow-x: auto; }
+.tab {
+  flex: 1 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 90px;
+  height: 40px;
+  padding: 0 24px;
+  border: none;
+  background: none;
+  box-shadow: inset 0 -2px 0 transparent;
+  cursor: pointer;
+  font-family: var(--font-family);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 24px;
+  letter-spacing: normal;
+  white-space: nowrap;
+  text-align: center;
+  color: rgba(0, 0, 0, 0.54);
+  opacity: 0.8;
+}
+.tabActive {
+  color: var(--main-bg-color, #0d5127);
+  box-shadow: inset 0 -2px 0 var(--main-bg-color, #0d5127);
+  opacity: 1;
+}
+/* app.scss .sqf-tab .tab-icon — icons inside API tab HTML */
+.tabPanel :global(.tab-icon) { font-size: 15px; width: 15px; height: 15px; }
 .tabPanel { display: flex; flex-direction: column; gap: 8px; }
 .tabTable { flex-grow: 1; height: 320px; overflow: auto; }
 .tabTablePlain { height: auto; }
@@ -244,9 +272,21 @@
   align-items: center;
 }
 .plainTable { margin-top: 16px; }
-.plainTable td { vertical-align: top; border-bottom: none; height: auto; min-height: 48px; }
+/* Angular's plain-cell `height: auto` loses a specificity tie to the 48px cell rule, so rows stay 48px */
+.plainTable td { vertical-align: top; border-bottom: none; }
 .plainTable td > span:not([class]) { display: table-cell; -webkit-line-clamp: unset; overflow: visible; }
-.tableRichText { font-size: 12px; }
+/* app.scss .sqf-table-richText */
+.tableRichText {
+  padding: 4px 8px;
+  background: #e8edf5;
+  border-radius: 4px;
+  font-size: 12px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-top: 8px;
+}
+.tableRichText :global(.tab-icon) { font-size: 15px; }
 @media (max-width: 768px) {
   .tabTable { height: auto; }
   .tabRichText { min-height: auto; }
@@ -259,7 +299,15 @@
 .footerMeta { display: flex; justify-content: space-between; align-items: center; padding: 6px 12px; min-height: 36px; }
 .updateDate { font-size: 12px; color: var(--color-text-secondary); display: flex; gap: 4px; align-items: center; }
 
-/* Angular sqf-comments-table: .mobile-row / .pr4; mat-table cell borders */
+/* Angular sqf-comments-table: cells take the global qf-styles .qf-table rules (not sqf-basic-table's),
+   with Material's `line-height: inherit` winning the specificity tie (rows 20px, header 22px). */
+.commentsTable { table-layout: fixed; }
+.commentsTable th, .commentsTable td { padding: 8px 4px 8px 8px; font-size: 12px; color: #666666; }
+.commentsTable th { height: 40px; line-height: 22px; }
+.commentsTable td { height: 32px; line-height: 20px; font-weight: 400; overflow-wrap: break-word; }
+.commentsTable th:first-child, .commentsTable td:first-child { padding-left: 0; }
+.commentsTable td > span:not([class]) { display: inline; -webkit-line-clamp: unset; overflow: visible; }
+/* .mobile-row / .pr4; mat-table cell borders */
 .commentsTable th, .commentsTable td { border-bottom-color: rgba(0, 0, 0, 0.12); }
 .commentsTable tbody tr:last-child td { border-bottom: 1px solid rgba(0, 0, 0, 0.12); }
 .commentsTable td.commentsMobileRow { padding: 4px 0; }

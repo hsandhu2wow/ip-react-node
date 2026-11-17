@@ -1,5 +1,5 @@
 // src/pages/quick-facts/SummaryPage.tsx
-import { useRef } from 'react'
+import { useRef, type ReactNode } from 'react'
 import { useEqualCardHeights } from '../hooks/useEqualCardHeights'
 import { useSeasonalCard } from '../hooks/useSeasonalCard'
 import { SeasonalSummaryCard } from '../components/SeasonalCard/SeasonalCard'
@@ -8,7 +8,8 @@ import { useFilter } from '../../../shared/context/FilterContext'
 import { useAuth } from '../../../shared/context/AuthContext'
 import { useSupportEmail } from '../hooks/useSupportEmail'
 import { SummaryCard } from '../components/SummaryCard/SummaryCard'
-import type { ISQFMetricCard } from '../../../shared/types/sqf.types'
+import type { ISeasonalCard, ISQFMetricCard } from '../../../shared/types/sqf.types'
+import { orderSummaryCards } from '../utils/cardOrder'
 import { PreviewPageCards } from '../../../shared/components/PreviewDialog/cardsPreviewContext'
 import styles from './SummaryPage.module.scss'
 import { NpsSurvey } from '../../../shared/components/NpsSurvey/NpsSurvey'
@@ -37,16 +38,6 @@ export function SummaryPage() {
   // and the seasonal matrix, when configured, has loaded
   useNotifyPageLoaded(!isLoading && !seasonalQuery.isLoading)
   const showSeasonalCard = !!cardStatus.seasonal?.summary && !!seasonalCard && !seasonalCard.hidden
-  const seasonalSeq = cardStatus.seasonal?.sequence || 100
-
-  // Sort by sequence number from card status config, then by card.seq
-  const sortedCards = [...cards]
-    .filter(c => !c.hidden)
-    .sort((a, b) => {
-      const seqA = a.seq ?? (cardStatus[a.cardName]?.sequence ?? 999)
-      const seqB = b.seq ?? (cardStatus[b.cardName]?.sequence ?? 999)
-      return seqA - seqB
-    })
 
   // Angular sqf-summary-home: store profile card for METRO/PEL at Store level
   const showProfileCard = ['METRO', 'PEL'].includes(user.portal) && selectedNode?.level_desc === 'Store'
@@ -56,16 +47,6 @@ export function SummaryPage() {
     enabled: isLoaded && showProfileCard,
     staleTime: 0,
   })
-  // [style.order]="getCardSequence('profileCard')" — ties keep DOM order (after generic cards)
-  const profileSeq = cardStatus.profileCard?.sequence || 100
-  const cardSeq = (c: ISQFMetricCard) => c.seq ?? (cardStatus[c.cardName]?.sequence ?? 999)
-  const seasonalIndex = sortedCards.filter(c => cardSeq(c) <= seasonalSeq).length
-  const profileIndex = sortedCards.filter(c => cardSeq(c) <= profileSeq).length + (showSeasonalCard && seasonalSeq <= profileSeq ? 1 : 0)
-  const profileSlot = showProfileCard && (
-    <div key="profileCard" className="metric-card-slot">
-      <ProfileCard card={profileQuery.data ?? null} storeCode={selectedNode!.code} supportEmail={supportEmail} />
-    </div>
-  )
 
   const renderCard = (card: ISQFMetricCard) => (
     <div key={card.cardName} className="metric-card-slot">
@@ -73,12 +54,25 @@ export function SummaryPage() {
     </div>
   )
 
-  const summarySlots = sortedCards.map(renderCard)
-  const previewCards = [...sortedCards] as Array<ISQFMetricCard | NonNullable<typeof seasonalCard>>
-  if (showSeasonalCard) {
-    summarySlots.splice(seasonalIndex, 0, <div key="seasonal" className="metric-card-slot"><SeasonalSummaryCard card={seasonalCard} supportEmail={supportEmail} /></div>)
-    previewCards.splice(seasonalIndex, 0, seasonalCard)
-  }
+  type Slot = { node: ReactNode; card?: ISQFMetricCard | ISeasonalCard }
+  const slots = orderSummaryCards<Slot>(
+    cardStatus,
+    cards.filter(c => !c.hidden).map(card => ({ name: card.cardName, value: { node: renderCard(card), card } })),
+    [
+      ...(showSeasonalCard
+        ? [{ name: 'seasonal', value: { card: seasonalCard, node: <div key="seasonal" className="metric-card-slot"><SeasonalSummaryCard card={seasonalCard} supportEmail={supportEmail} /></div> } }]
+        : []),
+      ...(showProfileCard
+        ? [{ name: 'profileCard', value: { node: (
+            <div key="profileCard" className="metric-card-slot">
+              <ProfileCard card={profileQuery.data ?? null} storeCode={selectedNode!.code} supportEmail={supportEmail} />
+            </div>
+          ) } }]
+        : []),
+    ],
+  )
+  // The profile card is not part of the page export (Angular previewTriggered$)
+  const previewCards = slots.flatMap(slot => (slot.card ? [slot.card] : []))
 
   // Show skeleton cards while loading (show 6 placeholders)
   const SKELETON_COUNT = 6
@@ -115,11 +109,7 @@ export function SummaryPage() {
                   <SummaryCard isLoading />
                 </div>
               ))
-            : [
-                ...summarySlots.slice(0, profileIndex),
-                profileSlot,
-                ...summarySlots.slice(profileIndex),
-              ]}
+            : slots.map(slot => slot.node)}
         </div>
       </div>
       </StellaPanel>

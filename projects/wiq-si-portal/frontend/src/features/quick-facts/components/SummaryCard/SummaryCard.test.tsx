@@ -1,5 +1,5 @@
 import { afterEach, describe, it, expect, vi } from 'vitest'
-import { act, render, screen, fireEvent } from '@testing-library/react'
+import { act, render, screen, fireEvent, within } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { SummaryCard } from './SummaryCard'
 import type { ISQFMetricCard } from '../../../../shared/types/sqf.types'
@@ -184,6 +184,24 @@ describe('SummaryCard', () => {
     expect(screen.getByText('Hidden explanation')).toBeInTheDocument()
     fireEvent.click(screen.getByText('Open section'))
     expect(screen.queryByText('Visible explanation')).not.toBeInTheDocument()
+  })
+
+  it('keeps each section title left of its own drop-down arrow (Angular el-card header)', () => {
+    renderCard({ card: { ...baseCard, expandable_list: [{ header: '<span>Fresh</span>', content: '<p>Fresh tasks</p>' }] } })
+    const toggle = screen.getByRole('button', { name: 'Fresh' })
+    const title = screen.getByText('Fresh').parentElement as HTMLElement
+    expect(title.parentElement).toBe(toggle)
+    expect(title).not.toContainElement(screen.getByText('keyboard_arrow_down'))
+    expect(toggle).toHaveAttribute('aria-expanded', 'false')
+    fireEvent.keyDown(toggle, { key: 'Enter' })
+    expect(toggle).toHaveAttribute('aria-expanded', 'true')
+    expect(within(toggle).getByText('keyboard_arrow_up')).toBeInTheDocument()
+    expect(screen.getByText('Fresh tasks')).toBeInTheDocument()
+  })
+
+  it('adds the API card cssClass to the card root (Angular header-highlight band)', () => {
+    const { container } = renderCard({ card: { ...baseCard, cssClass: 'header-highlight' } })
+    expect(container.firstChild).toHaveClass('header-highlight')
   })
 
   it('disables recognition until the preview has opened', async () => {

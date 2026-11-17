@@ -44,6 +44,27 @@ profile. The
 [Weekly/My Plan register](weekly-facts-myplan-parity.md#latest-continuation-november-16-angular-master-alignment)
 lists the intentional deviations. No live-BU qualification is added.
 
+**November 17 Quick Facts summary review fixes:** the tester's observations are
+addressed against Angular `master`. Card order now follows Angular's
+`getCardSequence`: configured sequence only, with API `seq` ignored. Ready to
+Trade and Nightfill sections gain the `el-card` header: a left-aligned title
+and an arrow toggle. The API `cssClass` (`header-highlight`) is applied.
+Several styles are ported:
+
+- the VOC info icon colour and the unclamped VOC comment cells;
+- the store-profile details richText classes;
+- the Material tab metrics;
+- the plain-table and richText spacing.
+
+The style ports are CSS-only and need a visual retest. Store Manager in the
+header was already present from the November 16 work.
+
+SFPPOOS% variance is not a frontend issue: React displays the API value as
+returned. Deviations kept:
+
+- React honours `isExpanded`, so sections can start open.
+- React still renders cards missing from the configuration.
+
 ## Frontend modernisation: October 30
 
 `feat/frontend-architecture-modernisation` branches from the committed

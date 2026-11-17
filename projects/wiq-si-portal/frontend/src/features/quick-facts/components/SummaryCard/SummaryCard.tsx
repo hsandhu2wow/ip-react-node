@@ -54,13 +54,27 @@ function getFilteredSubCard(
 
 function ExpandableItem({ item, isLast }: { item: IExpandableListItem; isLast: boolean }) {
   const [open, setOpen] = useState(item.isExpanded ?? false)
+  const toggle = () => setOpen(o => !o)
   return (
     <div className={`${styles.expandableItem} ${isLast ? styles.expandableItemLast : ''}`}>
       <div
         className={styles.expandableHeader}
-        onClick={() => setOpen(o => !o)}
-        dangerouslySetInnerHTML={{ __html: item.header }}
-      />
+        role="button"
+        tabIndex={0}
+        aria-expanded={open}
+        onClick={toggle}
+        onKeyDown={e => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault()
+            toggle()
+          }
+        }}
+      >
+        <div className={styles.expandableTitle} dangerouslySetInnerHTML={{ __html: item.header }} />
+        <span className={`material-icons ${styles.expandableArrow}`} aria-hidden="true">
+          {open ? 'keyboard_arrow_up' : 'keyboard_arrow_down'}
+        </span>
+      </div>
       {item.content && open && (
         <div
           className={styles.expandableContent}
@@ -240,7 +254,7 @@ export function SummaryCard({ card, isLoading, expandTable, axis, supportEmail }
 
   return (
     <>
-      <div className={styles.card} id={card.jsId} data-expanded={expanded || expandTable}>
+      <div className={[styles.card, card.cssClass].filter(Boolean).join(' ')} id={card.jsId} data-expanded={expanded || expandTable}>
         <div
           className={`${styles.header} ${subHeading ? styles.headerWithSubHeading : ''}`}
           style={{ borderTopColor: borderColor }}
