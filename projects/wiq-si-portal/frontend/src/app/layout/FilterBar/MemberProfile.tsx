@@ -16,8 +16,8 @@ function isZoneOrStateOrGroupLevel(level: number, portal: string): boolean {
 }
 
 /**
- * Angular MemberProfileComponent: the profile is only requested for zone/state/group
- * levels and stays hidden when out of range or when the request fails.
+ * Angular's eligible manager levels include Store: SI 4, METRO/PEL/BIGW 3.
+ * Hide the profile outside the eligible range or when the request fails.
  */
 export function useMemberProfile(
   node: { apiDepth: number; code: string } | null | undefined,

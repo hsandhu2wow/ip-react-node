@@ -44,8 +44,13 @@ export function FilterBar() {
     setSelectedPeriod, selectedBreakdownAxis, setSelectedBreakdownAxis,
   } = useFilter()
   const { user } = useAuth()
-  // Angular SqfFilterComponent.showProfileInActionBar: UTIL.responsive.xsm() checked once at init
-  const [showProfileInActionBar] = useState(() => window.screen.width <= 768)
+  // Match the header's CSS breakpoint, including window resizing and mobile rotation.
+  const [showProfileInActionBar, setShowProfileInActionBar] = useState(() => window.innerWidth <= 768)
+  useEffect(() => {
+    const resize = () => setShowProfileInActionBar(window.innerWidth <= 768)
+    window.addEventListener('resize', resize)
+    return () => window.removeEventListener('resize', resize)
+  }, [])
   const memberProfile = useMemberProfile(selectedDate ? selectedNode : null, user.portal)
   const showProfileInMenu = showProfileInActionBar && user.portal !== 'PEL' && !!memberProfile
 

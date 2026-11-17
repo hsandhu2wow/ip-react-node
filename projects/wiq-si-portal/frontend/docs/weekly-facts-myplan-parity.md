@@ -34,7 +34,7 @@ out of scope. Master changes ported to React:
 | `ai-insights-panel` + `resizable-drawer` (Stella) replace the payload-driven AI Insights drawer | [StellaPanel](../src/shared/components/StellaPanel/StellaPanel.tsx) wraps Summary, Details and Trend; [StellaContext](../src/shared/context/StellaContext.tsx) holds open state, gated by `getUserdetails` `is_stella_enabled`; filter-bar `auto_awesome` "Stella" toggle. The old `config.ai_insights_enabled`/`ai_insights` types, drawer and feedback mapping are removed |
 | Drawer sizing | Default 500px, minimum 410px, at least 400px of page content kept visible; drag handle; Summary/Details sidebar collapses while open; closes on page unmount |
 | `.spinnerStyle` mat-spinner while Weekly/My Plan loads | [Spinner](../src/shared/components/Spinner/Spinner.tsx) inside the Stella wrapper, replacing the text loader |
-| `app-member-profile` | [MemberProfile](../src/app/layout/FilterBar/MemberProfile.tsx) via `GET /sqf/getTeamMemberArea`, zone/state/group levels by portal; desktop filter bar or first mobile-menu item (portal ≠ PEL) |
+| `app-member-profile` | [MemberProfile](../src/app/layout/FilterBar/MemberProfile.tsx) via `GET /sqf/getTeamMemberArea`, eligible manager levels including Store (SI 4, METRO/PEL/BIGW 3); desktop filter bar or first mobile-menu item (portal ≠ PEL) |
 | `app-alert-list` / `app-alert-dialog` | [AlertList](../src/app/layout/AlertList/AlertList.tsx) below the filter bar and [AlertDialog](../src/app/layout/AlertList/AlertDialog.tsx); fetched once after the first page settles ([PageLoadedContext](../src/shared/context/PageLoadedContext.tsx)); the Weekly/My Plan banner replaces admin alerts; pop-ups reopen on each navigation until "I understand" posts `/popUpAlerts/read` |
 | `wf-table` class hooks | Table header/row/cell class names used by master's styles |
 
@@ -54,7 +54,9 @@ Intentional deviations, each covered by tests:
 - **Page-loaded signal:** Summary signals even when the seasonal request fails
   (Angular then never loads alerts). The 50ms alert leave animation is skipped.
 - **Member profile:** Angular's mobile menu re-creates the component and shows
-  a blank item; not replicated. Portal comes from the auth context.
+  a blank item; not replicated. Portal comes from the auth context. The November
+  17 header fix uses the live viewport instead of a mount-time screen-width
+  snapshot, preventing hidden profiles after resizing or device rotation.
 - **Focus:** the shared `Dialog` has no focus trap or `cdkFocusInitial` equivalent.
 
 Unverified: live Stella iframe authentication and whitelisting, real alert

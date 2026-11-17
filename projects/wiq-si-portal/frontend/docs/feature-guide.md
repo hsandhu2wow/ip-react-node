@@ -33,6 +33,14 @@ layout: left-aligned title, arrow toggle, keyboard support and the API
 `cssClass` on the card root. Unlike Angular, `isExpanded` sections start open.
 These code branches are not proof those BUs have been qualified.
 
+The shared filter header loads the selected manager through
+`/sqf/getTeamMemberArea/<apiDepth>/<code>`, including Store level (SI 4,
+METRO/PEL/BIGW 3), not from the Store Profile card. The profile follows the
+viewport: desktop header above 768px, More options at or below 768px except
+PEL. The lookup is keyed by location; an unsuccessful new lookup never keeps
+the previous store's manager visible. See the
+[header integration tests](../src/app/layout/QuickFactsLayout/QuickFactsLayout.profile.test.tsx).
+
 Details uses route metric, shared location/date/axis, configuration levels and
 CFC classification. Unavailable metrics redirect to summary with the search
 string. Generic card order remains API order until explicit sorting;
