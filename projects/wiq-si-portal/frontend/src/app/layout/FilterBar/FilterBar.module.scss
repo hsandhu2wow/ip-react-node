@@ -111,12 +111,15 @@
 }
 
 /* Angular .qf-filter__dp-toggle: 20px-wide box (margin-right .5rem) holding a
-   scale(0.7) mat-icon-button, so the 16.8px glyph overflows 11.4px to the right */
+   scale(0.7) mat-icon-button, so the 16.8px glyph overflows 11.4px to the right.
+   Left-aligned because the button's default text-align: center would shift the
+   glyph 1.6px right inside the 20px box. */
 .dateIcon {
-  font-size: 20px;
+  font-size: 16.8px;
   width: 20px;
-  height: 20px;
-  line-height: 20px;
+  text-align: left;
+  height: 16.8px;
+  line-height: 16.8px;
   flex: 0 0 20px;
   color: #4a4a4a;
   margin-right: 8px;
