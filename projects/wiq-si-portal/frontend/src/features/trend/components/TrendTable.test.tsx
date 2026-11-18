@@ -1,5 +1,5 @@
-import { describe, it, expect, vi } from 'vitest';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { afterEach, beforeEach, describe, it, expect, vi } from 'vitest';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { TrendTable } from './TrendTable';
 import type { WfTableData, WfTableCell } from '../types/wf.types';
 
@@ -20,6 +20,93 @@ const tableData: WfTableData = {
 };
 
 describe('TrendTable', () => {
+  describe('plain-text tooltips', () => {
+    const data: WfTableData = {
+      headers: [
+        { text: 'Group', val: '0' },
+        { text: 'Measure', val: '1' },
+        { text: 'Result', val: '2', tooltip: 'Last completed week' },
+      ],
+      kpiFilterEnabled: true,
+      data: [
+        [cell(0), cell(1), cell(2, { displayValue: 'Plain result', tooltip: 'Cell definition' })],
+        [cell(0), cell(1), cell(2, { displayValue: 'Unavailable result', tooltip: '<b>Suppressed</b>', infoMessage: 'Info instead' })],
+      ],
+    };
+
+    beforeEach(() => {
+      vi.useFakeTimers();
+      vi.spyOn(document.documentElement, 'clientWidth', 'get').mockReturnValue(1024);
+      vi.spyOn(document.documentElement, 'clientHeight', 'get').mockReturnValue(768);
+    });
+
+    afterEach(() => {
+      cleanup();
+      vi.runOnlyPendingTimers();
+      vi.useRealTimers();
+      vi.restoreAllMocks();
+    });
+
+    it.each(['weekly', 'myPlan'] as const)('uses Material-style tooltips instead of native titles on %s', (metric) => {
+      const { container } = render(<TrendTable metric={metric} tableData={data} isExpanded showVariance={false} onToggleExpanded={vi.fn()} />);
+      expect(container.querySelector('[title]')).toBeNull();
+      const targets = [
+        [screen.getByRole('columnheader', { name: 'Result' }).firstElementChild!, 'Last completed week', 'right'],
+        [screen.getByText('Plain result').closest('td')!.firstElementChild!, 'Cell definition', 'right'],
+        [screen.getByText('info_outlined'), 'Info instead', 'below'],
+        [screen.getByRole('button', { name: 'Collapse to KPI only' }), 'Collapse to KPI only', 'below'],
+      ] as const;
+      for (const [host, message, side] of targets) {
+        fireEvent.mouseEnter(host);
+        const surface = screen.getByText(message, { selector: '.mat-mdc-tooltip-surface' });
+        expect(surface.closest('[role="tooltip"]')).toHaveClass(`mat-mdc-tooltip-panel-${side}`);
+        if (host.tagName !== 'BUTTON') expect(host).toHaveAttribute('aria-description', message);
+        fireEvent.mouseLeave(host);
+        vi.advanceTimersByTime(75);
+        expect(surface).not.toBeInTheDocument();
+      }
+    });
+
+    it('dismisses both nested tooltips when the expand button stops click propagation', () => {
+      const toggle = vi.fn();
+      render(<TrendTable tableData={data} isExpanded showVariance={false} onToggleExpanded={toggle} />);
+      const expand = screen.getByRole('button', { name: 'Collapse to KPI only' });
+      fireEvent.mouseEnter(expand);
+      expect(document.querySelectorAll('.mat-mdc-tooltip-surface')).toHaveLength(2);
+      vi.advanceTimersByTime(150);
+      fireEvent.click(expand);
+      vi.advanceTimersByTime(75);
+      expect(document.querySelector('.mat-mdc-tooltip-surface')).toBeNull();
+      expect(toggle).toHaveBeenCalledOnce();
+    });
+
+    it('keeps the source below placement for string-only headers', () => {
+      render(<TrendTable tableData={{ headers: ['Group', 'Measure', 'Result'], data: [] }} isExpanded showVariance={false} />);
+      fireEvent.mouseEnter(screen.getByRole('columnheader', { name: 'Result' }).firstElementChild!);
+      expect(screen.getByText('Result', { selector: '.mat-mdc-tooltip-surface' }).closest('[role="tooltip"]'))
+        .toHaveClass('mat-mdc-tooltip-panel-below');
+    });
+
+    it('keeps the tooltip open when leaving the React host for its body-mounted overlay', () => {
+      render(<TrendTable tableData={data} isExpanded showVariance={false} />);
+      const host = screen.getByText('Plain result').closest('td')!.firstElementChild!;
+      fireEvent.mouseEnter(host);
+      const surface = screen.getByText('Cell definition', { selector: '.mat-mdc-tooltip-surface' });
+      fireEvent.mouseLeave(host, { relatedTarget: surface });
+      vi.advanceTimersByTime(75);
+      expect(surface).toBeInTheDocument();
+    });
+
+    it('removes visible tooltips immediately when their table unmounts', () => {
+      const { unmount } = render(<TrendTable tableData={data} isExpanded showVariance={false} />);
+      fireEvent.mouseEnter(screen.getByText('Plain result').closest('td')!.firstElementChild!);
+      expect(screen.getByText('Cell definition', { selector: '.mat-mdc-tooltip-surface' })).toBeInTheDocument();
+      unmount();
+      expect(document.querySelector('.mat-mdc-tooltip-surface')).toBeNull();
+      expect(vi.getTimerCount()).toBe(0);
+    });
+  });
+
   it.each(['weekly', 'myPlan'] as const)('shows %s HTML tooltips only over the inner header and cell content', (metric) => {
     render(<TrendTable metric={metric} isExpanded showVariance={false} tableData={{
       headers: [{ text: 'Group', val: '0' }, { text: 'Measure', val: '1' }, { text: 'Result', val: '2', tooltip: '<b>Header detail</b>' }],

@@ -2,6 +2,8 @@ import { Fragment } from 'react';
 import { filterTableData, getCellBorderStyle, getHeaderTooltip } from '../utils/tableTransform';
 import type { WfTableDisplayContext } from '../utils/tableTransform';
 import { isHtmlTooltip, showHtmlTooltip, hideHtmlTooltip } from '../../../shared/utils/htmlTooltip';
+import { disposeMaterialTooltip, hideMaterialTooltip, showMaterialTooltip } from '../../../shared/utils/materialTooltip';
+import type { MaterialTooltipPosition } from '../../../shared/utils/materialTooltip';
 import type { WfAlert, WfMetric, WfTableData } from '../types/wf.types';
 import { TREND_ALERT_ICONS } from './TrendInfoDialog';
 import styles from './TrendTable.module.scss';
@@ -26,15 +28,25 @@ function getTags(tags: string | undefined): string[] {
 
 function releaseTooltips(host: HTMLElement | null) {
   if (!host) return;
-  return () => hideHtmlTooltip(host);
+  return () => {
+    hideHtmlTooltip(host);
+    disposeMaterialTooltip(host);
+  };
 }
 
-function htmlTooltipHandlers(html: string | null | undefined) {
-  if (!html) return {};
+function tooltipProps(html: string | null, text?: string, position: MaterialTooltipPosition = 'after') {
+  if (!html && !text?.trim()) return {};
   return {
     ref: releaseTooltips,
-    onMouseEnter: (e: React.MouseEvent<HTMLElement>) => showHtmlTooltip(e.currentTarget, html, e.clientY),
-    onMouseLeave: (e: React.MouseEvent<HTMLElement>) => hideHtmlTooltip(e.currentTarget),
+    onMouseEnter: (e: React.MouseEvent<HTMLElement>) => {
+      if (html) showHtmlTooltip(e.currentTarget, html, e.clientY);
+      else if (text) showMaterialTooltip(e.currentTarget, text, position);
+    },
+    onMouseLeave: (e: React.MouseEvent<HTMLElement>) => {
+      hideHtmlTooltip(e.currentTarget);
+      // React retargets leaves into the non-React overlay to window.
+      hideMaterialTooltip(e.currentTarget, e.nativeEvent.relatedTarget);
+    },
   };
 }
 
@@ -68,6 +80,7 @@ export function TrendTable({ tableData, isExpanded, showVariance, displayContext
               const isMetric = headerIdx === metricIndex;
               const width = header.columnWidth || (headerIdx === 0 ? firstWidth : isMetric ? '145px' : undefined);
               const htmlTooltip = isHtmlTooltip(header.tooltip) ? header.tooltip! : null;
+              const textTooltip = htmlTooltip ? undefined : getHeaderTooltip(header).trim();
               return (
                 <th
                   key={header.val || headerIdx}
@@ -82,7 +95,6 @@ export function TrendTable({ tableData, isExpanded, showVariance, displayContext
                     .filter(Boolean)
                     .join(' ')}
                   colSpan={header.colSpan ?? 1}
-                  title={htmlTooltip ? undefined : getHeaderTooltip(header)}
                   style={{
                     ...(width ? { width, minWidth: width, maxWidth: width } : {}),
                     ...(headerIdx <= metricIndex ? {
@@ -90,7 +102,8 @@ export function TrendTable({ tableData, isExpanded, showVariance, displayContext
                     } : {}),
                   }}
                 >
-                  <div className={styles.thDiv} {...htmlTooltipHandlers(htmlTooltip)}>
+                  <div className={styles.thDiv} aria-description={textTooltip}
+                    {...tooltipProps(htmlTooltip, textTooltip, typeof tableData.headers[0] === 'string' ? 'below' : 'after')}>
                     {header.alert && onAlert && (
                       <button
                         type="button"
@@ -105,7 +118,7 @@ export function TrendTable({ tableData, isExpanded, showVariance, displayContext
                     {headerIdx === 1 && tableData.kpiFilterEnabled && onToggleExpanded && (
                       <button type="button" className={styles.expandButton}
                         aria-label={isExpanded ? 'Collapse to KPI only' : 'Expand all measures'}
-                        title={isExpanded ? 'Collapse to KPI only' : 'Expand all measures'}
+                        {...tooltipProps(null, isExpanded ? 'Collapse to KPI only' : 'Expand all measures', 'below')}
                         aria-expanded={isExpanded}
                         onClick={event => { event.stopPropagation(); onToggleExpanded(); }}>
                         <span className="material-icons" aria-hidden="true">{isExpanded ? 'expand_less' : 'expand_more'}</span>
@@ -139,6 +152,7 @@ export function TrendTable({ tableData, isExpanded, showVariance, displayContext
                   const isGoalCell = /(^|\s)(wf-table__goals|goal-tracker)(\s|$)/.test(cellClasses);
                   const isValueCell = index > metricIndex && !isGoalCell;
                   const htmlTooltip = !cell.infoMessage && isHtmlTooltip(cell.tooltip) ? cell.tooltip! : null;
+                  const textTooltip = cell.infoMessage || htmlTooltip ? undefined : cell.tooltip?.trim();
                   return (
                     <td
                       key={`cell-${rowIdx}-${cellIdx}`}
@@ -150,7 +164,6 @@ export function TrendTable({ tableData, isExpanded, showVariance, displayContext
                         } : {}),
                       }}
                       rowSpan={cell.rowSpan || 1}
-                      title={cell.infoMessage || htmlTooltip ? undefined : cell.tooltip}
                     >
                       <div
                         className={[
@@ -160,7 +173,8 @@ export function TrendTable({ tableData, isExpanded, showVariance, displayContext
                         ]
                           .filter(Boolean)
                           .join(' ')}
-                        {...htmlTooltipHandlers(htmlTooltip)}
+                        aria-description={textTooltip}
+                        {...tooltipProps(htmlTooltip, textTooltip)}
                       >
                         {cell.alert && onAlert && (
                           <button
@@ -182,7 +196,8 @@ export function TrendTable({ tableData, isExpanded, showVariance, displayContext
                         {(cell.infoMessage || tags.length > 0) && (
                           <div className={styles.metaRow}>
                             {cell.infoMessage && (
-                              <span className={`material-icons ${styles.infoIcon}`} title={cell.infoMessage}>
+                              <span className={`material-icons ${styles.infoIcon}`} aria-description={cell.infoMessage.trim()}
+                                {...tooltipProps(null, cell.infoMessage, 'below')}>
                                 info_outlined
                               </span>
                             )}
