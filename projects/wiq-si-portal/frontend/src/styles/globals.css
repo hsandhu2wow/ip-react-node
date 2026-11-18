@@ -55,6 +55,18 @@
   background-color: rgba(140, 140, 140, 0.6);
 }
 
+/* Angular CDK .cdk-global-scrollblock (MatDialog block scroll strategy) */
+.global-scrollblock {
+  position: fixed;
+  width: 100%;
+  overflow-y: scroll;
+}
+/* body's overflow-x: hidden would otherwise make it a scroll container and unpin
+   the sticky filter bar; clip keeps the clipping without one. */
+.global-scrollblock body {
+  overflow-x: clip;
+}
+
 /* Mobile overrides */
 @media (max-width: 768px) {
   :root {
@@ -265,7 +277,7 @@ body {
   border-radius: 4px;
   font-size: 12px;
   line-height: 1.4;
-  max-width: 260px;
+  max-width: 340px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
   pointer-events: none;
 }
@@ -303,50 +315,77 @@ body {
 }
 
 .wf-tt__divider {
-  height: 1px;
-  margin: 8px 0;
-  background: rgba(255, 255, 255, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+  margin: 6px 0 4px;
 }
 
-.wf-tt__stores + .wf-tt__stores {
-  margin-top: 8px;
+.wf-tt__section {
+  display: flex;
+  gap: 8px;
+}
+
+.wf-tt__stores {
+  flex: 1;
 }
 
 .wf-tt__stores-label {
+  font-size: 10px;
+  font-weight: 600;
+  opacity: 0.75;
   margin-bottom: 4px;
-  font-weight: 700;
+  letter-spacing: 0.3px;
 }
 
 .wf-tt__stores-row {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 1px 0;
+  gap: 5px;
+  margin-bottom: 3px;
+  font-size: 11px;
 }
 
 .wf-tt-dot {
-  flex: 0 0 8px;
-  width: 8px;
-  height: 8px;
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
+  flex-shrink: 0;
 }
 
-.tt-dot--green { background: #7dd9a4; }
-.tt-dot--red { background: #f7a0a0; }
+.tt-dot--green { background: #4caf7d; }
+.tt-dot--amber { background: #ef9c48; }
+.tt-dot--red { background: #eb5757; }
+.tt-dot--blue { background: #5b7ec5; }
 
 .wf-tt__store-name {
-  flex: 1 1 auto;
+  flex: 1;
+  max-width: 150px;
   min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  white-space: normal;
+  word-break: break-word;
+}
+
+@media (min-width: 769px) {
+  .wf-html-tooltip-panel {
+    max-width: none;
+  }
+
+  .wf-tt__store-name {
+    max-width: none;
+    white-space: nowrap;
+    word-break: normal;
+  }
 }
 
 .wf-tt__store-val {
+  font-weight: 600;
+  white-space: nowrap;
+  margin-left: auto;
   display: flex;
-  flex: 0 0 auto;
-  gap: 4px;
-  font-weight: 700;
+  gap: 2px;
+}
+
+.wf-tt__store-val > span:last-child:not(:only-child) {
+  font-weight: 400;
 }
 
 .tt-badge--green {

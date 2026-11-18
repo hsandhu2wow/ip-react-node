@@ -68,7 +68,7 @@ function getStickyLeftBoundary(host: Element): number {
   return maxRight;
 }
 
-function positionPanel(panel: HTMLDivElement, host: Element, pointerX: number, pointerY: number): void {
+function positionPanel(panel: HTMLDivElement, host: Element, pointerY: number): void {
   const hostRect = host.getBoundingClientRect();
   const panelWidth = panel.offsetWidth;
   const panelHeight = panel.offsetHeight;
@@ -76,18 +76,21 @@ function positionPanel(panel: HTMLDivElement, host: Element, pointerX: number, p
 
   let left: number;
   let top: number;
-  const fitsRight = pointerX + 8 + panelWidth <= window.innerWidth - 8;
-  const fitsLeft = pointerX - 8 - panelWidth >= minLeft;
+  const fitsRight = hostRect.right + 8 + panelWidth <= window.innerWidth - 8;
+  const fitsLeft = hostRect.left - 8 - panelWidth >= minLeft;
 
-  if (fitsRight) {
-    left = pointerX + 8;
+  if (host.closest('table.wf-table-three-col')) {
+    left = Math.min(hostRect.left + 130, window.innerWidth - panelWidth - 8);
+    top = pointerY - panelHeight / 2;
+  } else if (fitsRight) {
+    left = hostRect.right + 8;
     top = pointerY - panelHeight / 2;
   } else if (fitsLeft) {
-    left = pointerX - panelWidth - 8;
+    left = hostRect.left - panelWidth - 8;
     top = pointerY - panelHeight / 2;
   } else {
     left = Math.min(Math.max(minLeft, hostRect.left), window.innerWidth - panelWidth - 8);
-    top = pointerY + 16;
+    top = hostRect.bottom + 8;
     if (top + panelHeight > window.innerHeight - 8) {
       top = pointerY - panelHeight - 16;
     }
@@ -99,12 +102,12 @@ function positionPanel(panel: HTMLDivElement, host: Element, pointerX: number, p
   panel.style.transform = `translate(${left}px, ${top}px)`;
 }
 
-export function showHtmlTooltip(host: Element, html: string, clientX: number, clientY: number): void {
+export function showHtmlTooltip(host: Element, html: string, clientY: number): void {
   activeHost = host;
   const panel = getOrCreatePanel();
   panel.innerHTML = html;
   panel.style.display = 'block';
-  positionPanel(panel, host, clientX, clientY);
+  positionPanel(panel, host, clientY);
 }
 
 export function hideHtmlTooltip(host: Element): void {

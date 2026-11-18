@@ -24,10 +24,16 @@ function getTags(tags: string | undefined): string[] {
     .filter(Boolean);
 }
 
+function releaseTooltips(host: HTMLElement | null) {
+  if (!host) return;
+  return () => hideHtmlTooltip(host);
+}
+
 function htmlTooltipHandlers(html: string | null | undefined) {
   if (!html) return {};
   return {
-    onMouseEnter: (e: React.MouseEvent<HTMLElement>) => showHtmlTooltip(e.currentTarget, html, e.clientX, e.clientY),
+    ref: releaseTooltips,
+    onMouseEnter: (e: React.MouseEvent<HTMLElement>) => showHtmlTooltip(e.currentTarget, html, e.clientY),
     onMouseLeave: (e: React.MouseEvent<HTMLElement>) => hideHtmlTooltip(e.currentTarget),
   };
 }
@@ -83,9 +89,8 @@ export function TrendTable({ tableData, isExpanded, showVariance, displayContext
                       position: 'sticky', left: headerIdx === 0 ? 0 : headerIdx === metricIndex ? secondOffset : firstWidth,
                     } : {}),
                   }}
-                  {...htmlTooltipHandlers(htmlTooltip)}
                 >
-                  <div className={styles.thDiv}>
+                  <div className={styles.thDiv} {...htmlTooltipHandlers(htmlTooltip)}>
                     {header.alert && onAlert && (
                       <button
                         type="button"
@@ -146,7 +151,6 @@ export function TrendTable({ tableData, isExpanded, showVariance, displayContext
                       }}
                       rowSpan={cell.rowSpan || 1}
                       title={cell.infoMessage || htmlTooltip ? undefined : cell.tooltip}
-                      {...htmlTooltipHandlers(htmlTooltip)}
                     >
                       <div
                         className={[
@@ -156,6 +160,7 @@ export function TrendTable({ tableData, isExpanded, showVariance, displayContext
                         ]
                           .filter(Boolean)
                           .join(' ')}
+                        {...htmlTooltipHandlers(htmlTooltip)}
                       >
                         {cell.alert && onAlert && (
                           <button

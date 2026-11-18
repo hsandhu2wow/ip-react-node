@@ -11,6 +11,32 @@ export const TREND_ALERT_ICONS: Record<string, string | undefined> = {
   success: 'done',
 };
 
+const SCROLL_BLOCK_CLASS = 'global-scrollblock';
+
+// Angular MatDialog's CDK BlockScrollStrategy: pin <html> at the current scroll
+// offset and keep its scrollbar, so the page does not widen while the dialog is open.
+function blockDocumentScroll(): () => void {
+  const root = document.documentElement;
+  const overflows = root.scrollHeight > window.innerHeight || root.scrollWidth > window.innerWidth;
+  if (root.classList.contains(SCROLL_BLOCK_CLASS) || !overflows) return () => {};
+  const { scrollX, scrollY } = window;
+  const previous = { left: root.style.left, top: root.style.top };
+  root.style.left = `${-scrollX}px`;
+  root.style.top = `${-scrollY}px`;
+  root.classList.add(SCROLL_BLOCK_CLASS);
+  return () => {
+    const body = document.body;
+    const previousBehavior = { root: root.style.scrollBehavior, body: body.style.scrollBehavior };
+    root.style.left = previous.left;
+    root.style.top = previous.top;
+    root.classList.remove(SCROLL_BLOCK_CLASS);
+    root.style.scrollBehavior = body.style.scrollBehavior = 'auto';
+    window.scroll(scrollX, scrollY);
+    root.style.scrollBehavior = previousBehavior.root;
+    body.style.scrollBehavior = previousBehavior.body;
+  };
+}
+
 interface TrendInfoDialogProps {
   alert: WfAlert;
   refreshTimeLabel?: string;
@@ -23,8 +49,7 @@ export function TrendInfoDialog({ alert, refreshTimeLabel, onClose }: TrendInfoD
 
   useEffect(() => {
     const previousFocus = document.activeElement;
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
+    const unblockScroll = blockDocumentScroll();
     function onKeyDown(event: KeyboardEvent) {
       if (event.key === 'Escape') {
         event.preventDefault();
@@ -46,7 +71,7 @@ export function TrendInfoDialog({ alert, refreshTimeLabel, onClose }: TrendInfoD
     document.addEventListener('keydown', onKeyDown);
     return () => {
       document.removeEventListener('keydown', onKeyDown);
-      document.body.style.overflow = previousOverflow;
+      unblockScroll();
       if (previousFocus instanceof HTMLElement && previousFocus.isConnected) previousFocus.focus();
     };
   }, [onClose]);
