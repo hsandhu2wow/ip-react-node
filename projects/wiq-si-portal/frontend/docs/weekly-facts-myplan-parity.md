@@ -23,6 +23,37 @@ existing React code, not missing Angular functionality or browser pixels.
 
 ## Baseline and evidence
 
+### Latest continuation: November 18 tooltip parity
+
+The table tooltip follow-up compares Angular `origin/master` at `2668b4a1b`.
+The reference copy's HTML directive and `app.scss` match that commit.
+[TrendTable](../src/features/trend/components/TrendTable.tsx) now attaches
+tooltips to inner header/cell wrappers and cleans up when a host unmounts.
+[HTML positioning](../src/shared/utils/htmlTooltip.ts) retains the source
+host-edge, sticky-column, fallback and three-column rules.
+[Global styles](../src/styles/globals.css) restore the uncapped desktop panel,
+340px cap at 768px and below, side-by-side Top/Bottom 3 sections, complete
+store names, score/delta typography and all four solid status dots.
+
+[Plain-text tooltips](../src/shared/utils/materialTooltip.ts) replace native
+table titles with the source Material surface, 200px maximum width, anchor
+gap, fallback placement and show/hide animations. Header/cell messages appear
+after their host; info/expand icons and string-only headers use below.
+Hover transfer, Escape, outside clicks, resize/scroll and unmount cleanup
+have focused regressions alongside the existing HTML tests.
+
+Paired synthetic browser checks covered both Weekly Facts and My Plan,
+multi-column and three-column tables at 390, 767, 768, 769, 800 and 1440px.
+The same Top/Bottom 3 fixture measures 567 x 177.2px on both applications
+at desktop widths and 340 x 423.4px at 768px and below. KPI/goal panel
+dimensions, content styles and host-relative positioning also match.
+Plain-text header/cell/info/expand surfaces and anchors were compared at
+800 and 1440px. These are fixture-specific results, not all-BU qualification.
+
+Scope remains table tooltips: FilterBar and Summary/Details/Seasonal native
+titles are unchanged. Touch long-press is not ported; these checks cover
+mouse-hover behavior, not touch or keyboard-focus parity.
+
 ### Latest continuation: November 16 Angular master alignment
 
 Compared against Angular `origin/master` at `000573d97` (November 16).

@@ -107,6 +107,7 @@ boundaries without source evidence.
 |---|---|
 | Information and alerts | Dedicated dialog with focus/scroll lifecycle; composed mobile info includes refresh/metric content |
 | Variance / all rows | Server defaults and table KPI/filter state drive controls |
+| Table tooltips | Inner-wrapper HTML tooltips with responsive source sizing; Material-style plain-text header/cell/info/expand tooltips, with host cleanup instead of native titles |
 | Banner | Registered with the shell and rendered by the layout AlertList in place of admin alerts; dismissal/reset, DOMPurify for banner HTML |
 | Stella | Header button when `is_stella_enabled`; end-side resizable iframe drawer below the header, closed on page unmount; Summary/Details sidebar collapses while open |
 | Loading | Master's centred spinner (`Spinner`) inside the Stella wrapper while page data loads |
@@ -127,6 +128,11 @@ The detailed assessment records synthetic browser scenarios at 360, 767, 768,
 769 and 1024px using intercepted requests. That is not paired visual,
 live-data, export or enabled-BU acceptance. WFM/double-goal/three-column/sticky
 fidelity and actual permissions/configurations still need evidence.
+
+The [November 18 follow-up](weekly-facts-myplan-parity.md#latest-continuation-november-18-tooltip-parity)
+adds paired Angular/React tooltip geometry and style checks for both routes.
+It does not qualify whole-page layout, touch long-press or shared filter-bar
+tooltips.
 
 ## Shared workflows
 

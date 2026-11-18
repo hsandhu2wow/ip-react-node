@@ -44,7 +44,7 @@ cleanup/deduplication; they do not supply authentication or permissions.
 | `src/shared/context/` | Demo identity and shared URL-backed filter state |
 | `src/shared/components/` | Common dialogs, previews, recognition and snackbars |
 | `src/shared/types/` | Card/hierarchy wire declarations also used by filters/exports |
-| `src/shared/utils/` | Formatting, tree/table helpers, analytics, capture/export and HTML tooltip infrastructure |
+| `src/shared/utils/` | Formatting, tree/table helpers, analytics, capture/export and HTML/plain-text tooltip infrastructure |
 | `src/styles/` | Global runtime theme variables and literal backend-HTML classes |
 | `src/test/` | Vitest lifecycle, MSW infrastructure and sanitized fixtures |
 
