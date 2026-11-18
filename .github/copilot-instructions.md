@@ -5,10 +5,10 @@ run its commands from that directory. The
 [project guide](../projects/wiq-si-portal/README.md) describes the monorepo
 layout, Cloud Build paths and branches.
 
-Read and follow the frontend's
-[AGENTS.md](../projects/wiq-si-portal/frontend/AGENTS.md) as the shared
-repository guide before making changes. It defines the migration goal, module
-boundaries, parity constraints, test commands and safety rules.
+For frontend changes, read and follow the frontend's
+[AGENTS.md](../projects/wiq-si-portal/frontend/AGENTS.md). It defines the
+migration goal, module boundaries, parity constraints, test commands and
+safety rules.
 
 Read the relevant
 [architecture decisions](../projects/wiq-si-portal/frontend/docs/decisions/README.md)

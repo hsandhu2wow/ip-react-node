@@ -8,7 +8,7 @@ this repository currently contains the frontend only.
 projects/
   wiq-si-portal/
     README.md
-    configs/             # Existing encrypted per-environment build configuration
+    configs/             # Encrypted per-environment build configuration
     dispatch.yaml        # Existing App Engine API routing
     frontend/            # React application, tests, assets and migration docs
     services/            # Reserved for future backend migrations
@@ -44,6 +44,7 @@ paths, branches and the repository transition scope.
 ## Security
 
 Never commit local environment files, decrypted configuration or credentials.
-Only encrypted configuration files belong in `configs/`; `VITE_*` values are
-public browser configuration, not a place for secrets. See [SECURITY.md](SECURITY.md)
-for vulnerability reporting.
+Only encrypted configuration files belong in
+`projects/wiq-si-portal/configs/`; `VITE_*` values are public browser
+configuration, not a place for secrets. See [SECURITY.md](SECURITY.md) for
+vulnerability reporting.
