@@ -20,6 +20,50 @@ const tableData: WfTableData = {
 };
 
 describe('TrendTable', () => {
+  it.each(['weekly', 'myPlan'] as const)('shows %s HTML tooltips only over the inner header and cell content', (metric) => {
+    render(<TrendTable metric={metric} isExpanded showVariance={false} tableData={{
+      headers: [{ text: 'Group', val: '0' }, { text: 'Measure', val: '1' }, { text: 'Result', val: '2', tooltip: '<b>Header detail</b>' }],
+      data: [[cell(0), cell(1), cell(2, { displayValue: 'Fixture result', tooltip: '<b>Cell detail</b>' })]],
+    }} />);
+    const header = screen.getByRole('columnheader', { name: 'Result' });
+    const value = screen.getByText('Fixture result').closest('td')!;
+    const panel = () => document.querySelector<HTMLElement>('.wf-html-tooltip-panel');
+
+    for (const [target, detail] of [[header, 'Header detail'], [value, 'Cell detail']] as const) {
+      fireEvent.mouseEnter(target, { clientY: 100 });
+      expect(panel()?.style.display).not.toBe('block');
+      fireEvent.mouseEnter(target.firstElementChild!, { clientY: 100 });
+      expect(panel()).toHaveTextContent(detail);
+      expect(panel()).toHaveStyle({ display: 'block' });
+      fireEvent.mouseLeave(target.firstElementChild!);
+      expect(panel()).toHaveStyle({ display: 'none' });
+    }
+  });
+
+  it('keeps an HTML tooltip on rerender and hides it when its host unmounts', () => {
+    const data: WfTableData = {
+      headers: tableData.headers,
+      data: [[cell(0), cell(1), cell(2, { displayValue: 'Fixture result', tooltip: '<b>Cell detail</b>' })]],
+    };
+    const { rerender, unmount } = render(<TrendTable tableData={data} isExpanded showVariance={false} />);
+    fireEvent.mouseEnter(screen.getByText('Fixture result').closest('td')!.firstElementChild!, { clientY: 100 });
+    const panel = document.querySelector('.wf-html-tooltip-panel');
+    expect(panel).toHaveStyle({ display: 'block' });
+    rerender(<TrendTable tableData={data} isExpanded showVariance />);
+    expect(panel).toHaveStyle({ display: 'block' });
+    unmount();
+    expect(panel).toHaveStyle({ display: 'none' });
+  });
+
+  it('suppresses the cell HTML tooltip when an info message is present', () => {
+    render(<TrendTable isExpanded showVariance={false} tableData={{
+      headers: tableData.headers,
+      data: [[cell(0), cell(1), cell(2, { displayValue: 'Fixture result', tooltip: '<b>Suppressed detail</b>', infoMessage: 'Info instead' })]],
+    }} />);
+    fireEvent.mouseEnter(screen.getByText('Fixture result').closest('td')!.firstElementChild!, { clientY: 100 });
+    expect(document.querySelector<HTMLElement>('.wf-html-tooltip-panel')?.style.display).not.toBe('block');
+  });
+
   it('keeps a cell alert inline with its value and opens the corresponding popup', () => {
     const alert = { type: 'warning' as const, title: 'Result notice', text: 'Fixture explanation' };
     const onAlert = vi.fn();
