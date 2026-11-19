@@ -40,7 +40,7 @@ Nav visibility must derive from fetched `GET /getUserdetails` data, loaded CFC c
 Port the Angular `NavService` rules, including:
 
 - Feature/role flags: `sqf`, `sqf_enabled`, `sqa`, `quick_assist_enabled`, `wf`, `weekly_facts_enabled`, `my_plan_enabled`, `bqf`, `psf`, `psf_enabled`, `act` and `admin`.
-- CFC exclusion for Quick Assist and Weekly Facts/Trend.
+- Portal-specific CFC behavior: SI/METRO retain Quick Assist; other portals suppress it. CFC users do not see Weekly Facts/My Plan (Trend).
 - SI/METRO short labels and portal-specific navigation.
 - Dashboard segregation: buying/store Dashboards links when segregated, otherwise one standalone Dashboards item.
 - Angular route paths and `matchRoutes`/`excludeRoutes` behavior so only the intended nav item is active.
@@ -83,7 +83,7 @@ Known Angular destinations that need Coming Soon coverage include `/quick-facts/
 
 ### Automated tests
 
-- Nav-model tests for each access flag, CFC exclusion, portal labels, dashboard segregation, New!/Soon badges, route matching and exclusive active states.
+- Nav-model tests for each access flag, portal-specific CFC behavior, portal labels, dashboard segregation, New!/Soon badges, route matching and exclusive active states.
 - Component tests for desktop rail expansion, user menu and actions; mobile header, drawer, bottom sheet, keyboard/outside-click behavior and body-scroll cleanup.
 - Page-bar tests for eligible items, labels, active routes, query preservation and mobile-only visibility.
 - Footer tests for scroll-hide and Back-to-top behavior, including Weekly routes.
