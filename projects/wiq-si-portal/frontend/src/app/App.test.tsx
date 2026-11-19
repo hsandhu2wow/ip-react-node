@@ -21,6 +21,13 @@ describe('application routes with sanitized API responses', () => {
     })
     queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
     vi.mocked(client.get).mockImplementation(async path => {
+      if (path === '/getUserdetails') return { data: {
+        name: 'Fixture User', email: 'fixture@example.invalid', portal: 'SI',
+        sqf: 1, sqf_enabled: true, sqa: 1, quick_assist_enabled: 1,
+        wf: 1, weekly_facts_enabled: 1, my_plan_enabled: 1, bqf: 1,
+        sqf_area_of_responsibility: 'fixture-state',
+      } }
+      if (path === '/getDashboards/all') return { data: { dashboard_segregation: true } }
       if (path === '/sqf/getUniversalFilterGeneric') return { data: structuredClone(fixture.hierarchy) }
       if (path === '/sqf/getSQFMetricCardsStatus') return { data: structuredClone(fixture.status) }
       if (path === '/sqf/getDataLoadETA') return { data: [] }
@@ -75,6 +82,24 @@ describe('application routes with sanitized API responses', () => {
     show(path)
     expect(await screen.findByRole('link', { name: 'Go to details' })).toBeInTheDocument()
     expect(screen.getByText('Fixture Sales')).toBeInTheDocument()
+  })
+
+  it.each([
+    '/quick-facts/quick-assist',
+    '/dashboards',
+    '/dashboards/search/example',
+    '/bqf/summary',
+    '/price-simulator/simulations',
+    '/act',
+    '/admin',
+    '/help',
+  ])('renders Coming Soon for the unmigrated route %s', async path => {
+    show(path)
+    expect(await screen.findByRole('heading', { name: 'Coming Soon' })).toBeInTheDocument()
+    expect(screen.queryByText('Fixture Sales')).not.toBeInTheDocument()
+    if (path !== '/quick-facts/quick-assist') {
+      expect(screen.queryByRole('navigation', { name: 'Quick Facts navigation' })).not.toBeInTheDocument()
+    }
   })
 
   it('keeps summary failures visible through the full provider/query stack', async () => {

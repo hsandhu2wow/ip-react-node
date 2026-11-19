@@ -1,0 +1,32 @@
+.pageBar {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .pageBar {
+    position: sticky;
+    top: var(--mob-appbar-height);
+    z-index: 910;
+    display: flex;
+    align-items: stretch;
+    height: 48px;
+    border-bottom: 1px solid #d3d3d3;
+    background: #fff;
+  }
+
+  .tab {
+    display: flex;
+    flex: 1;
+    align-items: center;
+    justify-content: center;
+    min-width: 0;
+    border-bottom: 4px solid transparent;
+    color: var(--color-primary);
+    font-size: 16px;
+    text-decoration: none;
+  }
+
+  .tabActive {
+    border-bottom-color: var(--color-primary);
+  }
+}

@@ -25,13 +25,14 @@ export default function App() {
             <Route index element={<Navigate to="summary" replace />} />
             <Route path="summary" element={<SummaryPage />} />
             <Route path="details/:type" element={<DetailsPage />} />
+            <Route path="quick-assist" element={<ComingSoon />} />
             <Route path="weekly" element={<TrendRouteGuard metric="weekly"><TrendPage metric="weekly" /></TrendRouteGuard>} />
             <Route path="myplan" element={<TrendRouteGuard metric="myPlan"><TrendPage metric="myPlan" /></TrendRouteGuard>} />
           </Route>
 
           <Route path="/weekly" element={<ProtectedRoute><ComingSoon /></ProtectedRoute>} />
           <Route path="/trend" element={<ProtectedRoute><ComingSoon /></ProtectedRoute>} />
-          <Route path="/dashboards" element={<ProtectedRoute><ComingSoon /></ProtectedRoute>} />
+          <Route path="/dashboards/*" element={<ProtectedRoute><ComingSoon /></ProtectedRoute>} />
           {['/bqf/*', '/price-simulator/*', '/act/*', '/admin/*', '/help/*'].map(path => (
             <Route key={path} path={path} element={<ProtectedRoute><ComingSoon /></ProtectedRoute>} />
           ))}
