@@ -1,6 +1,3 @@
-/* src/components/layout/SideNav/SideNav.module.css */
-
-/* ── Hide on mobile ── */
 @media (max-width: 768px) {
   .sidenav { display: none !important; }
 }
@@ -9,88 +6,130 @@
   position: fixed;
   top: 0;
   left: 0;
-  height: 100vh;
-  width: 56px;
-  background: #0C482C;
   z-index: 1100;
   display: flex;
   flex-direction: column;
-  align-items: stretch;
+  width: 56px;
+  height: 100vh;
   overflow: hidden;
-  transition: width 350ms cubic-bezier(0.4, 0, 0.2, 1);
+  background: #0c482c;
+  transition: width 350ms cubic-bezier(0.4, 0, 0.2, 1), box-shadow 350ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.sidenav:hover {
-  width: 290px;
-  box-shadow: 4px 0 12px rgba(0, 0, 0, 0.18);
-}
-
+.sidenav:hover,
 .sidenavExpanded {
-  width: 290px;
+  width: 268px;
   box-shadow: 4px 0 12px rgba(0, 0, 0, 0.18);
 }
 
-/* ── Logo ── */
 .logo {
   display: flex;
+  flex-shrink: 0;
   align-items: center;
   height: 64px;
-  flex-shrink: 0;
-  overflow: hidden;
   gap: 10px;
+  overflow: hidden;
+  text-decoration: none;
 }
 
 .logoIcon {
-  width: 56px;
-  height: 56px;
-  flex-shrink: 0;
   display: flex;
+  flex-shrink: 0;
   align-items: center;
   justify-content: center;
+  width: 56px;
+  height: 56px;
 }
 
 .logoLabel {
   color: #fff;
   font-size: 14px;
   font-weight: 700;
+  letter-spacing: 0.02em;
   white-space: nowrap;
   opacity: 0;
   transition: opacity 280ms cubic-bezier(0.4, 0, 0.2, 1);
-  letter-spacing: 0.02em;
 }
 
-.sidenav:hover .logoLabel { opacity: 1; }
+.sidenav:hover .logoLabel,
+.sidenavExpanded .logoLabel {
+  opacity: 1;
+}
 
-/* ── Nav items ── */
 .nav {
-  flex: 1;
   display: flex;
+  flex: 1;
   flex-direction: column;
   padding: 8px 0;
   gap: 2px;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.group {
+  display: flex;
+  flex-direction: column;
+}
+
+.groupLabel {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 8px 12px 4px;
+  pointer-events: none;
+}
+
+.groupLabelLine {
+  position: absolute;
+  right: 0;
+  left: 0;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.groupLabelText {
+  position: relative;
+  z-index: 1;
+  max-width: 0;
   overflow: hidden;
+  padding: 0;
+  background: #0c482c;
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 11px;
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 200ms cubic-bezier(0.4, 0, 0.2, 1), max-width 0ms 200ms, padding 0ms 200ms;
+}
+
+.sidenav:hover .groupLabelText,
+.sidenavExpanded .groupLabelText {
+  max-width: 200px;
+  padding: 0 6px;
+  opacity: 1;
+  transition: max-width 0ms 200ms, padding 0ms 200ms, opacity 200ms 200ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .item {
   display: flex;
   align-items: center;
+  width: 100%;
   height: 48px;
   padding: 0 16px 0 13px;
   gap: 16px;
-  cursor: pointer;
+  overflow: hidden;
   border: none;
-  background: none;
+  border-left: 3px solid transparent;
+  background: transparent;
   color: rgba(255, 255, 255, 0.65);
-  font-family: var(--font-family);
+  cursor: pointer;
+  font-family: Arial, Helvetica, sans-serif;
   font-size: 14px;
   font-weight: 500;
-  white-space: nowrap;
-  overflow: hidden;
+  text-align: left;
   text-decoration: none;
-  border-left: 3px solid transparent;
-  box-sizing: border-box;
+  white-space: nowrap;
   transition: background 150ms, color 150ms;
-  width: 100%;
 }
 
 .item:hover {
@@ -98,156 +137,213 @@
   color: #fff;
 }
 
+.item:focus-visible,
+.userRow:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.6);
+  outline-offset: -2px;
+}
+
 .itemActive {
-  background: rgba(255, 255, 255, 0.12) !important;
-  color: #fff !important;
   border-left-color: #fff;
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  cursor: default;
 }
 
 .itemIcon {
-  font-size: 22px;
   flex-shrink: 0;
   width: 24px;
-  text-align: center;
   color: inherit;
+  font-size: 22px;
+  text-align: center;
 }
 
 .itemLabel {
-  opacity: 0;
-  transition: opacity 280ms cubic-bezier(0.4, 0, 0.2, 1);
+  flex: 1;
+  overflow: hidden;
   font-size: 14px;
   line-height: 1;
-}
-
-.sidenav:hover .itemLabel { opacity: 1; }
-
-.badge {
-  font-size: 10px;
-  background: rgba(255, 255, 255, 0.18);
-  color: rgba(255, 255, 255, 0.7);
-  border-radius: 3px;
-  padding: 2px 5px;
-  margin-left: auto;
-  white-space: nowrap;
   opacity: 0;
   transition: opacity 280ms cubic-bezier(0.4, 0, 0.2, 1);
-  flex-shrink: 0;
 }
 
-.sidenav:hover .badge { opacity: 1; }
+.sidenav:hover .itemLabel,
+.sidenavExpanded .itemLabel {
+  opacity: 1;
+}
 
-/* ── Footer ── */
+.badge {
+  flex-shrink: 0;
+  padding: 2px 5px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.18);
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  opacity: 0;
+  transition: opacity 280ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sidenav:hover .badge,
+.sidenavExpanded .badge {
+  opacity: 1;
+}
+
+.rule {
+  flex-shrink: 0;
+  height: 1px;
+  margin: 8px 12px 4px;
+  background: rgba(255, 255, 255, 0.18);
+}
+
 .footer {
-  margin-top: auto;
+  display: flex;
   flex-shrink: 0;
+  flex-direction: column;
+  padding-top: 4px;
   border-top: 1px solid rgba(255, 255, 255, 0.2);
-  padding: 8px 0;
 }
 
-/* ── User section ── */
-.userContainer { position: relative; }
+.error {
+  margin: 8px;
+  padding: 8px;
+  background: #fff;
+  color: #7a1f1f;
+  font-size: 12px;
+}
+
+.userContainer {
+  position: relative;
+}
 
 .userRow {
+  position: relative;
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 12px;
-  overflow: hidden;
-  cursor: pointer;
-  position: relative;
-  background: none;
-  border: none;
   width: 100%;
+  padding: 12px;
+  gap: 10px;
+  overflow: hidden;
+  border: none;
+  background: none;
+  cursor: pointer;
   text-align: left;
 }
 
-.userRow:hover { background: rgba(255, 255, 255, 0.06); }
+.userRow:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
 
 .avatar {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.15);
   display: flex;
+  flex-shrink: 0;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  overflow: hidden;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.15);
   color: #fff;
+}
+
+.avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .userInfo {
   display: flex;
+  flex: 1;
   flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
   opacity: 0;
   transition: opacity 280ms cubic-bezier(0.4, 0, 0.2, 1);
-  overflow: hidden;
-  min-width: 0;
 }
 
-.sidenav:hover .userInfo { opacity: 1; }
+.sidenav:hover .userInfo,
+.sidenavExpanded .userInfo {
+  opacity: 1;
+}
 
 .userName {
   color: #fff;
   font-size: 12px;
   font-weight: 700;
-  white-space: nowrap;
 }
 
-.userRole {
+.userRole,
+.userEmail {
   color: rgba(255, 255, 255, 0.65);
   font-size: 11px;
+}
+
+.userName,
+.userRole,
+.userEmail {
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .userChevron {
-  font-size: 16px;
-  color: rgba(255, 255, 255, 0.55);
   flex-shrink: 0;
   margin-left: auto;
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 20px;
   opacity: 0;
-  transition: opacity 280ms cubic-bezier(0.4, 0, 0.2, 1);
+  transition: opacity 280ms cubic-bezier(0.4, 0, 0.2, 1), transform 200ms;
 }
 
-.sidenav:hover .userChevron { opacity: 1; }
+.sidenav:hover .userChevron,
+.sidenavExpanded .userChevron {
+  opacity: 1;
+}
 
-/* ── User popup menu ── */
 .userMenu {
   position: absolute;
+  right: 0;
   bottom: 100%;
   left: 0;
-  right: 0;
   z-index: 1200;
   padding: 0 8px 4px;
 }
 
 .menuPanel {
-  background: #fff;
-  border-radius: 4px;
-  box-shadow: 0 2px 4px -1px rgba(0,0,0,.2), 0 4px 5px 0 rgba(0,0,0,.14), 0 1px 10px 0 rgba(0,0,0,.12);
   overflow: hidden;
   padding: 8px 0;
+  border-radius: 4px;
+  background: #fff;
+  box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.2), 0 4px 5px 0 rgba(0, 0, 0, 0.14), 0 1px 10px 0 rgba(0, 0, 0, 0.12);
 }
 
 .menuItem {
   display: flex;
   align-items: center;
-  gap: 12px;
   width: 100%;
   height: 48px;
   padding: 0 16px;
-  font-size: 14px;
-  font-family: inherit;
-  color: rgba(0, 0, 0, 0.87);
-  background: none;
+  gap: 12px;
   border: none;
+  background: none;
+  color: rgba(0, 0, 0, 0.87);
   cursor: pointer;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 14px;
   text-align: left;
 }
 
-.menuItem:hover { background: rgba(0, 0, 0, 0.04); }
+.menuItem:hover,
+.menuItem:focus-visible {
+  background: rgba(0, 0, 0, 0.04);
+}
 
 .menuIcon {
-  font-size: 20px;
-  color: rgba(0, 0, 0, 0.54);
   flex-shrink: 0;
+  color: rgba(0, 0, 0, 0.54);
+  font-size: 20px;
 }
