@@ -20,6 +20,13 @@ export async function searchUsers(name: string): Promise<IUserSearchResult[]> {
 /** Subset of GET /getUserdetails (Angular IUserDetails) used by Quick Facts */
 export interface IUserDetails {
   employee_number?: string
+  name?: string
+  email?: string
+  success_factors_role?: string
+  profile_photo?: string
+  switch_account_url?: string
+  logoutUrl?: string
+  new_tags?: string[]
   Store_Insights_Role?: string
   portal?: string
   sqf?: number
