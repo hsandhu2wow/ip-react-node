@@ -65,7 +65,7 @@ export function MobileNav() {
     return () => document.removeEventListener('keydown', handleKeyDown)
   }, [drawerOpen])
 
-  const groups = useNavGroups()
+  const { groups } = useNavGroups()
   const activePrefix = getActivePrefix(location.pathname, navPrefixes(groups.flatMap(g => g.items)))
 
   function isItemActive(item: NavItem) {

@@ -13,7 +13,8 @@ export function SideNav() {
   const location = useLocation()
   const [menuOpen, setMenuOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
-  const navItems = flattenNavGroups(useNavGroups())
+  const { groups } = useNavGroups()
+  const navItems = flattenNavGroups(groups)
   const activePrefix = getActivePrefix(location.pathname, navPrefixes(navItems))
 
   useEffect(() => {
