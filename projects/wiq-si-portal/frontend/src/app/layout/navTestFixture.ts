@@ -25,5 +25,6 @@ export const fullAccessNavGroups = buildNavGroups(
 export const fullAccessNavResult = {
   groups: fullAccessNavGroups,
   user: fullAccessUser,
+  isCfc: false,
   dashboardSettingsError: false,
 }

@@ -43,9 +43,24 @@ export interface IUserDetails {
   psf?: number
   psf_enabled?: boolean | 0 | 1
   act?: number
+  sqf_video?: string
+  bqf_video?: string
+  dashboards_video?: string
+  psim_video?: string
+  sqf_video_flag?: number
+  bqf_video_flag?: number
+  dashboards_video_flag?: number
   /** Server-derived: global Stella setting plus ai_insights_whitelisted_users */
   is_stella_enabled?: boolean
   [key: string]: unknown
+}
+
+export type IntroVideoFlagUpdate = Partial<
+  Pick<IUserDetails, 'sqf_video_flag' | 'bqf_video_flag' | 'dashboards_video_flag'>
+>
+
+export async function updateIntroVideoFlag(payload: IntroVideoFlagUpdate): Promise<unknown> {
+  return (await client.post('/updatevideoflag', payload)).data
 }
 
 let userDetailsPromise: Promise<IUserDetails> | null = null

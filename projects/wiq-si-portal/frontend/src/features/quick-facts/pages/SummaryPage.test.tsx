@@ -98,6 +98,23 @@ describe('SummaryPage', () => {
     show()
     expect(screen.getByText('Failed to load metrics. Please try again.')).toBeInTheDocument()
   })
+
+  it('renders the title widget beside the Summary title', () => {
+    vi.mocked(useEnrichedSummaryCards).mockReturnValue({
+      data: [], cardStatus: {}, isLoading: false, isError: false,
+      widgetCard: {
+        card_identifier: 'widget_card',
+        card_position: 0,
+        metric_key: 'widget_card',
+        card_contents: { card_header_title: 'Profit summary' },
+      },
+    })
+
+    show()
+
+    expect(screen.getByText('Profit summary')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { level: 1, name: /Daily/ })).toBeInTheDocument()
+  })
 })
 
 let seasonal: ISeasonalCard | undefined

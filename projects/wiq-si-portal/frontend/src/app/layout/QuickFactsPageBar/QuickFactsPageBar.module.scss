@@ -9,24 +9,39 @@
     z-index: 910;
     display: flex;
     align-items: stretch;
-    height: 48px;
+    min-height: 48px;
     border-bottom: 1px solid #d3d3d3;
     background: #fff;
   }
 
   .tab {
     display: flex;
-    flex: 1;
+    flex: auto;
     align-items: center;
     justify-content: center;
     min-width: 0;
-    border-bottom: 4px solid transparent;
+    gap: 8px;
+    margin: 0 4px;
+    padding: 0 16px;
+    border-bottom: 4px solid #fff;
     color: var(--color-primary);
     font-size: 16px;
+    line-height: 24px;
     text-decoration: none;
   }
 
   .tabActive {
     border-bottom-color: var(--color-primary);
+  }
+
+  .newTag {
+    min-width: 45px;
+    height: 21px;
+    border-radius: 3px;
+    background-color: #e8edf5;
+    color: #333;
+    font-size: 14px;
+    line-height: 21px;
+    text-align: center;
   }
 }

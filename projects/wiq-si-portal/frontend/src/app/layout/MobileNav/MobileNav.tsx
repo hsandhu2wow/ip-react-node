@@ -7,13 +7,13 @@ import { BUCKET_URL, logoLabelForPortal } from '../../config/theme'
 import { MobileAccountSheet } from './MobileAccountSheet'
 import styles from './MobileNav.module.scss'
 
-function getRouteTitle(pathname: string): string {
+function getRouteTitle(pathname: string): string | undefined {
   if (/^\/quick-facts(?:\/|$)/.test(pathname) || ['/weekly', '/trend'].includes(pathname)) return 'My Insights'
   if (pathname.startsWith('/dashboards')) return 'Dashboards'
   if (pathname.startsWith('/bqf')) return 'Buying Quick Facts'
   if (pathname.startsWith('/price-simulator')) return 'Pricing Simulator'
   if (pathname.startsWith('/act')) return 'Availability Navigator'
-  if (pathname.startsWith('/admin')) return 'Admin'
+  if (pathname.startsWith('/admin')) return undefined
   if (pathname.startsWith('/help')) return 'Help'
   return 'My Insights'
 }
@@ -28,15 +28,15 @@ function DrawerItem({
   onClick: () => void
 }) {
   const iconClass = item.isSymbol ? 'material-symbols-outlined' : 'material-icons-outlined'
+  const to = item.key === 'help' ? '/help/access' : item.to
   return (
     <NavLink
-      to={item.to}
+      to={to}
       className={`${styles.drawerItem} ${active ? styles.drawerItemActive : ''}`}
       onClick={onClick}
     >
       <span className={`${iconClass} ${styles.drawerItemIcon}`} aria-hidden="true">{item.icon}</span>
       <span>{item.label}</span>
-      {item.newTag && <span className={styles.soon}>New!</span>}
       {!item.live && <span className={styles.soon}>Soon</span>}
     </NavLink>
   )
@@ -81,8 +81,13 @@ export function MobileNav() {
   const drawerWasOpen = useRef(false)
   const accountWasOpen = useRef(false)
   const title = getRouteTitle(location.pathname)
-  const dashboardRoute = location.pathname.startsWith('/dashboards')
   const activePrefix = getActivePrefix(location.pathname, navPrefixes(groups.flatMap(group => group.items)))
+  const activeHeaderItem = groups
+    .flatMap(group => group.items)
+    .find(item => isNavItemActive(item, activePrefix))
+  const titleTo = activeHeaderItem
+    ? activeHeaderItem.key === 'help' ? '/help/access' : activeHeaderItem.to
+    : undefined
   const navGroups = groups.filter(group => group.key !== 'other')
   const otherItems = groups.find(group => group.key === 'other')?.items ?? []
   const mainOtherItems = otherItems.filter(item => item.key !== 'admin' && item.key !== 'help')
@@ -146,13 +151,13 @@ export function MobileNav() {
         >
           <span className="material-icons" aria-hidden="true">{drawerOpen ? 'menu_open' : 'menu'}</span>
         </button>
-        <div className={styles.title}>
-          <span className={styles.titleLabel} data-testid="mobile-title">{title}</span>
-        </div>
-        {dashboardRoute && (
-          <div className={styles.search}>
-            <span className="material-icons-outlined" aria-hidden="true">search</span>
-            <input type="search" aria-label="Search Dashboards" placeholder="Search Dashboards" />
+        {title && (
+          <div className={styles.title}>
+            {titleTo ? (
+              <Link to={titleTo} className={styles.titleLabel} data-testid="mobile-title">{title}</Link>
+            ) : (
+              <span className={styles.titleLabel} data-testid="mobile-title">{title}</span>
+            )}
           </div>
         )}
         {user?.name && (

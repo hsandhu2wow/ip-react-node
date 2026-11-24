@@ -82,6 +82,21 @@ export function buildNavGroups(
   }
 
   if (user && hasStoreAccess) {
+    const quickAssistItem =
+      user.sqa === 1 &&
+      user.quick_assist_enabled &&
+      (isShortLabelPortal || isCfc === false)
+        ? {
+            key: 'weekly',
+            icon: 'date_range',
+            label: isShortLabelPortal ? 'Weekly' : 'Quick Assist',
+            to: '/quick-facts/quick-assist',
+            matchRoutes: ['/quick-facts/quick-assist'],
+            newTag: hasNewTag(user, 'quick_assist'),
+            live: false,
+          }
+        : undefined
+
     if (user.sqf === 1 && user.sqf_enabled) {
       store.push({
         key: 'daily',
@@ -99,21 +114,7 @@ export function buildNavGroups(
       })
     }
 
-    if (
-      user.sqa === 1 &&
-      user.quick_assist_enabled &&
-      (isShortLabelPortal || isCfc === false)
-    ) {
-      store.push({
-        key: 'weekly',
-        icon: 'date_range',
-        label: isShortLabelPortal ? 'Weekly' : 'Quick Assist',
-        to: '/quick-facts/quick-assist',
-        matchRoutes: ['/quick-facts/quick-assist'],
-        newTag: hasNewTag(user, 'quick_assist'),
-        live: false,
-      })
-    }
+    if (isShortLabelPortal && quickAssistItem) store.push(quickAssistItem)
 
     const showWeeklyFacts =
       user.wf === 1 &&
@@ -140,6 +141,8 @@ export function buildNavGroups(
         live: true,
       })
     }
+
+    if (!isShortLabelPortal && quickAssistItem) store.push(quickAssistItem)
 
     if (dashboardSegregation === true) {
       store.push({

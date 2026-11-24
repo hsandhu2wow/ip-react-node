@@ -43,7 +43,22 @@ describe('useNavGroups', () => {
 
     await waitFor(() => expect(result.current).toHaveProperty('user.name', 'Alex Example'))
     expect(result.current).toHaveProperty('groups.0.items.0.to', '/quick-facts')
+    expect(result.current.isCfc).toBe(false)
     expect(getDashboardNavigationSettings).toHaveBeenCalledOnce()
+  })
+
+  it('exposes whether the current account area is a CFC child', async () => {
+    vi.mocked(getUserDetails).mockResolvedValue({
+      name: 'Alex Example',
+      portal: 'BIG W',
+      sqf_area_of_responsibility: '1234',
+      sqf: 1,
+      sqf_enabled: true,
+    })
+    vi.mocked(getCFCChildCodes).mockResolvedValue(['1234'])
+    const { result } = renderHook(() => useNavGroups(), { wrapper: createWrapper() })
+
+    await waitFor(() => expect(result.current.isCfc).toBe(true))
   })
 
   it('uses the Angular SI segregation default without requesting dashboard data', async () => {

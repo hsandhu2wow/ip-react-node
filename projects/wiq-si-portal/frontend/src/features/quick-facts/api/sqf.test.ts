@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { mapGenericCards } from './sqf'
+import { getTitleWidgetCard, mapGenericCards } from './sqf'
 import type { ISQFMetricCard } from '../../../shared/types/sqf.types'
 
 const card = (cardName: string, extra: object = {}) => ({ cardName, cardType: 'summary', ...extra }) as ISQFMetricCard
@@ -26,5 +26,26 @@ describe('mapGenericCards (SqfMetricCardService.mapData)', () => {
       card('nested', { cards: [card('child', { tableData })] }),
     ]) as ISQFMetricCard[]
     expect(out.map(c => c.tableOnly)).toEqual([true, false, false])
+  })
+
+  it('preserves and validates the optional title widget in a period response', () => {
+    const widget = {
+      card_identifier: 'widget_card',
+      card_position: 0,
+      metric_key: 'widget_card',
+      card_contents: { card_header_title: 'Profit summary' },
+    }
+    const mapped = mapGenericCards({ WTD: [], widget_card: widget } as never)
+
+    expect(mapped).toMatchObject({ widget_card: widget })
+    expect(getTitleWidgetCard(mapped)).toEqual(widget)
+    expect(getTitleWidgetCard({
+      WTD: [],
+      widget_card: { ...widget, hasError: true },
+    } as never)).toBeNull()
+    expect(getTitleWidgetCard({
+      WTD: [],
+      widget_card: { ...widget, card_identifier: 'metric_card' },
+    } as never)).toBeNull()
   })
 })

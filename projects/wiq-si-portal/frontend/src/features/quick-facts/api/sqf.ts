@@ -3,6 +3,7 @@ import type {
   ISQFGenericFilter,
   ISQFMetricCard,
   ISQFCardsResponse,
+  IQuickFactsTitleWidget,
   IAvailableMetricCards,
   IDataLoadETA,
 } from '../../../shared/types/sqf.types'
@@ -32,6 +33,14 @@ export async function getSupportEmail(portal: 'SQF' | 'BQF' = 'SQF'): Promise<st
 }
 
 type CardsResponse = ISQFCardsResponse
+
+export function getTitleWidgetCard(response: ISQFCardsResponse | undefined): IQuickFactsTitleWidget | null {
+  if (!response || Array.isArray(response) || typeof response !== 'object' || !('widget_card' in response)) {
+    return null
+  }
+  const widget = response.widget_card
+  return widget && widget.card_identifier === 'widget_card' && !widget.hasError ? widget : null
+}
 
 /**
  * SqfMetricCardService.mapData: every successful (non-hasError) generic card gets

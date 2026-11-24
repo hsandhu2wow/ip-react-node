@@ -27,6 +27,16 @@ describe('buildNavGroups', () => {
     expect(labels({ sqf: 1, sqf_enabled: true, sqa: 1, quick_assist_enabled: 1 }, false, 'BIG W'))
       .toEqual(['Quick Facts', 'Quick Assist', 'Dashboards', 'Help'])
   })
+  it('orders non-SI Store items as Quick Facts, Weekly Facts, then Quick Assist', () => {
+    const user: IUserDetails = {
+      sqf: 1, sqf_enabled: true, sqa: 1, quick_assist_enabled: 1,
+      wf: 1, weekly_facts_enabled: 1,
+    }
+
+    expect(labels(user, false, 'BIG W')).toEqual([
+      'Quick Facts', 'Weekly Facts', 'Quick Assist', 'Dashboards', 'Help',
+    ])
+  })
   it('keeps Quick Assist for CFC SI/METRO but hides it for other portals', () => {
     const user: IUserDetails = { sqa: 1, quick_assist_enabled: 1, wf: 1, weekly_facts_enabled: 1 }
     expect(labels(user, true, 'SI', true)).toContain('Weekly')

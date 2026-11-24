@@ -34,7 +34,7 @@ function setup({
   isCardsLoading = false,
   isStatusLoading = false,
 }: {
-  cards?: any[]
+  cards?: unknown
   cardStatus?: Record<string, any>
   apiDepth?: number
   isCardsLoading?: boolean
@@ -102,5 +102,12 @@ describe('useEnrichedSummaryCards', () => {
     const cardStatus = { sales: { details: true, details_last_level: 3, sequence: 1 } }
     const result = setup({ cardStatus })
     expect(result.cardStatus).toEqual(cardStatus)
+  })
+
+  it('returns the valid widget_card from the existing summary response', () => {
+    const widget = { card_identifier: 'widget_card', card_position: 0, metric_key: 'widget_card' }
+    const result = setup({ cards: { WTD: [], widget_card: widget } })
+
+    expect(result.widgetCard).toEqual(widget)
   })
 })

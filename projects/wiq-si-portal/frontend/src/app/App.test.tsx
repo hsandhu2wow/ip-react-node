@@ -7,13 +7,15 @@ import App from './App'
 import fixture from '../test/fixtures/sqf-api.sanitized.json'
 import { SnackbarProvider } from '../shared/components/Snackbar/Snackbar'
 
-vi.mock('../shared/api/client', () => ({ default: { get: vi.fn() } }))
+vi.mock('../shared/api/client', () => ({ default: { get: vi.fn(), post: vi.fn() } }))
 
 describe('application routes with sanitized API responses', () => {
   let queryClient: QueryClient
 
   beforeEach(() => {
     vi.clearAllMocks()
+    localStorage.clear()
+    vi.mocked(client.post).mockResolvedValue({ data: {} })
     vi.stubGlobal('ResizeObserver', class {
       observe() {}
       unobserve() {}
@@ -46,7 +48,22 @@ describe('application routes with sanitized API responses', () => {
     vi.useRealTimers()
   })
 
-  function show(path: string) {
+  function show(path: string, userOverrides: Record<string, unknown> = {}) {
+    queryClient.setQueryData(['user-details'], {
+      name: 'Fixture User',
+      email: 'fixture@example.invalid',
+      portal: 'SI',
+      sqf: 1,
+      sqf_enabled: true,
+      sqa: 1,
+      quick_assist_enabled: 1,
+      wf: 1,
+      weekly_facts_enabled: 1,
+      my_plan_enabled: 1,
+      bqf: 1,
+      sqf_area_of_responsibility: 'fixture-state',
+      ...userOverrides,
+    })
     return render(
       <QueryClientProvider client={queryClient}>
         <MemoryRouter initialEntries={[path]}>
@@ -100,6 +117,66 @@ describe('application routes with sanitized API responses', () => {
     if (path !== '/quick-facts/quick-assist') {
       expect(screen.queryByRole('navigation', { name: 'Quick Facts navigation' })).not.toBeInTheDocument()
     }
+  })
+
+  it.each([
+    ['/bqf/summary', { bqf_video: 'https://drive.google.com/file/d/bqf/view' }, 'Welcome to Insights Portal'],
+    ['/quick-facts/summary', { sqf_video: 'https://drive.google.com/file/d/sqf/view' }, 'Welcome to Insights Portal'],
+    ['/dashboards/search', { dashboards_video: 'https://drive.google.com/file/d/dashboards/view' }, 'Welcome to Insights Portal. Click play for an overview of the site.'],
+  ])('shows the configured first-visit video on %s', async (path, user, title) => {
+    show(path, user)
+
+    expect(await screen.findByRole('dialog', { name: title })).toBeInTheDocument()
+    if (!path.startsWith('/quick-facts')) {
+      expect(screen.getByRole('heading', { name: 'Coming Soon' })).toBeInTheDocument()
+    }
+  })
+
+  it('shows the Pricing Simulator video only after its CORS error condition', async () => {
+    localStorage.setItem('corsErrorHappened', 'yes')
+    show('/price-simulator/simulations', {
+      psim_video: 'https://drive.google.com/file/d/psim/view',
+    })
+
+    expect(await screen.findByRole('dialog', { name: 'Welcome to Pricing Simulator' })).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Close video' }))
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+    expect(localStorage.getItem('psimVideoFlag')).toBe('yes')
+    expect(client.post).not.toHaveBeenCalled()
+  })
+
+  it('does not show the Pricing Simulator video before a CORS error', async () => {
+    show('/price-simulator/simulations', {
+      psim_video: 'https://drive.google.com/file/d/psim/view',
+    })
+
+    expect(await screen.findByRole('heading', { name: 'Coming Soon' })).toBeInTheDocument()
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+  })
+
+  it('does not show a video when it is already viewed or not configured', async () => {
+    show('/bqf/summary', {
+      bqf_video: 'https://drive.google.com/file/d/bqf/view',
+      bqf_video_flag: 1,
+    })
+    expect(await screen.findByRole('heading', { name: 'Coming Soon' })).toBeInTheDocument()
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+  })
+
+  it('persists an explicit video close', async () => {
+    show('/bqf/summary', { bqf_video: 'https://drive.google.com/file/d/bqf/view' })
+    await screen.findByRole('dialog', { name: 'Welcome to Insights Portal' })
+    fireEvent.click(screen.getByRole('button', { name: 'Close video' }))
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+    expect(client.post).toHaveBeenCalledWith('/updatevideoflag', { bqf_video_flag: 1 })
+  })
+
+  it('keeps the dialog open and reports a video-flag update failure', async () => {
+    vi.mocked(client.post).mockRejectedValueOnce(new Error('Update failed'))
+    show('/bqf/summary', { bqf_video: 'https://drive.google.com/file/d/bqf/view' })
+    fireEvent.click(await screen.findByRole('button', { name: 'Close video' }))
+    expect(await screen.findByRole('alert')).toHaveTextContent('Unable to save your video preference. Please try again.')
+    expect(screen.getByRole('dialog', { name: 'Welcome to Insights Portal' })).toBeInTheDocument()
   })
 
   it('keeps summary failures visible through the full provider/query stack', async () => {

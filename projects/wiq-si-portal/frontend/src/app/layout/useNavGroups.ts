@@ -10,6 +10,7 @@ import { buildNavGroups, type NavGroup } from './navItems'
 export interface NavGroupsResult {
   groups: NavGroup[]
   user: IUserDetails | undefined
+  isCfc: boolean | undefined
   dashboardSettingsError: boolean
 }
 
@@ -28,12 +29,16 @@ export function useNavGroups() {
     ? undefined
     : dashboardSettings.data?.dashboard_segregation ?? portal === 'SI'
 
-  const groups = useMemo(() => {
-    const isCfc = cfcCodes ? cfcCodes.includes(String(user?.sqf_area_of_responsibility || '')) : undefined
-    return buildNavGroups(user, isCfc, portal, dashboardSegregation)
-  }, [user, cfcCodes, portal, dashboardSegregation])
+  const isCfc = useMemo(
+    () => cfcCodes ? cfcCodes.includes(String(user?.sqf_area_of_responsibility || '')) : undefined,
+    [cfcCodes, user],
+  )
+  const groups = useMemo(
+    () => buildNavGroups(user, isCfc, portal, dashboardSegregation),
+    [user, isCfc, portal, dashboardSegregation],
+  )
 
   return useMemo(() => {
-    return { groups, user, dashboardSettingsError: dashboardSettings.isError }
-  }, [groups, user, dashboardSettings.isError])
+    return { groups, user, isCfc, dashboardSettingsError: dashboardSettings.isError }
+  }, [groups, user, isCfc, dashboardSettings.isError])
 }

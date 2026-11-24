@@ -12,9 +12,13 @@ import { useTrendActions } from '../../../features/trend/context/TrendActionsCon
 import { AlertDialog } from './AlertDialog'
 import styles from './AlertList.module.scss'
 
-type AlertPage = 'sqf' | 'wf' | 'myplan'
+type AlertPage = 'sqf' | 'sqa' | 'wf' | 'myplan'
 
-const PAGES: Record<string, AlertPage> = { weekly: 'wf', myplan: 'myplan' }
+const PAGES: Record<string, AlertPage> = {
+  weekly: 'wf',
+  myplan: 'myplan',
+  'quick-assist': 'sqa',
+}
 
 // Fetched once per layout lifetime (Angular AlertListComponent subscribes with take(1))
 const ONCE_PER_LAYOUT = { staleTime: Infinity, gcTime: 0, retry: false } as const
@@ -30,7 +34,7 @@ interface AlertItem {
 
 export function AlertList() {
   const { pathname, key: locationKey } = useLocation()
-  const page = PAGES[/^\/quick-facts\/(weekly|myplan)\/?$/.exec(pathname)?.[1] ?? ''] ?? 'sqf'
+  const page = PAGES[/^\/quick-facts\/(weekly|myplan|quick-assist)\/?$/.exec(pathname)?.[1] ?? ''] ?? 'sqf'
   const pageLoaded = usePageLoaded()
   const { user } = useAuth()
   const { banner, bannerDismissed, dismissBanner } = useTrendActions()

@@ -4,26 +4,39 @@
   padding-bottom: 48px;
 }
 
-/* Mirrors Angular .view-page-title(--daily): centred and as wide as the card grid
-   at each breakpoint so it left-aligns with the first card. */
+/* Mirrors the Angular title row and keeps it aligned with the card grid. */
+.titleRow {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin: 16px auto 12px;
+}
+
 .pageTitle {
   display: flex;
+  flex: 1;
   align-items: baseline;
+  min-width: 0;
+  margin: 0;
   gap: 6px;
-  margin: 16px auto 12px;
   font-size: 22px;
   font-weight: 700;
   line-height: 1.2;
   color: #1a1a1a;
 }
-@media (max-width: 360px) { .pageTitle { width: 336px; } }
-@media (min-width: 361px) and (max-width: 767px) { .pageTitle { width: 100%; max-width: 503px; } }
-@media (min-width: 361px) and (max-width: 526px) { .pageTitle { padding-left: 12px; } }
-@media (min-width: 768px) and (max-width: 1023px) { .pageTitle { width: 688px; } }
-@media (min-width: 1024px) and (max-width: 1439px) { .pageTitle { width: 904px; } }
-@media (min-width: 1440px) and (max-width: 1727px) { .pageTitle { width: 1278px; } }
-@media (min-width: 1728px) and (max-width: 1919px) { .pageTitle { width: 1419px; } }
-@media (min-width: 1920px) { .pageTitle { width: 1640px; } }
+@media (max-width: 360px) { .titleRow { width: 336px; } }
+@media (min-width: 361px) and (max-width: 767px) { .titleRow { width: 100%; max-width: 503px; } }
+@media (min-width: 361px) and (max-width: 526px) { .titleRow { padding-left: 12px; } }
+@media (min-width: 768px) and (max-width: 1023px) { .titleRow { width: 688px; } }
+@media (min-width: 1024px) and (max-width: 1439px) { .titleRow { width: 904px; } }
+@media (min-width: 1440px) and (max-width: 1727px) { .titleRow { width: 1278px; } }
+@media (min-width: 1728px) and (max-width: 1919px) { .titleRow { width: 1419px; } }
+@media (min-width: 1920px) { .titleRow { width: 1640px; } }
+
+@media (max-width: 1024px) {
+  .titleRow { flex-wrap: wrap; }
+  .pageTitle { flex: 1 1 100%; }
+}
 
 .pageTitleLabel {
   color: #1a1a1a;

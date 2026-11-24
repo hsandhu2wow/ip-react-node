@@ -219,6 +219,85 @@ export type ETAMap = Record<string, { time: Date; day?: string }>
 /** Reporting period offered by the Quick Facts filter */
 export type Period = 'WTD' | 'YDAY'
 
+export interface IQuickFactsMixedChart {
+  chart_type?: 'doughnut'
+  caption?: string
+  config?: {
+    general?: {
+      bar_chart_type?: 'superimposed' | 'side_by_side' | 'stacked' | 'superimposedStacked'
+      bar_chart_orientation?: 'vertical' | 'horizontal'
+      chart_size?: 'standard' | 'small'
+      show_custom_tooltip?: boolean
+      show_data_points?: boolean
+      show_bar_data_points?: boolean
+      cutout?: string
+      circumference?: number
+      rotation?: number
+    }
+    x_axis?: { labels?: string[] }
+    y_axis?: {
+      bar_axis?: { title?: string | null; hide_axis?: boolean; min_value?: number; max_value?: number }
+      bar_secondary_axis?: { title?: string | null; hide_axis?: boolean; min_value?: number; max_value?: number }
+      line_axis?: { title?: string | null; hide_axis?: boolean; min_value?: number; max_value?: number; outline_data_points?: boolean }
+      line_secondary_axis?: { title?: string | null; hide_axis?: boolean; min_value?: number; max_value?: number }
+    }
+  }
+  data?: Array<{ value: number; colour: string; legend?: string | null }>
+  bars?: Record<string, {
+    data: Array<{ value: number | null; colour: string; tooltip?: string }>
+    hidden?: boolean
+    legend: string
+    categoryPercentage?: number
+    barPercentage?: number
+  }>
+  bars_secondary?: Record<string, {
+    data: Array<{ value: number | null; colour: string; tooltip?: string }>
+    hidden?: boolean
+    legend: string
+    categoryPercentage?: number
+    barPercentage?: number
+  }>
+  lines?: Record<string, {
+    colour: string
+    data: number[]
+    data_formatted?: string[]
+    legend: string
+    line_type?: 'dashed' | 'solid'
+    tooltip_data?: Array<string | null>
+    show_data_points?: boolean
+    data_point_outline_colour?: string
+  }>
+  lines_secondary?: Record<string, {
+    colour: string
+    data: number[]
+    data_formatted?: string[]
+    legend: string
+    line_type?: 'dashed' | 'solid'
+    tooltip_data?: Array<string | null>
+    show_data_points?: boolean
+    data_point_outline_colour?: string
+  }>
+  target_lines?: Record<string, {
+    hidden?: boolean
+    target_line_label?: string | null
+    target_line_value: number | null
+    target_line_axis?: string
+    target_line_colour?: string
+  }>
+}
+
+export interface IQuickFactsTitleWidget {
+  card_identifier: 'widget_card'
+  card_position: number
+  metric_key: string
+  hasError?: boolean | string
+  card_contents?: {
+    card_header_title?: string
+    rich_text?: string
+    mixed_chart?: IQuickFactsMixedChart
+  }
+}
+
 /** Global breakdown axis: one level down the hierarchy, or departments */
 export type BreakdownAxis = 'childLevel' | 'department'
 
@@ -226,9 +305,14 @@ export type BreakdownAxis = 'childLevel' | 'department'
 export type ISQFPeriodValue = ISQFMetricCard[] | { cards: ISQFMetricCard[]; sortBy?: string }
 
 /** summaryCards / detailCard response: only periods that have data are present */
-export type ISQFPeriodResponse = Partial<Record<Period, ISQFPeriodValue>>
+export type ISQFPeriodResponse = Partial<Record<Period, ISQFPeriodValue>> & {
+  widget_card?: IQuickFactsTitleWidget
+}
 
-export type ISQFCardsResponse = ISQFPeriodResponse | ISQFMetricCard[] | { cards: ISQFMetricCard[]; sortBy?: string }
+export type ISQFCardsResponse =
+  | ISQFPeriodResponse
+  | ISQFMetricCard[]
+  | { cards: ISQFMetricCard[]; sortBy?: string; widget_card?: IQuickFactsTitleWidget }
 
 /** Legacy Seasonal API, separate from the v4 generic metric-card payload. */
 export interface ISeasonalChartAPI { Day: string; Sales: string }

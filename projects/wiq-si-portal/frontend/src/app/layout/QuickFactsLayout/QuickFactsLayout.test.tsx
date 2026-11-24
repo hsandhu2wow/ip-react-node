@@ -28,6 +28,7 @@ function navResult(user: IUserDetails, isCfc: boolean) {
   return {
     groups: buildNavGroups(user, isCfc, user.portal ?? 'SI', user.portal === 'SI'),
     user,
+    isCfc,
     dashboardSettingsError: false,
   };
 }
@@ -67,11 +68,11 @@ describe('Quick Facts mobile page navigation', () => {
     expect(screen.queryByRole('navigation', { name: 'Insights sections' })).not.toBeInTheDocument();
   });
 
-  it('keeps Quick Assist for CFC SI accounts but hides Trend', async () => {
+  it('excludes Quick Assist and My Plan from the CFC SI page bar', async () => {
     vi.mocked(useNavGroups).mockReturnValue(navResult(fullAccessUser, true));
     renderLayout();
-    expect(await screen.findByRole('link', { name: 'Weekly' })).toBeInTheDocument();
-    expect(screen.queryByRole('link', { name: 'Trend' })).not.toBeInTheDocument();
+    expect(await screen.findByText('My Plan page')).toBeInTheDocument();
+    expect(screen.queryByRole('navigation', { name: 'Quick Facts navigation' })).not.toBeInTheDocument();
   });
 
   it('uses non-SI page-bar labels', async () => {
@@ -79,8 +80,8 @@ describe('Quick Facts mobile page navigation', () => {
     vi.mocked(getUserDetails).mockResolvedValue(user);
     vi.mocked(useNavGroups).mockReturnValue(navResult(user, false));
     renderLayout();
-    expect(await screen.findByRole('link', { name: 'Quick Facts' })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Weekly Facts' })).toBeInTheDocument();
+    expect(await screen.findByRole('link', { name: 'Quick Facts New!' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Weekly Facts New!' })).toBeInTheDocument();
   });
 });
 

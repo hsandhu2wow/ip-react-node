@@ -25,19 +25,32 @@ interface ClientOptions {
   timeout?: number
 }
 
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  if (value === null || typeof value !== 'object') return false
+  const prototype = Object.getPrototypeOf(value)
+  return prototype === Object.prototype || prototype === null
+}
+
 export function createHttpClient({
   baseURL = import.meta.env.VITE_API_URL || '',
   timeout = 30_000,
 }: ClientOptions = {}) {
   async function request<T>(
-    method: 'GET' | 'POST', path: string, body?: BodyInit, options: RequestOptions = {},
+    method: 'GET' | 'POST', path: string, body?: BodyInit | Record<string, unknown>, options: RequestOptions = {},
   ): Promise<{ data: T }> {
     const url = new URL(`${baseURL.replace(/\/$/, '')}/${path.replace(/^\//, '')}`, window.location.origin)
     const controller = new AbortController()
     const timer = setTimeout(() => controller.abort(new DOMException('Request timed out', 'TimeoutError')), timeout)
     const signal = options.signal ? AbortSignal.any([controller.signal, options.signal]) : controller.signal
     try {
-      const response = await fetch(url, { method, body, credentials: 'include', signal })
+      const jsonBody = isPlainObject(body)
+      const response = await fetch(url, {
+        method,
+        body: jsonBody ? JSON.stringify(body) : body,
+        ...(jsonBody ? { headers: { 'Content-Type': 'application/json' } } : {}),
+        credentials: 'include',
+        signal,
+      })
       const text = await response.text()
       // Preserve text/empty responses used by support-email and legacy POST endpoints.
       let data: unknown = text
@@ -59,7 +72,7 @@ export function createHttpClient({
 
   return {
     get: <T = unknown>(path: string, options?: RequestOptions) => request<T>('GET', path, undefined, options),
-    post: <T = unknown>(path: string, body?: BodyInit, options?: RequestOptions) => request<T>('POST', path, body, options),
+    post: <T = unknown>(path: string, body?: BodyInit | Record<string, unknown>, options?: RequestOptions) => request<T>('POST', path, body, options),
   }
 }
 

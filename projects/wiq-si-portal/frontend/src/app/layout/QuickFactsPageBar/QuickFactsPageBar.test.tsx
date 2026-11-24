@@ -13,6 +13,7 @@ function resultFor(user: IUserDetails, isCfc: boolean, portal: string, segregati
   return {
     groups: buildNavGroups(user, isCfc, portal, segregation),
     user,
+    isCfc,
     dashboardSettingsError: false,
   }
 }
@@ -40,9 +41,10 @@ describe('QuickFactsPageBar', () => {
     renderPageBar('/quick-facts/summary')
 
     expect(screen.getByRole('navigation', { name: 'Quick Facts navigation' })).toBeInTheDocument()
-    expect(linkFor('/quick-facts').textContent).toBe('Daily')
-    expect(linkFor('/quick-facts/quick-assist').textContent).toBe('Weekly')
-    expect(linkFor('/quick-facts/weekly').textContent).toBe('Trend')
+    expect(linkFor('/quick-facts')).toHaveAttribute('aria-label', 'Daily New!')
+    expect(linkFor('/quick-facts/quick-assist')).toHaveAttribute('aria-label', 'Weekly New!')
+    expect(linkFor('/quick-facts/weekly')).toHaveAttribute('aria-label', 'Trend New!')
+    expect(screen.getAllByText('New!')).toHaveLength(3)
     expect(screen.getAllByRole('link')).toHaveLength(3)
   })
 
@@ -62,37 +64,43 @@ describe('QuickFactsPageBar', () => {
     expect(linkFor(`${activeTabPath}?code=fixture-state`)).toHaveAttribute('aria-current', 'page')
   })
 
+  it('preserves the full query string when switching tabs', () => {
+    renderPageBar('/quick-facts/summary?code=fixture-state&date=2026-10-19&axis=department')
+
+    expect(linkFor('/quick-facts/quick-assist?code=fixture-state&date=2026-10-19&axis=department'))
+      .toHaveAttribute('href', '/quick-facts/quick-assist?code=fixture-state&date=2026-10-19&axis=department')
+  })
+
   it('shows Quick Facts, Quick Assist and Weekly Facts wording outside SI and METRO', () => {
     const user = { ...fullAccessUser, portal: '360FM' }
     vi.mocked(useNavGroups).mockReturnValue(resultFor(user, false, '360FM', false))
     renderPageBar('/quick-facts/summary')
 
-    expect(screen.getByRole('link', { name: 'Quick Facts' })).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'Quick Assist' })).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'Weekly Facts' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Quick Facts New!' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Quick Assist New!' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Weekly Facts New!' })).toBeInTheDocument()
   })
 
-  it('keeps Quick Assist for CFC SI accounts but hides Trend', () => {
+  it('excludes Quick Assist and hides the page bar for CFC SI accounts with one eligible tab', () => {
     vi.mocked(useNavGroups).mockReturnValue(resultFor(fullAccessUser, true, 'SI', true))
-    renderPageBar('/quick-facts')
+    const { container } = renderPageBar('/quick-facts')
 
-    expect(screen.getByRole('link', { name: 'Weekly' })).toBeInTheDocument()
-    expect(screen.queryByRole('link', { name: 'Trend' })).not.toBeInTheDocument()
+    expect(container.firstChild).toBeNull()
   })
 
-  it('hides Quick Assist and Trend for CFC accounts outside SI and METRO', () => {
+  it('hides the page-bar when CFC access leaves only one eligible tab', () => {
     const user = { ...fullAccessUser, portal: 'BIG W' }
     vi.mocked(useNavGroups).mockReturnValue(resultFor(user, true, 'BIG W', false))
-    renderPageBar('/quick-facts')
+    const { container } = renderPageBar('/quick-facts')
 
-    expect(screen.getByRole('link', { name: 'Quick Facts' })).toBeInTheDocument()
-    expect(screen.queryByRole('link', { name: /Quick Assist/ })).not.toBeInTheDocument()
-    expect(screen.queryByRole('link', { name: 'Weekly Facts' })).not.toBeInTheDocument()
+    expect(container.firstChild).toBeNull()
   })
 
-  it('labels the only enabled trend route as My Plan', () => {
+  it('hides My Plan from the mobile page bar when Weekly Facts is disabled', () => {
     const user: IUserDetails = {
       portal: 'SI',
+      sqf: 1,
+      sqf_enabled: true,
       wf: 1,
       weekly_facts_enabled: false,
       my_plan_enabled: true,
@@ -100,16 +108,14 @@ describe('QuickFactsPageBar', () => {
     vi.mocked(useNavGroups).mockReturnValue(resultFor(user, false, 'SI', true))
     renderPageBar('/quick-facts/myplan?code=fixture-state')
 
-    expect(screen.getByRole('link', { name: 'My Plan' })).toHaveAttribute(
-      'href',
-      '/quick-facts/myplan?code=fixture-state',
-    )
+    expect(screen.queryByRole('navigation', { name: 'Quick Facts navigation' })).not.toBeInTheDocument()
   })
 
   it('renders nothing when no Quick Facts sections are available', () => {
     vi.mocked(useNavGroups).mockReturnValue({
       groups: [],
       user: undefined,
+      isCfc: undefined,
       dashboardSettingsError: false,
     })
     const { container } = renderPageBar('/quick-facts/summary')

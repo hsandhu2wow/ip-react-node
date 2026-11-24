@@ -31,7 +31,7 @@ function Navigation() {
   const navigate = useNavigate()
   return (
     <>
-      {['summary', 'details', 'weekly', 'myplan'].map(page => (
+      {['summary', 'details', 'weekly', 'myplan', 'quick-assist'].map(page => (
         <button key={page} onClick={() => navigate(`/quick-facts/${page}`)}>Go {page}</button>
       ))}
       <AlertList />
@@ -54,6 +54,7 @@ function renderList({ path = '/quick-facts/summary', ready = true, trend }: { pa
                 <Route path="details" element={<Page ready={false} />} />
                 <Route path="weekly" element={page} />
                 <Route path="myplan" element={page} />
+                <Route path="quick-assist" element={page} />
               </Route>
             </Routes>
           </TrendActionsProvider>
@@ -131,6 +132,24 @@ describe('AlertList (Angular app-alert-list)', () => {
     expect(screen.queryByRole('alert')).not.toBeInTheDocument()
   })
 
+  it('selects Quick Assist alerts for both inline and pop-up lists', async () => {
+    served.alerts = [
+      alert(1, { sqf: 1, text: 'Daily-only notice' }),
+      alert(2, { sqa: 1, text: 'Quick Assist notice' }),
+    ]
+    served.popups = [
+      alert(3, { sqf: 1, text: 'Daily-only update' }),
+      alert(4, { sqa: 1, text: 'Quick Assist update' }),
+    ]
+    renderList({ path: '/quick-facts/quick-assist' })
+
+    expect(await screen.findByText('Quick Assist notice')).toBeInTheDocument()
+    expect(screen.queryByText('Daily-only notice')).not.toBeInTheDocument()
+    const dialog = await screen.findByRole('dialog')
+    expect(dialog).toHaveTextContent('Quick Assist update')
+    expect(dialog).not.toHaveTextContent('Daily-only update')
+  })
+
   it('replaces Weekly Facts admin alerts with the page banner, even after it is dismissed', async () => {
     served.alerts = [alert(1, { wf: 1, text: 'Weekly alert' })]
     const dismissBanner = vi.fn()
@@ -157,6 +176,29 @@ describe('AlertList (Angular app-alert-list)', () => {
 })
 
 describe('AlertList pop-up alerts (Angular AlertDialogComponent)', () => {
+  it('uses the configured update title for the heading and accessible dialog name', async () => {
+    const title = 'New elevated view access'
+    served.popups = [alert(5, { sqf: 1, title, text: 'Your access has changed.' })]
+    renderList()
+    const dialog = await screen.findByRole('dialog', { name: title })
+    expect(within(dialog).getByRole('heading', { level: 2, name: title })).toBeVisible()
+  })
+
+  it('keeps each title with its own message when updates arrive together', async () => {
+    served.popups = [
+      alert(5, { sqf: 1, title: 'New elevated view access', text: 'Access details' }),
+      alert(6, { sqf: 1, title: '   ', text: 'Other news' }),
+    ]
+    renderList()
+    const dialog = await screen.findByRole('dialog')
+    for (const [name, text] of [['New elevated view access', 'Access details'], ['Important Update', 'Other news']]) {
+      const heading = within(dialog).getByRole('heading', { level: 3, name })
+      expect(heading.nextElementSibling).toHaveTextContent(text)
+    }
+    fireEvent.click(within(dialog).getByRole('button', { name: 'I understand' }))
+    await waitFor(() => expect(requests.read).toEqual([[expect.objectContaining({ id: 5 }), expect.objectContaining({ id: 6 })]]))
+  })
+
   it('opens the current page pop-ups and reopens them on navigation until acknowledged', async () => {
     served.popups = [
       alert(5, { sqf: 1, text: '<p>Daily update</p>' }),

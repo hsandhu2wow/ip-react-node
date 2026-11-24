@@ -8,11 +8,13 @@ import { DetailsPage } from '../features/quick-facts/pages/DetailsPage'
 import { TrendPage } from '../features/trend/pages/TrendPage'
 import { TrendRouteGuard } from '../features/trend/components/TrendRouteGuard'
 import { ComingSoon } from './pages/coming-soon/ComingSoon'
+import { RouteLifecycle } from './RouteLifecycle/RouteLifecycle'
 
 export default function App() {
   return (
     <AuthProvider>
       <AppShell>
+        <RouteLifecycle />
         <Routes>
           <Route
             path="/quick-facts"

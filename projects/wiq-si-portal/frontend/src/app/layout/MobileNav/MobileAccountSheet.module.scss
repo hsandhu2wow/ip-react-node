@@ -28,12 +28,42 @@
   box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.16);
 }
 
+.sheetTop {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  min-height: 36px;
+}
+
 .handle {
   width: 32px;
   height: 4px;
-  margin: 22px auto 8px;
+  margin: 16px auto;
   border-radius: 2px;
   background: #c7c7c7;
+}
+
+.close {
+  position: absolute;
+  top: 4px;
+  right: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: #616161;
+  cursor: pointer;
+}
+
+.close:focus-visible,
+.cancel:focus-visible,
+.confirm:focus-visible {
+  outline: 2px solid #0c482c;
+  outline-offset: 2px;
 }
 
 .profile {
@@ -115,6 +145,11 @@
   background: #f3f4f6;
 }
 
+.action:disabled {
+  color: #9e9e9e;
+  cursor: not-allowed;
+}
+
 .action:focus-visible {
   outline: 2px solid #0c482c;
   outline-offset: -2px;
@@ -124,4 +159,55 @@
   flex-shrink: 0;
   width: 24px;
   font-size: 24px;
+}
+
+.confirmation {
+  padding: 8px 20px 20px;
+}
+
+.confirmationTitle {
+  margin: 4px 0 0;
+  color: #111827;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.confirmationDescription {
+  margin: 12px 0 24px;
+  color: #4b5563;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.confirmationActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.cancel,
+.confirm {
+  min-width: 88px;
+  height: 40px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 4px;
+  cursor: pointer;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.cancel {
+  background: #f3f4f6;
+  color: #333;
+}
+
+.confirm {
+  background: #c62828;
+  color: #fff;
+}
+
+.confirm:hover {
+  background: #a51f1f;
 }

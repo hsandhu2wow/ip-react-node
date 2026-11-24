@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { fireEvent, render, screen, within } from '@testing-library/react'
 import { MemoryRouter, useLocation } from 'react-router-dom'
+import { buildNavGroups } from '../navItems'
 import { useNavGroups } from '../useNavGroups'
 import { fullAccessNavResult } from '../navTestFixture'
 import { MobileNav } from './MobileNav'
@@ -53,12 +54,27 @@ describe('MobileNav', () => {
     ['/bqf/summary', 'Buying Quick Facts'],
     ['/price-simulator/simulations', 'Pricing Simulator'],
     ['/act', 'Availability Navigator'],
-    ['/admin', 'Admin'],
     ['/help', 'Help'],
   ])('shows the %s top-level title on its route', (path, title) => {
     renderNav(path)
 
     expect(screen.getByTestId('mobile-title')).toHaveTextContent(title)
+  })
+
+  it('does not render a title on Admin routes', () => {
+    renderNav('/admin')
+
+    expect(screen.queryByTestId('mobile-title')).not.toBeInTheDocument()
+  })
+
+  it('links the mobile title to the active navigation destination', () => {
+    renderNav('/dashboards/app/store')
+
+    const header = within(screen.getByTestId('mobile-appbar'))
+    expect(header.getByRole('link', { name: 'Dashboards' })).toHaveAttribute(
+      'href',
+      '/dashboards/app/store',
+    )
   })
 
   it('uses the fetched profile and opens the account sheet', () => {
@@ -72,27 +88,30 @@ describe('MobileNav', () => {
     expect(screen.queryByText('Demo User')).not.toBeInTheDocument()
   })
 
-  it('keeps Dashboard search visual-only', () => {
+  it('does not render Dashboard search on mobile', () => {
     renderNav('/dashboards')
-    const search = screen.getByRole('searchbox', { name: 'Search Dashboards' })
 
-    fireEvent.change(search, { target: { value: 'weekly sales' } })
-    fireEvent.keyDown(search, { key: 'Enter' })
-
-    expect(screen.getByTestId('current-path')).toHaveTextContent('/dashboards')
-    expect(search).toHaveValue('weekly sales')
+    expect(screen.queryByRole('searchbox', { name: 'Search Dashboards' })).not.toBeInTheDocument()
   })
 
-  it('opens a grouped drawer with feature links and independent New and Soon badges', () => {
+  it('orders non-SI Store items and uses the Angular Help destination without New tags', () => {
+    const user = { ...fullAccessNavResult.user!, portal: 'BIG W' }
+    vi.mocked(useNavGroups).mockReturnValue({
+      ...fullAccessNavResult,
+      user,
+      groups: buildNavGroups(user, false, 'BIG W', false),
+    })
     renderNav()
     fireEvent.click(screen.getByTestId('mobile-menu-btn'))
 
     const drawer = within(screen.getByTestId('mobile-drawer'))
-    expect(drawer.getByText('Buying')).toBeInTheDocument()
-    expect(drawer.getByText('Store')).toBeInTheDocument()
-    expect(linkFor('/quick-facts/quick-assist')).toHaveTextContent('New!')
     expect(linkFor('/quick-facts/quick-assist')).toHaveTextContent('Soon')
-    expect(drawer.getAllByText('Dashboards')).toHaveLength(2)
+    expect(drawer.queryByText('New!')).not.toBeInTheDocument()
+    expect(linkFor('/help/access')).toHaveTextContent('Help')
+    const links = drawer.getAllByRole('link')
+    const indexFor = (path: string) => links.findIndex(link => link.getAttribute('href') === path)
+    expect(indexFor('/quick-facts')).toBeLessThan(indexFor('/quick-facts/weekly'))
+    expect(indexFor('/quick-facts/weekly')).toBeLessThan(indexFor('/quick-facts/quick-assist'))
     expect(screen.getByTestId('mobile-menu-btn')).toHaveAttribute('aria-expanded', 'true')
   })
 
@@ -159,5 +178,16 @@ describe('MobileNav', () => {
     expect(screen.queryByRole('dialog', { name: 'User menu' })).not.toBeInTheDocument()
     expect(document.body.style.overflow).toBe('scroll')
     expect(accountButton).toHaveFocus()
+  })
+
+  it('closes the active account sheet on browser Back without changing route', () => {
+    renderNav('/dashboards/app/store')
+    fireEvent.click(screen.getByRole('button', { name: 'User menu' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Sign Out' }))
+
+    fireEvent.popState(window)
+
+    expect(screen.getByTestId('current-path')).toHaveTextContent('/dashboards/app/store')
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 })

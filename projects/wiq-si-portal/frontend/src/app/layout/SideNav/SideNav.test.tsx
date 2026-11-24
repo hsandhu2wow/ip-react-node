@@ -17,6 +17,7 @@ function resultFor(
   return {
     groups: buildNavGroups(user, false, user.portal ?? 'SI', dashboardSegregation),
     user,
+    isCfc: false,
     dashboardSettingsError,
   }
 }
