@@ -3,6 +3,7 @@ import { Link, NavLink, useLocation } from 'react-router-dom'
 import { getActivePrefix } from '../navActiveMatch'
 import { isNavItemActive, navPrefixes, type NavItem, type NavGroup } from '../navItems'
 import { useNavGroups } from '../useNavGroups'
+import type { IUserDetails } from '../../../shared/api/users'
 import { BUCKET_URL, logoLabelForPortal } from '../../config/theme'
 import { MobileAccountSheet } from './MobileAccountSheet'
 import styles from './MobileNav.module.scss'
@@ -16,6 +17,14 @@ function getRouteTitle(pathname: string): string | undefined {
   if (pathname.startsWith('/admin')) return undefined
   if (pathname.startsWith('/help')) return 'Help'
   return 'My Insights'
+}
+
+function myInsightsLandingPage(user: IUserDetails | undefined, isCfc: boolean | undefined) {
+  if (user?.sqf === 1 && user.sqf_enabled) return '/quick-facts'
+  if (user?.sqa === 1 && user.quick_assist_enabled) return '/quick-facts/quick-assist'
+  if (isCfc === false && user?.wf === 1 && (user.weekly_facts_enabled || user.my_plan_enabled)) {
+    return '/quick-facts/weekly'
+  }
 }
 
 function DrawerItem({
@@ -72,7 +81,7 @@ function NavGroupItems({
 
 export function MobileNav() {
   const location = useLocation()
-  const { groups, user, dashboardSettingsError } = useNavGroups()
+  const { groups, user, dashboardSettingsError, isCfc } = useNavGroups()
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [accountOpen, setAccountOpen] = useState(false)
   const menuButtonRef = useRef<HTMLButtonElement>(null)
@@ -85,9 +94,8 @@ export function MobileNav() {
   const activeHeaderItem = groups
     .flatMap(group => group.items)
     .find(item => isNavItemActive(item, activePrefix))
-  const titleTo = activeHeaderItem
-    ? activeHeaderItem.key === 'help' ? '/help/access' : activeHeaderItem.to
-    : undefined
+  const titleTo = title === 'My Insights' ? myInsightsLandingPage(user, isCfc)
+    : activeHeaderItem?.key === 'help' ? '/help/access' : activeHeaderItem?.to
   const navGroups = groups.filter(group => group.key !== 'other')
   const otherItems = groups.find(group => group.key === 'other')?.items ?? []
   const mainOtherItems = otherItems.filter(item => item.key !== 'admin' && item.key !== 'help')

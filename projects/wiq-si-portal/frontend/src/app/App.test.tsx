@@ -101,6 +101,36 @@ describe('application routes with sanitized API responses', () => {
     expect(screen.getByText('Fixture Sales')).toBeInTheDocument()
   })
 
+  it('retains the Daily tab filters through the Summary redirect', async () => {
+    show('/quick-facts?code=fixture-child&date=2026-10-19&axis=department')
+    await screen.findByText('Fixture Sales')
+    expect(client.get).toHaveBeenCalledWith('/sqf/summaryCards/1/2026-10-19/fixture-child')
+    expect(screen.getByRole('button', { name: 'Breakdown' })).toHaveTextContent('Departments')
+  })
+
+  it('loads inline and pop-up alerts on a direct Quick Assist visit', async () => {
+    const get = vi.mocked(client.get).getMockImplementation()!
+    vi.mocked(client.get).mockImplementation((path, options) => {
+      if (path === '/alerts') return Promise.resolve({ data: [{ id: 1, sqa: 1, type: 'info', text: 'Assist banner' }] })
+      if (path === '/popUpAlerts') return Promise.resolve({ data: [{ id: 2, sqa: 1, type: 'new', title: 'Assist update' }] })
+      return get(path, options)
+    })
+    show('/quick-facts/quick-assist')
+    expect(await screen.findByText('Assist banner')).toBeInTheDocument()
+    expect(await screen.findByRole('dialog', { name: 'Assist update' })).toBeInTheDocument()
+  })
+
+  it.each(['/availability-navigator', '/pricing-simulator', '/unknown-route'])(
+    'records one navigation event for arrival via %s', async path => {
+      const events: { event: string }[] = []
+      vi.stubGlobal('dataLayer', events)
+      show(path)
+      if (path === '/unknown-route') await screen.findByText('Fixture Sales')
+      else await screen.findByRole('heading', { name: 'Coming Soon' })
+      expect(events.filter(entry => entry.event === 'gtm.js')).toHaveLength(1)
+    },
+  )
+
   it.each([
     '/quick-facts/quick-assist',
     '/dashboards',

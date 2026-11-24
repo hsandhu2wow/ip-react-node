@@ -50,6 +50,19 @@ describe('MobileNav', () => {
   })
 
   it.each([
+    [{}, '/quick-facts'],
+    [{ sqf_enabled: false }, '/quick-facts/quick-assist'],
+    [{ sqf_enabled: false, sqa: 0, weekly_facts_enabled: 0 as const }, '/quick-facts/weekly'],
+  ] as const)('uses the account landing page for My Insights with access %j', (access, expected) => {
+    const user = { ...fullAccessNavResult.user!, ...access }
+    vi.mocked(useNavGroups).mockReturnValue({
+      ...fullAccessNavResult, user, groups: buildNavGroups(user, false, 'SI', true),
+    })
+    renderNav('/quick-facts/weekly')
+    expect(screen.getByRole('link', { name: 'My Insights' })).toHaveAttribute('href', expected)
+  })
+
+  it.each([
     ['/dashboards/app/store', 'Dashboards'],
     ['/bqf/summary', 'Buying Quick Facts'],
     ['/price-simulator/simulations', 'Pricing Simulator'],
