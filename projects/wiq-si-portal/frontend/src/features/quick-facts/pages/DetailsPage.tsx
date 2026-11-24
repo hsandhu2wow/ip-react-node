@@ -22,6 +22,8 @@ import { sendQFDataToAnalytics } from '../../../shared/utils/analytics'
 import { NpsSurvey } from '../../../shared/components/NpsSurvey/NpsSurvey'
 import { StellaPanel } from '../../../shared/components/StellaPanel/StellaPanel'
 import { useNotifyPageLoaded } from '../../../shared/context/PageLoadedContext'
+import { getTitleWidgetCard } from '../api/sqf'
+import { TitleWidget } from '../components/TitleWidget/TitleWidget'
 
 type SortType = 'az' | 'za' | 'lowhigh' | 'highlow'
 
@@ -88,6 +90,7 @@ export function DetailsPage() {
   const seasonalSummaryQuery = useSeasonalCard(cardStatusQuery.data?.seasonal)
   const seasonalDetailsQuery = useSeasonalCard(cardStatusQuery.data?.seasonal, true, seasonal)
   const detailsQuery = useDetailsCard(seasonal ? undefined : type)
+  const titleWidget = getTitleWidgetCard(detailsQuery.data)
   const periodCards = usePeriodCards(detailsQuery.data)
   const etaQuery = useDataLoadETA()
   const supportEmail = useSupportEmail().data
@@ -205,6 +208,7 @@ export function DetailsPage() {
 
           <div className={styles.pageHeader}>
             <div className={styles.pageTitle}>{pageTitle}</div>
+            <TitleWidget card={titleWidget} />
 
             {/* Sort dropdown — matches Angular's "Sort Cards ≡" button */}
             <div className={styles.sortDropdownWrapper} ref={sortRef}>

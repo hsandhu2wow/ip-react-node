@@ -1,9 +1,11 @@
 // src/pages/coming-soon/ComingSoon.tsx
 import { useLocation } from 'react-router-dom'
+import { useNotifyPageLoaded } from '../../../shared/context/PageLoadedContext'
 import styles from './ComingSoon.module.scss'
 
 export function ComingSoon() {
   const { pathname } = useLocation()
+  useNotifyPageLoaded(true)
   const routeName = (pathname.replace(/^\//, '').split('/')[0] || 'home').replace(/-/g, ' ')
 
   return (

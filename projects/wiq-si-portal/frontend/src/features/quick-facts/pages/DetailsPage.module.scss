@@ -43,6 +43,7 @@
 /* Mirrors .qf-details-home__detail-head-title */
 .pageHeader {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
   max-width: 900px;

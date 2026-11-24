@@ -48,7 +48,7 @@ describe('DetailsPage', () => {
     vi.mocked(useDetailsCard).mockReturnValue({
       data: [coverageCard('Store 10', 5), coverageCard('Store 2', 20), coverageCard('CLOSED', 1), { ...coverageCard('Hidden', 0), hidden: true }],
       isLoading: false, isError: false,
-    } as ReturnType<typeof useDetailsCard>)
+    } as unknown as ReturnType<typeof useDetailsCard>)
     vi.mocked(useCardStatus).mockReturnValue(statusResult({
       sales: { sequence: 1, titleText: 'Sales details', details: 1, details_start_level: 0, details_last_level: 9 },
     }))
@@ -118,7 +118,7 @@ describe('DetailsPage', () => {
     vi.mocked(useDetailsCard).mockReturnValue({
       data: { WTD: { cards: [coverageCard('Preferred', 1, 100), coverageCard('Store 2', 20)], sortBy: 'High - Low' } },
       isLoading: false, isError: false,
-    } as ReturnType<typeof useDetailsCard>)
+    } as unknown as ReturnType<typeof useDetailsCard>)
     show()
     expect(titles()).toEqual(['Preferred', 'Store 2'])
     expect(screen.getByRole('button', { name: /High - Low/ })).toBeInTheDocument()
@@ -155,6 +155,26 @@ describe('DetailsPage', () => {
     } as ReturnType<typeof useDetailsCard>)
     show()
     expect(screen.getByText('Failed to load details. Please try again.')).toBeInTheDocument()
+  })
+
+  it('renders the title widget when the Details response contains no metric cards', () => {
+    vi.mocked(useDetailsCard).mockReturnValue({
+      data: {
+        WTD: [],
+        widget_card: {
+          card_identifier: 'widget_card',
+          card_position: 0,
+          metric_key: 'widget_card',
+          card_contents: { card_header_title: 'Profit summary' },
+        },
+      },
+      isLoading: false,
+      isError: false,
+    } as unknown as ReturnType<typeof useDetailsCard>)
+
+    show()
+
+    expect(screen.getByText('Profit summary')).toBeInTheDocument()
   })
 
   it('builds breadcrumbs without hidden ancestors and selects a child on drill-down', () => {

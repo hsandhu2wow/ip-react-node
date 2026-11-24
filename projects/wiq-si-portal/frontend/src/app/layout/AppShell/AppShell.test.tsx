@@ -5,8 +5,8 @@ import { AuthProvider } from '../../../shared/context/AuthContext'
 import { AppShell } from './AppShell'
 
 vi.mock('../useNavGroups', async () => {
-  const { fullAccessNavGroups } = await import('../navTestFixture')
-  return { useNavGroups: () => fullAccessNavGroups }
+  const { fullAccessNavResult } = await import('../navTestFixture')
+  return { useNavGroups: () => fullAccessNavResult }
 })
 
 function renderShell(path = '/quick-facts') {

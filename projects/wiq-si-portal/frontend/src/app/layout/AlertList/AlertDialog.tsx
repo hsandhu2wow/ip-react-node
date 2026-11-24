@@ -15,6 +15,8 @@ interface AlertDialogProps {
   onConfirm: () => void
 }
 
+const DEFAULT_TITLE = 'Important Update'
+
 export function AlertDialog({ alerts, bigW, onClose, onConfirm }: AlertDialogProps) {
   // Opened with disableClose (backdrop clicks ignored) but Escape still closes
   useEffect(() => {
@@ -23,15 +25,20 @@ export function AlertDialog({ alerts, bigW, onClose, onConfirm }: AlertDialogPro
     return () => window.removeEventListener('keydown', onKey)
   }, [onClose])
 
-  // Angular binds this through bypassSecurityTrustHtml; sanitised here like every other admin HTML
-  const message = DOMPurify.sanitize(alerts.map(alert => `<div>${alert.text ?? ''}</div>`).join(''))
+  const updates = alerts.map(({ id, title, text }) => ({
+    id,
+    title: typeof title === 'string' ? title.trim() : '',
+    body: DOMPurify.sanitize(text ?? ''),
+  }))
+  const showUpdateHeadings = updates.length > 1 && updates.some(update => update.title)
+  const dialogTitle = showUpdateHeadings ? 'Important Updates' : (updates[0]?.title || DEFAULT_TITLE)
 
   return (
     <Dialog
       open
       onClose={onClose}
       disableClose
-      ariaLabel="Important Update"
+      ariaLabel={dialogTitle}
       className={styles.panel}
       backdropClassName={styles.alertBackdrop}
     >
@@ -41,14 +48,19 @@ export function AlertDialog({ alerts, bigW, onClose, onConfirm }: AlertDialogPro
             <div className={styles.icon}>
               <span className="material-icons" aria-hidden="true">campaign</span>
             </div>
-            <h2 className={styles.title}>Important Update</h2>
+            <h2 className={styles.title}>{dialogTitle}</h2>
           </div>
           <button type="button" className={styles.close} aria-label="Close dialog" onClick={onClose}>
             <span className="material-icons" aria-hidden="true">close</span>
           </button>
         </div>
         <div className={styles.body}>
-          <div dangerouslySetInnerHTML={{ __html: message }} />
+          {updates.map(update => (
+            <div key={update.id}>
+              {showUpdateHeadings && <h3 className={styles.updateTitle}>{update.title || DEFAULT_TITLE}</h3>}
+              <div dangerouslySetInnerHTML={{ __html: update.body }} />
+            </div>
+          ))}
         </div>
         <div className={styles.divider} />
         <div className={styles.footer}>

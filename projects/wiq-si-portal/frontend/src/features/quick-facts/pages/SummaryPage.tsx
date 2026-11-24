@@ -18,6 +18,7 @@ import { getStoreProfileCard } from '../api/storeProfile'
 import { ProfileCard } from '../components/ProfileCard/ProfileCard'
 import { StellaPanel } from '../../../shared/components/StellaPanel/StellaPanel'
 import { useNotifyPageLoaded } from '../../../shared/context/PageLoadedContext'
+import { TitleWidget } from '../components/TitleWidget/TitleWidget'
 
 export function SummaryPage() {
   const { isLoaded, selectedBreakdownAxis, selectedNode } = useFilter()
@@ -83,15 +84,18 @@ export function SummaryPage() {
       {/* Angular sqf-summary/details-home ngOnInit: qfCardsService.showNPSSurvey() */}
       <NpsSurvey />
       <PreviewPageCards getCards={() => previewCards.filter(card => card.jsId && document.getElementById(card.jsId))} />
-      <h1 className={styles.pageTitle}>
-        <span className={styles.pageTitleLabel}>{isSI ? 'Daily' : 'Quick Facts'}</span>
-        {isSI && (
-          <>
-            <span className={styles.pageTitleDot}>·</span>
-            <span className={styles.pageTitleSub}>powered by Quick Facts</span>
-          </>
-        )}
-      </h1>
+      <div className={styles.titleRow}>
+        <h1 className={styles.pageTitle}>
+          <span className={styles.pageTitleLabel}>{isSI ? 'Daily' : 'Quick Facts'}</span>
+          {isSI && (
+            <>
+              <span className={styles.pageTitleDot}>·</span>
+              <span className={styles.pageTitleSub}>powered by Quick Facts</span>
+            </>
+          )}
+        </h1>
+        <TitleWidget card={enrichedQuery.widgetCard} />
+      </div>
 
       {/* Angular sqf-summary-home: app-ai-insights-panel wraps .qf-home */}
       <StellaPanel>

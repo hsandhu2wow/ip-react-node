@@ -7,6 +7,7 @@ import './styles/globals.css'
 import App from './app/App.tsx'
 import { SnackbarProvider } from './shared/components/Snackbar/Snackbar'
 import { applyThemeAssets } from './app/config/theme'
+import { installStaleChunkRecovery } from './app/staleChunkRecovery'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -18,6 +19,7 @@ const queryClient = new QueryClient({
 })
 
 applyThemeAssets()
+installStaleChunkRecovery()
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

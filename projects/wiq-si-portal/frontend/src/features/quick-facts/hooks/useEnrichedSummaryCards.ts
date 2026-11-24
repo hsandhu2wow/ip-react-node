@@ -5,13 +5,15 @@ import { useFilter } from '../../../shared/context/FilterContext'
 import { usePeriodCards } from './usePeriodCards'
 import { useDataLoadETA } from './useDataLoadETA'
 import { stampCutOffTimes } from '../utils/eta'
-import type { ISQFMetricCard, IAvailableMetricCards } from '../../../shared/types/sqf.types'
+import { getTitleWidgetCard } from '../api/sqf'
+import type { ISQFMetricCard, IAvailableMetricCards, IQuickFactsTitleWidget } from '../../../shared/types/sqf.types'
 
 export interface EnrichedSummaryResult {
   data: ISQFMetricCard[]
   isLoading: boolean
   isError: boolean
   cardStatus: IAvailableMetricCards
+  widgetCard?: IQuickFactsTitleWidget | null
 }
 
 /**
@@ -49,5 +51,6 @@ export function useEnrichedSummaryCards(): EnrichedSummaryResult {
     isLoading: summaryQuery.isLoading || statusQuery.isLoading,
     isError: summaryQuery.isError || statusQuery.isError,
     cardStatus,
+    widgetCard: getTitleWidgetCard(summaryQuery.data),
   }
 }

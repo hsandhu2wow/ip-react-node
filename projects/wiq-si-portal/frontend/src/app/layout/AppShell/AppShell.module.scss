@@ -21,5 +21,6 @@
 }
 
 @media (max-width: 768px) {
+  .main { --mob-appbar-height: 60px; }
   .trend { --mob-appbar-height: 60px; }
 }

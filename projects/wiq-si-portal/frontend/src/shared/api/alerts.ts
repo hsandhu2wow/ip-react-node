@@ -13,6 +13,8 @@ export interface IAlert {
   bqf?: number | null
   psf?: number | null
   removable?: number
+  /** Optional plain-text heading for a pop-up update. */
+  title?: string | null
   text?: string
   hyperText?: string
   icon?: string

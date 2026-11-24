@@ -110,7 +110,7 @@ assessment are the shape reference, not a single response fixture.
 | GET `/users/userSearch/<name>` | [users.ts](../src/shared/api/users.ts): `searchUsers` | Employee search model |
 | GET `/getUserdetails` | users.ts: `getUserDetails` | Module-cached user metadata for analytics; `is_stella_enabled` gates Stella |
 | GET `/alerts` | [alerts.ts](../src/shared/api/alerts.ts): `getAlerts` | Admin alerts; keeps Angular's `active && sqf \|\| sqa \|\| wf \|\| myplan` filter and icon mapping |
-| GET `/popUpAlerts` | alerts.ts: `getPopUpAlerts` | Pop-up alerts, same filter and icon mapping |
+| GET `/popUpAlerts` | alerts.ts: `getPopUpAlerts` | Same filter and icon mapping as `/alerts`. Each record can include an optional plain-text `title`, e.g. `"title": "New elevated view access"`. Missing or blank titles default to “Important Update”. |
 | POST `/popUpAlerts/read` | alerts.ts: `markPopUpAlertsRead` | FormData `payload` = JSON of the acknowledged alerts |
 | POST `/uploadImageForSlide` | [gcpSlides.ts](../src/shared/utils/gcpSlides.ts) | Image FormData; returns upload status/URL |
 | POST `/deleteImageForSlide` | gcpSlides.ts | FormData URL for temporary-image cleanup |
