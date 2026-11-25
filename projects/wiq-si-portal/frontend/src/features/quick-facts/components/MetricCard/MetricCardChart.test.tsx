@@ -1,10 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { fireEvent, render, screen } from '@testing-library/react'
+import { useImperativeHandle, type Ref } from 'react'
+import { MemoryRouter } from 'react-router-dom'
+import { act, fireEvent, render, renderHook, screen } from '@testing-library/react'
 import type { ISQFChartData } from '../../../../shared/types/sqf.types'
+import { FilterProvider, useFilter } from '../../../../shared/context/FilterContext'
 import { MetricCardChart } from './MetricCardChart'
 import { MetricCardTabs } from './MetricCardTabs'
 
 interface Dataset {
+  label?: string
   data: number[]
   backgroundColor: string[]
   hoverBackgroundColor: string[]
@@ -85,10 +89,19 @@ const charts = vi.hoisted(() => ({
   Bar: vi.fn<(props: ChartProps) => void>(),
   Pie: vi.fn<(props: CircularProps) => void>(),
   Doughnut: vi.fn<(props: CircularProps) => void>(),
+  instance: {
+    stop: vi.fn<() => void>(),
+    reset: vi.fn<() => void>(),
+    update: vi.fn<() => void>(),
+  },
 }))
 
 vi.mock('react-chartjs-2', () => ({
-  Bar: (props: ChartProps) => { charts.Bar(props); return <div aria-label="Bar chart" /> },
+  Bar: (props: ChartProps & { ref?: Ref<typeof charts.instance> }) => {
+    useImperativeHandle(props.ref, () => charts.instance, [])
+    charts.Bar(props)
+    return <div aria-label="Bar chart" />
+  },
   Pie: (props: CircularProps) => { charts.Pie(props); return <div aria-label="Pie chart" /> },
   Doughnut: (props: CircularProps) => { charts.Doughnut(props); return <div aria-label="Doughnut chart" /> },
 }))
@@ -132,16 +145,88 @@ describe('MetricCardChart', () => {
     expect(props.data.labels).toEqual(['Sales', 'Wages'])
     expect(props.data.datasets).toHaveLength(2)
     expect(props.data.datasets[0]).toMatchObject({
+      label: 'actual',
       data: [20, 10], backgroundColor: ['#219653', '#eb5757'],
       hoverBackgroundColor: ['#219653', '#eb5757'],
       barThickness: 15, categoryPercentage: 0.8, barPercentage: 0.9,
     })
     expect(props.data.datasets[1]).toMatchObject({
+      label: 'plan',
       data: [15, 25], barThickness: 32, categoryPercentage: 1, barPercentage: 1,
     })
     expect(screen.getByLabelText('Bar chart').parentElement).toHaveStyle({ height: '200px' })
     expect(props.options.indexAxis).toBe('x')
     expect(props.options.scales?.x.stacked).toBe(false)
+  })
+
+  it.each(['bar', 'horizontalBar'] as const)('restarts every %s series together when data changes', chartType => {
+    const { rerender } = render(<MetricCardChart chartData={fixture({ chartType })} />)
+    vi.clearAllMocks()
+    const next = fixture({ chartType })
+    next.datasets.plan._data = [
+      { value: 30, color: '#ddd' }, { value: 40, color: '#ccc' },
+    ]
+
+    rerender(<MetricCardChart chartData={next} />)
+
+    expect(charts.instance.stop).toHaveBeenCalledOnce()
+    expect(charts.instance.reset).toHaveBeenCalledOnce()
+    expect(charts.instance.update).toHaveBeenCalledOnce()
+    expect(charts.instance.stop.mock.invocationCallOrder[0])
+      .toBeLessThan(charts.instance.reset.mock.invocationCallOrder[0])
+    expect(charts.instance.reset.mock.invocationCallOrder[0])
+      .toBeLessThan(charts.instance.update.mock.invocationCallOrder[0])
+    expect(barProps().data.datasets.map(dataset => dataset.data)).toEqual([[20, 10], [30, 40]])
+  })
+
+  it('replays identical VOC data when the reporting selection changes', () => {
+    const chart = fixture({
+      datasets: { voc: { data: [
+        { value: 75, color: '#219653' }, { value: 65, color: '#eb5757' },
+      ] } },
+    })
+    const { result } = renderHook(useFilter, {
+      wrapper: ({ children }) => (
+        <MemoryRouter initialEntries={['/?date=2026-11-23&code=N']}>
+          <FilterProvider>
+            <MetricCardChart chartData={chart} />
+            {children}
+          </FilterProvider>
+        </MemoryRouter>
+      ),
+    })
+    act(() => result.current.initTree([{
+      name: 'National', code: 'N', level: 0, level_desc: 'National',
+      children: [{ name: 'Store', code: '1001', level: 4, level_desc: 'Store' }],
+    }]))
+    const data = barProps().data
+
+    for (const changeSelection of [
+      () => result.current.setSelectedPeriod('YDAY'),
+      () => result.current.setSelectedBreakdownAxis('department'),
+      () => result.current.setSelectedDate('2026-11-24'),
+      () => result.current.setSelectedNode(result.current.treeNodes[1]),
+    ]) {
+      vi.clearAllMocks()
+      act(changeSelection)
+      expect(charts.instance.stop).toHaveBeenCalledOnce()
+      expect(charts.instance.reset).toHaveBeenCalledOnce()
+      expect(charts.instance.update).toHaveBeenCalledOnce()
+      expect(barProps().data).toBe(data)
+      expect(data.datasets[0].data).toEqual([75, 65])
+    }
+
+    vi.clearAllMocks()
+    act(() => result.current.setSelectedBreakdownAxis('department'))
+    expect(charts.instance.reset).not.toHaveBeenCalled()
+  })
+
+  it('does not restart animation for a height-only rerender', () => {
+    const chart = fixture()
+    const { rerender } = render(<MetricCardChart chartData={chart} />)
+    vi.clearAllMocks()
+    rerender(<MetricCardChart chartData={chart} height={200} />)
+    expect(charts.instance.reset).not.toHaveBeenCalled()
   })
 
   it('configures horizontal stacked bars and tooltip color keys', () => {
@@ -211,6 +296,7 @@ describe('MetricCardChart', () => {
     const props = (chartType === 'pie' ? charts.Pie : charts.Doughnut).mock.calls[0][0]
     expect(props.options.plugins.datalabels.display).toBe(chartType !== 'gauge')
     expect(charts.Bar).not.toHaveBeenCalled()
+    expect(charts.instance.reset).not.toHaveBeenCalled()
   })
 
   it('renders nothing when no plottable datasets remain', () => {
@@ -219,6 +305,7 @@ describe('MetricCardChart', () => {
     })} />)
     expect(container).toBeEmptyDOMElement()
     expect(charts.Bar).not.toHaveBeenCalled()
+    expect(charts.instance.reset).not.toHaveBeenCalled()
   })
 
   it('switches a tabbed card from its chart to a table without retaining the old view', () => {

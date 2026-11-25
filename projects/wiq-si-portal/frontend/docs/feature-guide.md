@@ -56,6 +56,11 @@ selection separate.
 The table supports expansion, original content/HTML, sorting and scroll
 shadows. Nested-table header sorting is disabled while initial API sorting
 remains. Chart.js conversion includes gauge labels/needle callbacks.
+Generic bar charts use API dataset keys as stable series identities. All series
+replay together from the value-axis baseline when chart data or the selected
+location, date, period or breakdown changes, including unchanged VOC values.
+This retains the chart instance and API values; hover and size-only changes do
+not restart bar growth. Pie, doughnut and gauge behavior is unchanged.
 No unit assertion certifies actual chart pixels, sticky geometry or complete
 Angular layout matching.
 
