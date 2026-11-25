@@ -1,5 +1,5 @@
 // src/components/cards/MetricCard/MetricCardChart.tsx
-import { memo, useMemo } from 'react'
+import { memo, useEffect, useMemo, useRef } from 'react'
 import { Bar, Pie, Doughnut } from 'react-chartjs-2'
 import type { Chart, Plugin } from 'chart.js'
 import {
@@ -9,6 +9,7 @@ import {
 } from 'chart.js'
 import ChartDataLabels from 'chartjs-plugin-datalabels'
 import type { ISQFChartData } from '../../../../shared/types/sqf.types'
+import { useOptionalFilter } from '../../../../shared/context/FilterContext'
 import styles from './MetricCard.module.scss'
 import { xAxisLabelHoverPlugin } from '../../chart-plugins/xAxisLabelHover'
 
@@ -227,6 +228,8 @@ function buildChartJsData(chartData: ISQFChartData) {
     tooltipData.push(rows.map(r => r.tooltip))
 
     datasets.push({
+      // react-chartjs-2 reconciles series by label, not their array position.
+      label: key,
       data: values,
       backgroundColor: colors,
       hoverBackgroundColor: colors,
@@ -257,12 +260,30 @@ export const MetricCardChart = memo(function MetricCardChart({ chartData, height
 })
 
 function BarChart({ chartData, height }: { chartData: ISQFChartData; height: number }) {
-  // Stable data/options so react-chartjs-2 only updates the chart when chartData changes
+  const chartRef = useRef<Chart<'bar'>>(null)
+  const filter = useOptionalFilter()
   const config = useMemo(() => buildBarConfig(chartData), [chartData])
+
+  useEffect(() => {
+    const chart = chartRef.current
+    if (!chart) return
+    // A normal update only interpolates changed values, leaving identical VOC data static.
+    chart.stop()
+    chart.reset()
+    chart.update()
+  }, [
+    chartData,
+    filter?.selectedNode?.code,
+    filter?.selectedNode?.apiDepth,
+    filter?.selectedDate,
+    filter?.selectedPeriod,
+    filter?.selectedBreakdownAxis,
+  ])
+
   if (!config) return null
   return (
     <div className={styles.barChart} style={{ height }}>
-      <Bar data={config.data as any} options={config.options as any} />
+      <Bar ref={chartRef} data={config.data as any} options={config.options as any} />
     </div>
   )
 }
